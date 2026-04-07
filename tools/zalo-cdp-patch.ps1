@@ -102,24 +102,66 @@ function Invoke-Cdp {
         throw "Khong tim thay file CSS: $ThemeCssPath"
       }
 
-      [string]$css = Get-Content -LiteralPath $ThemeCssPath -Raw
-      $cssBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($css))
+      $themeDefs = @(
+        @{ key = 'green';  label = 'Green';  path = '.\themes\zalo-green.css' },
+        @{ key = 'pink';   label = 'Pink';   path = '.\themes\zalo-pink.css' },
+        @{ key = 'blue';   label = 'Blue';   path = '.\themes\zalo-blue.css' },
+        @{ key = 'purple'; label = 'Purple'; path = '.\themes\zalo-purple.css' },
+        @{ key = 'orange'; label = 'Orange'; path = '.\themes\zalo-orange.css' }
+      )
+
+      $themeCssB64 = @{}
+      $themeLabels = @{}
+      foreach ($t in $themeDefs) {
+        if (Test-Path -LiteralPath $t.path) {
+          [string]$tCss = Get-Content -LiteralPath $t.path -Raw
+          $themeCssB64[$t.key] = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($tCss))
+          $themeLabels[$t.key] = $t.label
+        }
+      }
+      if ($themeCssB64.Keys.Count -eq 0) {
+        throw 'Khong load duoc theme nao trong thu muc themes'
+      }
+
+      $selectedTheme = [System.IO.Path]::GetFileNameWithoutExtension($ThemeCssPath)
+      if ($selectedTheme -like 'zalo-*') { $selectedTheme = $selectedTheme.Substring(5) }
+      if (-not $themeCssB64.ContainsKey($selectedTheme)) { $selectedTheme = 'green' }
+      if (-not $themeCssB64.ContainsKey($selectedTheme)) { $selectedTheme = @($themeCssB64.Keys)[0] }
+
+      $themeCssB64Json = $themeCssB64 | ConvertTo-Json -Compress
+      $themeLabelsJson = $themeLabels | ConvertTo-Json -Compress
+      $themeOrder = @($themeDefs | Where-Object { $themeCssB64.ContainsKey($_.key) } | ForEach-Object { $_.key })
+      if ($themeOrder.Count -eq 0) { $themeOrder = @($themeCssB64.Keys) }
+      $themeOrderJson = $themeOrder | ConvertTo-Json -Compress
 
       $script = @"
 (() => {
   const STYLE_ID = 'zalo-runtime-patch';
   const CTRL_ID = 'zalo-theme-controls';
   const LOCK_STYLE_ID = 'zalo-lock-pin-style';
-  const cssText = atob('$cssBase64');
+  const THEMES_B64 = $themeCssB64Json;
+  const THEMES_META = $themeLabelsJson;
+  const THEME_ORDER = $themeOrderJson;
+  const DEFAULT_THEME_KEY = '$selectedTheme';
+  const THEMES_CSS = Object.fromEntries(Object.entries(THEMES_B64).map(([k, v]) => [k, atob(v)]));
 
-  function applyTheme() {
+    function applyTheme(themeKey) {
+    const key = (themeKey && THEMES_CSS[themeKey])
+      ? themeKey
+      : (window.__zaloThemeKey || DEFAULT_THEME_KEY || THEME_ORDER[0]);
+
+    window.__zaloThemeKey = key;
+
     let tag = document.getElementById(STYLE_ID);
     if (!tag) {
       tag = document.createElement('style');
       tag.id = STYLE_ID;
       document.head.appendChild(tag);
     }
-    tag.textContent = window.__zaloThemeCss || cssText;
+
+    const css = THEMES_CSS[key] || THEMES_CSS[THEME_ORDER[0]] || '';
+    tag.textContent = css;
+    window.__zaloThemeCss = css;
     return tag.textContent.length;
   }
 
@@ -393,7 +435,7 @@ function Invoke-Cdp {
       el.style.transition = prevTransition;
     }, 430);
   }
-  function ensureControls() {
+    function ensureControls() {
     const target = document.querySelector('.nav__tabs__bottom');
     if (!target) return false;
 
@@ -419,6 +461,8 @@ function Invoke-Cdp {
     ].join(';');
 
     const TOGGLE_ID = 'zalo-theme-toggle-btn';
+    const THEME_ID = 'zalo-theme-picker-btn';
+
     let toggleBtn = document.getElementById(TOGGLE_ID);
     if (!toggleBtn) {
       toggleBtn = document.createElement('button');
@@ -426,14 +470,18 @@ function Invoke-Cdp {
       wrap.appendChild(toggleBtn);
     }
 
-    // Remove legacy controls from old patch versions (ex: PIN button).
+    let themeBtn = document.getElementById(THEME_ID);
+    if (!themeBtn) {
+      themeBtn = document.createElement('button');
+      themeBtn.id = THEME_ID;
+      wrap.appendChild(themeBtn);
+    }
+
     [...wrap.querySelectorAll('button')].forEach((btn) => {
-      if (btn !== toggleBtn) btn.remove();
+      if (btn !== toggleBtn && btn !== themeBtn) btn.remove();
     });
 
-    toggleBtn.type = 'button';
-    toggleBtn.title = 'Toggle Pastel Theme';
-    toggleBtn.style.cssText = [
+    const baseBtnCss = [
       'height:28px',
       'width:28px',
       'padding:0',
@@ -450,13 +498,30 @@ function Invoke-Cdp {
       '-webkit-app-region:no-drag'
     ].join(';');
 
+    toggleBtn.type = 'button';
+    toggleBtn.title = 'Bat/tat patch giao dien';
+    toggleBtn.style.cssText = baseBtnCss;
+
+    themeBtn.type = 'button';
+    themeBtn.title = 'Chuyen theme giao dien';
+    themeBtn.style.cssText = baseBtnCss;
+
     const refresh = () => {
       const active = !!document.getElementById(STYLE_ID);
+      const key = window.__zaloThemeKey || DEFAULT_THEME_KEY || THEME_ORDER[0];
+      const short = (key || 'th').slice(0, 2).toUpperCase();
+
       toggleBtn.textContent = active ? 'ON' : 'OFF';
       toggleBtn.style.opacity = '1';
       toggleBtn.style.border = '1px solid ' + (active ? '#3a8457' : '#b8cfc1');
       toggleBtn.style.background = active ? '#4fa871' : '#e4efe8';
       toggleBtn.style.color = active ? '#ffffff' : '#244638';
+
+      themeBtn.textContent = short;
+      themeBtn.title = 'Theme: ' + (THEMES_META[key] || key);
+      themeBtn.style.border = '1px solid #b8cfc1';
+      themeBtn.style.background = '#f5f9f7';
+      themeBtn.style.color = '#244638';
     };
 
     toggleBtn.onclick = (e) => {
@@ -468,13 +533,29 @@ function Invoke-Cdp {
       if (active) {
         clearTheme();
       } else {
-        // Force a full re-patch cycle every time user turns it ON.
         clearTheme();
-        applyTheme();
+        applyTheme(window.__zaloThemeKey || DEFAULT_THEME_KEY);
         setTimeout(() => {
-          applyTheme();
+          applyTheme(window.__zaloThemeKey || DEFAULT_THEME_KEY);
           ensureLockPinUI();
         }, 30);
+      }
+
+      refresh();
+    };
+
+    themeBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const current = window.__zaloThemeKey || DEFAULT_THEME_KEY || THEME_ORDER[0];
+      const idx = Math.max(0, THEME_ORDER.indexOf(current));
+      const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+      window.__zaloThemeKey = next;
+
+      if (document.getElementById(STYLE_ID)) {
+        triggerThemeFade();
+        applyTheme(next);
       }
 
       refresh();
@@ -483,11 +564,14 @@ function Invoke-Cdp {
     refresh();
     return true;
   }
-  window.__zaloThemeCss = cssText;
+  window.__zaloThemes = THEMES_CSS;
+  window.__zaloThemeMeta = THEMES_META;
+  window.__zaloThemeOrder = THEME_ORDER;
+  window.__zaloThemeKey = (THEMES_CSS[DEFAULT_THEME_KEY] ? DEFAULT_THEME_KEY : (THEME_ORDER[0] || 'green'));
   window.__zaloThemeApply = applyTheme;
   window.__zaloThemeClear = clearTheme;
 
-  const cssLength = applyTheme();
+  const cssLength = applyTheme(window.__zaloThemeKey || DEFAULT_THEME_KEY);
   const controls = ensureControls();
   const pinUIs = ensureLockPinUI();
   ensureLockObserver();
@@ -505,7 +589,7 @@ function Invoke-Cdp {
     w: Math.round(el.getBoundingClientRect().width),
     h: Math.round(el.getBoundingClientRect().height)
   }));
-  return { ok: true, mode: 'apply', cssLength, controls, pinUIs, hostMeta, inputCount, inputMeta };
+  return { ok: true, mode: 'apply', theme: window.__zaloThemeKey, cssLength, controls, pinUIs, hostMeta, inputCount, inputMeta };
 })()
 "@
     }
@@ -575,6 +659,14 @@ function Invoke-Cdp {
 }
 
 Invoke-Cdp -DebugPort $Port -Mode $Action -ThemeCssPath $CssPath -Match $TargetMatch
+
+
+
+
+
+
+
+
 
 
 

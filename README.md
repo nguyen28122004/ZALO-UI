@@ -4,7 +4,7 @@ Muc tieu: patch giao dien Zalo runtime qua Chrome DevTools Protocol (CDP), khong
 
 ## 1) Dieu kien tien quyet
 
-- Zalo da co CDP endpoint dang mo tren `127.0.0.1:9222`.
+- CDP endpoint da san sang tren `127.0.0.1:9222`.
 - Kiem tra nhanh:
 
 ```powershell
@@ -18,7 +18,7 @@ Luu y: Tai lieu nay KHONG huong dan kill/mo Zalo kem debug argument.
 
 File tool: `tools/zalo-cdp-patch.ps1`
 
-Apply theme hien tai:
+Apply theme bat ky:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\zalo-green.css -TargetMatch Zalo
@@ -30,15 +30,21 @@ Clear patch:
 powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action clear -Port 9222 -TargetMatch Zalo
 ```
 
-Dung CSS khac:
+Sau khi `apply`, script inject cum nut giao dien o left nav:
+- `ON/OFF`: bat/tat patch
+- nut theme: chuyen vong qua `green -> pink -> blue -> purple -> orange`
+
+## 3) Patch nhanh theo ten theme
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\my-theme.css -TargetMatch Zalo
+powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme green
+powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme pink
+powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme blue
+powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme purple
+powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme orange
 ```
 
-Sau khi `apply`, script se inject 1 nut tron `ON/OFF` o thanh left nav de bat/tat theme nhanh.
-
-## 3) Runtime mod thu cong trong DevTools
+## 4) Runtime mod thu cong trong DevTools
 
 Trong DevTools Console, nap `snippets/zalo-runtime-mod.js`, sau do:
 
@@ -55,19 +61,18 @@ Rollback:
 zaloMod.clear();
 ```
 
-## 4) Tim selector va debug style
+## 5) Tim selector va debug style
 
-Dung playbook: `docs/ZALO_UI_MOD_GUIDE.md`
+Dung playbook: `docs/ZALO_UI_MOD_GUIDE.md`.
 
-Noi dung chinh:
-- quy tac chon selector ben vung
-- script probe de map UI nhanh
-- cach tra CSS vars va override an toan
+## 6) Cau truc file
 
-## 5) Cau truc file
-
-- `tools/zalo-cdp-patch.ps1`: patch/clear CSS qua CDP websocket
-- `tools/start-zalo-auto-patch.ps1`: auto apply khi CDP san sang (khong trinh bay buoc kill/mo app trong README)
-- `themes/zalo-green.css`: theme pastel light
+- `tools/zalo-cdp-patch.ps1`: patch/clear CSS qua CDP websocket + UI controls
+- `tools/patch-zalo-now.ps1`: patch nhanh theo ten theme
+- `themes/zalo-green.css`: pastel green
+- `themes/zalo-pink.css`: pastel pink
+- `themes/zalo-blue.css`: pastel blue
+- `themes/zalo-purple.css`: pastel purple
+- `themes/zalo-orange.css`: pastel orange
 - `snippets/zalo-selector-probe.js`: scan UI va goi y selector
 - `snippets/zalo-runtime-mod.js`: inject/remove CSS runtime trong DevTools

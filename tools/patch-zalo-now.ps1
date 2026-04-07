@@ -1,11 +1,17 @@
 ﻿param(
   [int]$Port = 9222,
-  [string]$CssPath = '.\themes\zalo-green.css',
+  [ValidateSet('green','pink','blue','purple','orange')]
+  [string]$Theme = 'green',
+  [string]$CssPath = '',
   [string]$TargetMatch = 'Zalo',
   [switch]$ClearFirst
 )
 
 $ErrorActionPreference = 'Stop'
+
+if (-not $CssPath) {
+  $CssPath = ".\\themes\\zalo-$Theme.css"
+}
 
 if (-not (Test-Path -LiteralPath $CssPath)) {
   throw "Khong tim thay file CSS: $CssPath"
@@ -24,4 +30,4 @@ if ($ClearFirst) {
 }
 
 powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port $Port -CssPath $CssPath -TargetMatch $TargetMatch | Out-Host
-Write-Host 'Patch done.'
+Write-Host "Patch done. Theme: $Theme"
