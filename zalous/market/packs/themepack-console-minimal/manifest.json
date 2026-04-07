@@ -1,0 +1,12 @@
+{
+  "id": "themepack.console-minimal",
+  "name": "Theme Pack Console Minimal",
+  "type": "theme-pack",
+  "version": "1.0.0",
+  "description": "Giao dien toi gian kieu console: mono, it mau, an avatar",
+  "assets": {
+    "css": "console-minimal.css",
+    "js": "console-minimal.js",
+    "html": "console-minimal.html"
+  }
+}

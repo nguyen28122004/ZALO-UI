@@ -1,0 +1,12 @@
+{
+  "id": "themepack.hello-kitty",
+  "name": "Theme Pack Hello Kitty",
+  "type": "theme-pack",
+  "version": "1.0.0",
+  "description": "Phong cach hong pastel Hello Kitty, mem va de thuong",
+  "assets": {
+    "css": "hello-kitty.css",
+    "js": "hello-kitty.js",
+    "html": "hello-kitty.html"
+  }
+}

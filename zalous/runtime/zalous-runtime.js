@@ -447,11 +447,11 @@
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
             <button id="zalous-install-theme" style="height:28px;padding:0 10px;border:1px solid #b8cfc1;border-radius:8px;background:#fff;cursor:pointer;font-size:12px">Install Theme</button>
             <button id="zalous-install-extension" style="height:28px;padding:0 10px;border:1px solid #b8cfc1;border-radius:8px;background:#fff;cursor:pointer;font-size:12px">Install Extension</button>
-            <button id="zalous-reload-extensions" style="height:28px;padding:0 10px;border:1px solid #b8cfc1;border-radius:8px;background:#e8f3ee;cursor:pointer;font-size:12px">Reload Extensions</button>
+            <button id="zalous-reload-page" style="height:28px;padding:0 10px;border:1px solid #b8cfc1;border-radius:8px;background:#e8f3ee;cursor:pointer;font-size:12px">Reload Trang</button>
             <input id="zalous-theme-file" type="file" accept=".css,text/css" style="display:none" />
             <input id="zalous-extension-file" type="file" accept=".js,text/javascript,application/javascript" style="display:none" />
           </div>
-          <div style="font-size:12px;color:#567664;margin-bottom:10px">Theme apply ngay khong can reload. Extension co the can bam Reload de load lai.</div>
+          <div style="font-size:12px;color:#567664;margin-bottom:10px">Theme apply ngay khong can reload. Neu can tai lai UI, bam Reload Trang.</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
               <div style="font-size:12px;font-weight:700;color:#2a513f;margin-bottom:6px">Themes</div>
@@ -481,8 +481,9 @@
       modal.querySelector('#zalous-install-extension').onclick = () => extInput.click();
       themeInput.onchange = () => { installFromInput(themeInput, 'theme'); };
       extInput.onchange = () => { installFromInput(extInput, 'extension'); };
-      modal.querySelector('#zalous-reload-extensions').onclick = () => {
-        state.reloadExtensions();
+      modal.querySelector('#zalous-reload-page').onclick = () => {
+        try { state.saveConfig(); } catch (_) {}
+        window.location.reload();
       };
 
       modal.querySelectorAll('[data-theme]').forEach((btn) => {

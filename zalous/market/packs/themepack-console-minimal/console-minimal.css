@@ -1,0 +1,197 @@
+:root[data-zalous-theme-pack="console-minimal"],
+:root[data-zalous-theme-pack="console-minimal"] .light {
+  --bg-default: #0a0f0d;
+  --surface-background: #0f1613;
+  --surface-background-subtle: #111a16;
+  --surface-alt: #0d1411;
+  --layer-background: #0f1613;
+  --layer-background-subtle: #111a16;
+  --layer-background-hover: #17211c;
+  --layer-background-selected: #1e2b24;
+  --layer-background-disabled: #161f1b;
+  --layer-background-inverse: #e7efe9;
+  --layer-background-leftmenu: #0c1310;
+  --layer-background-leftmenu-hover: #17211c;
+  --layer-background-leftmenu-selected: #1e2b24;
+  --layer-background-navbar-normal: #0c1310;
+  --layer-background-navbar-hover: #17211c;
+  --layer-background-navbar-selected: #1e2b24;
+  --layer-background-navbar-sublevel-normal: #0f1613;
+  --layer-background-navbar-sublevel-hover: #17211c;
+  --layer-background-navbar-sublevel-selected: #1e2b24;
+  --text-primary: #d6e4dc;
+  --text-secondary: #a1b6ab;
+  --text-placeholder: #7f958a;
+  --text-disabled: #657a70;
+  --text-on-color: #0a100d;
+  --text-information: #b4e1c4;
+  --text-navbar-sublevel-normal: #d1e0d7;
+  --text-navbar-sublevel-selected: #e8f4ed;
+  --icon-primary: #d4e1d9;
+  --icon-secondary: #9ab0a4;
+  --icon-disabled: #6f8379;
+  --icon-information: #b4e1c4;
+  --icon-navbar-normal: #cfe0d6;
+  --icon-navbar-sublevel-normal: #cfe0d6;
+  --icon-navbar-sublevel-selected: #e8f4ed;
+  --border: rgba(198, 220, 207, 0.18);
+  --border-subtle: rgba(198, 220, 207, 0.12);
+  --border-hover: rgba(198, 220, 207, 0.28);
+  --border-focused: #89c3a2;
+  --divider: rgba(198, 220, 207, 0.18);
+  --divider-subtle: rgba(198, 220, 207, 0.08);
+  --divider-bold: rgba(198, 220, 207, 0.26);
+  --button-primary-normal: #88c19f;
+  --button-primary-hover: #79b291;
+  --button-primary-pressed: #669d7e;
+  --button-primary-text: #0a100d;
+  --button-primary-tonal-normal: #1a2721;
+  --button-primary-tonal-hover: #203129;
+  --button-primary-tonal-pressed: #294036;
+  --button-primary-tonal-text: #cbe3d5;
+  --button-secondary-neutral-normal: #141e19;
+  --button-secondary-neutral-hover: #1a2721;
+  --button-secondary-neutral-pressed: #203129;
+  --button-secondary-neutral-text: #cfe1d6;
+  --button-tertiary-neutral-text: #cfe1d6;
+  --input-field-bg-filled: #111a16;
+  --input-field-bg-filled-hover: #16211c;
+  --input-field-bg-filled-pressed: #1a2721;
+  --input-field-bg-outline: #0f1613;
+  --input-field-bg-outline-hover: #17211c;
+  --input-field-bg-outline-pressed: #1d2c25;
+  --white-message: #111a16;
+  --white-message-selected: #1a2721;
+  --blue-message: #15201b;
+  --blue-message-selected: #1d2c25;
+  --white-quote: #0f1613;
+  --blue-quote: #17241e;
+  --progress-indicator: #88c19f;
+  --link: #a7dabd;
+  --cta-link: #a7dabd;
+  --cta-link-hover: #c2ead1;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] body,
+:root[data-zalous-theme-pack="console-minimal"] button,
+:root[data-zalous-theme-pack="console-minimal"] input,
+:root[data-zalous-theme-pack="console-minimal"] textarea,
+:root[data-zalous-theme-pack="console-minimal"] select {
+  font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", "Courier New", monospace !important;
+  letter-spacing: 0 !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] body,
+:root[data-zalous-theme-pack="console-minimal"] #app,
+:root[data-zalous-theme-pack="console-minimal"] #container {
+  background: var(--bg-default) !important;
+  color: var(--text-primary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] #main-tab,
+:root[data-zalous-theme-pack="console-minimal"] [id*="main-tab"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="main-tab"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="leftmenu"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="left-menu"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="leftbar"] {
+  background: var(--layer-background-leftmenu) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="sidebar"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="conversation"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="chat-list"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="chat-detail"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="right-panel"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="panel"] {
+  background: var(--layer-background) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] .msg-item,
+:root[data-zalous-theme-pack="console-minimal"] .conv-item,
+:root[data-zalous-theme-pack="console-minimal"] .message-content-wrapper {
+  background: transparent !important;
+  border-color: var(--border-subtle) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] .msg-item,
+:root[data-zalous-theme-pack="console-minimal"] .conv-item,
+:root[data-zalous-theme-pack="console-minimal"] .message-content-wrapper,
+:root[data-zalous-theme-pack="console-minimal"] input,
+:root[data-zalous-theme-pack="console-minimal"] textarea,
+:root[data-zalous-theme-pack="console-minimal"] button {
+  border-radius: 0 !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] input,
+:root[data-zalous-theme-pack="console-minimal"] textarea,
+:root[data-zalous-theme-pack="console-minimal"] select {
+  background: var(--input-field-bg-filled) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] button {
+  border: 1px solid var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="nav__tabs"] *,
+:root[data-zalous-theme-pack="console-minimal"] [class*="navbar"] * {
+  color: var(--icon-navbar-normal) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] a {
+  color: #a7dabd !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="avatar"],
+:root[data-zalous-theme-pack="console-minimal"] .avatar,
+:root[data-zalous-theme-pack="console-minimal"] .conv-item__avatar,
+:root[data-zalous-theme-pack="console-minimal"] .chat-item__avatar,
+:root[data-zalous-theme-pack="console-minimal"] .chat-detail__avatar,
+:root[data-zalous-theme-pack="console-minimal"] .user-avatar,
+:root[data-zalous-theme-pack="console-minimal"] .contact-avatar,
+:root[data-zalous-theme-pack="console-minimal"] [data-testid*="avatar"] {
+  display: none !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] .msg-item img,
+:root[data-zalous-theme-pack="console-minimal"] .message-content-wrapper img,
+:root[data-zalous-theme-pack="console-minimal"] [class*="media"] img,
+:root[data-zalous-theme-pack="console-minimal"] .msg-item video,
+:root[data-zalous-theme-pack="console-minimal"] .message-content-wrapper video {
+  display: initial !important;
+  visibility: visible !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] ::selection {
+  background: #294036;
+  color: #dff4e7;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] *::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] *::-webkit-scrollbar-thumb {
+  background: #21322a;
+  border: 1px solid #16211c;
+}
+
+#zalous-theme-pack-html .zalous-console-minimal-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(160, 205, 180, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(160, 205, 180, 0.028) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
