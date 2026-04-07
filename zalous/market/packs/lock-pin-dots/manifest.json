@@ -1,0 +1,8 @@
+﻿{
+  "id": "extension.lock-pin-dots",
+  "name": "Lock PIN Dots",
+  "type": "extension",
+  "entry": "lock-pin-dots.js",
+  "description": "Replace passcode field with 4-dot visual lock input",
+  "version": "1.0.0"
+}

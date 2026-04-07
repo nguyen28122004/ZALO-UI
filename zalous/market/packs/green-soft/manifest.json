@@ -1,0 +1,8 @@
+﻿{
+  "id": "theme.green-soft",
+  "name": "Green Soft",
+  "type": "theme",
+  "entry": "green-soft.css",
+  "description": "Pastel green theme for Zalo UI",
+  "version": "1.0.0"
+}

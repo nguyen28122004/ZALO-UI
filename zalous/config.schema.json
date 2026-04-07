@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ZalousConfig",
+  "type": "object",
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "activeTheme": { "type": "string" },
+    "enabledExtensions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "patchEnabled": { "type": "boolean" },
+    "appAsarPath": { "type": "string" },
+    "ui": {
+      "type": "object",
+      "properties": {
+        "controls": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "market": {
+      "type": "object",
+      "properties": {
+        "source": { "type": "string" },
+        "catalogUrl": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "required": ["version", "enabledExtensions", "patchEnabled"],
+  "additionalProperties": true
+}

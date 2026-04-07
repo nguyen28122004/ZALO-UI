@@ -1,69 +1,114 @@
-﻿# Zalo Runtime UI Mod (CDP + Multi-Theme)
+# hara-zalous (zalous)
 
-Patch giao dien Zalo runtime qua Chrome DevTools Protocol (CDP), khong sua file goc cua app.
+`hara-zalous` (goi tat `zalous`) la bo patch engine cho Zalo Desktop theo huong giong Spicetify:
+- Patch mot lan vao `app.asar` de cam runtime bootstrap.
+- Theme/extension duoc quan ly rieng o `%APPDATA%\Zalous`.
+- Khi mo Zalo, runtime tu nap config + theme + extension de apply.
+- Co local market de cai pack, san sang mo rong online market sau nay.
 
-## 1) Dieu kien tien quyet
+## 1) Cau truc tong quan
 
-- CDP da mo tren `127.0.0.1:9222`.
-- Kiem tra nhanh:
+- `tools/zalous-cli.js`: CLI chinh (`init`, `apply`, `market-install`, ...)
+- `zalous/runtime/zalous-runtime.js`: runtime bootstrap inject vao `index.html` trong `app.asar`
+- `zalous/market/catalog.local.json`: catalog local
+- `zalous/market/packs/*`: cac pack mau (theme/extension)
 
-```powershell
-Invoke-WebRequest -UseBasicParsing http://127.0.0.1:9222/json/version | Select-Object -ExpandProperty Content
-Invoke-WebRequest -UseBasicParsing http://127.0.0.1:9222/json/list | Select-Object -ExpandProperty Content
-```
+Du lieu runtime tren may:
+- `%APPDATA%\Zalous\config.json`
+- `%APPDATA%\Zalous\themes\*.css`
+- `%APPDATA%\Zalous\extensions\*.js`
+- `%APPDATA%\Zalous\backups\app.asar.*.bak`
 
-Luu y: README nay KHONG huong dan kill/mo Zalo voi debug argument.
+## 2) Quick Start
 
-## 2) Kien truc theme
-
-- `themes/zalo-common.css`: phan rule chung (layout, selector, behavior), luon duoc apply khi theme ON.
-- `themes/zalo-<color>.css`: token mau theo theme.
-
-Theme hien co:
-- `green`
-- `pink`
-- `blue`
-- `purple`
-- `orange`
-
-## 3) Patch/Clear bang script chinh
-
-Apply:
+### 2.0 Cai dependency
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\zalo-green.css -TargetMatch Zalo
+npm install
 ```
 
-Clear:
+### 2.1 Khoi tao
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action clear -Port 9222 -TargetMatch Zalo
+node .\tools\zalous-cli.js init
 ```
 
-## 4) Patch nhanh theo ten theme
+### 2.2 Tu dong tim app.asar
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme green
-powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme pink
-powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme blue
-powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme purple
-powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme orange
+node .\tools\zalous-cli.js detect
 ```
 
-## 5) In-app controls sau khi apply
+### 2.3 Cai pack local market (vi du)
 
-Sau khi patch, left nav co cum controls:
-- `ON/OFF`: bat/tat patch (`common + theme color`).
-- nut theme: cycle theme theo thu tu `green -> pink -> blue -> purple -> orange`.
+```powershell
+node .\tools\zalous-cli.js market-list
+node .\tools\zalous-cli.js market-install --id theme.green-soft
+node .\tools\zalous-cli.js market-install --id extension.lock-pin-dots
+```
 
-## 6) Cau truc file
+### 2.4 Patch vao Zalo
 
-- `tools/zalo-cdp-patch.ps1`: patch/clear qua CDP + inject controls
-- `tools/patch-zalo-now.ps1`: wrapper patch nhanh theo `-Theme`
-- `themes/zalo-common.css`: css chung
-- `themes/zalo-green.css`: token mau green pastel
-- `themes/zalo-pink.css`: token mau pink pastel
-- `themes/zalo-blue.css`: token mau blue pastel
-- `themes/zalo-purple.css`: token mau purple pastel
-- `themes/zalo-orange.css`: token mau orange pastel
-- `docs/ZALO_UI_MOD_GUIDE.md`: playbook selector/theme workflow
+```powershell
+node .\tools\zalous-cli.js apply
+```
+
+Mo lai Zalo de runtime bootstrap hoat dong.
+
+## 3) Cac lenh quan trong
+
+```powershell
+# Trang thai
+node .\tools\zalous-cli.js status
+
+# Theme
+node .\tools\zalous-cli.js list-themes
+node .\tools\zalous-cli.js set-theme --theme zalo-green.css
+node .\tools\zalous-cli.js import-theme --file C:\path\custom.css --name custom.css
+
+# Extension
+node .\tools\zalous-cli.js list-extensions
+node .\tools\zalous-cli.js enable-extension --name lock-pin-dots.js
+node .\tools\zalous-cli.js disable-extension --name lock-pin-dots.js
+node .\tools\zalous-cli.js import-extension --file C:\path\ext.js --name ext.js
+
+# Restore backup gan nhat
+node .\tools\zalous-cli.js restore
+```
+
+## 4) Build `.exe` CLI
+
+```powershell
+npm run build:exe
+```
+
+Output:
+- `dist/zalous.exe`
+
+## 5) Runtime behavior
+
+Khi Zalo mo:
+1. `zalous-runtime.js` doc payload duoc inject trong `index.html`.
+2. Thu nap external config/files tu `%APPDATA%\Zalous` (neu renderer co quyen Node `require`).
+3. Merge `embedded + external`.
+4. Apply theme dang active.
+5. Run danh sach extensions duoc enable.
+6. Render control nho trong nav (ON/OFF + doi theme).
+
+## 6) Local Market va mo rong Online Market
+
+Hien tai:
+- `catalog.local.json` quan ly pack local.
+- `market-install` copy file tu `zalous/market/packs/*` vao `%APPDATA%\Zalous`.
+
+Roadmap online market:
+1. Them schema catalog URL (HTTPS, signed).
+2. Download pack zip/js/css + verify checksum/signature.
+3. Store metadata version + dependency.
+4. Add rollback theo tung pack.
+
+## 7) Tai lieu chi tiet
+
+- [Architecture](./docs/zalous/ARCHITECTURE.md)
+- [Operational Flow](./docs/zalous/FLOW.md)
+- [CLI Reference](./docs/zalous/CLI.md)

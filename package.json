@@ -1,0 +1,23 @@
+{
+  "name": "hara-zalous",
+  "version": "0.2.0",
+  "description": "Spicetify-like patch CLI for Zalo Desktop",
+  "main": "tools/zalous-cli.js",
+  "bin": {
+    "zalous": "tools/zalous-cli.js"
+  },
+  "scripts": {
+    "zalous": "node tools/zalous-cli.js",
+    "build:exe": "pkg . --targets node18-win-x64 --output dist/zalous.exe"
+  },
+  "dependencies": {
+    "@electron/asar": "^3.2.8"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

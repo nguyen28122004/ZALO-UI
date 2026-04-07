@@ -1,0 +1,20 @@
+﻿{
+  "version": 1,
+  "updatedAt": "2026-04-07",
+  "packs": [
+    {
+      "id": "theme.green-soft",
+      "name": "Green Soft",
+      "type": "theme",
+      "description": "Pastel green base theme",
+      "path": "packs/green-soft"
+    },
+    {
+      "id": "extension.lock-pin-dots",
+      "name": "Lock PIN Dots",
+      "type": "extension",
+      "description": "4-dot passcode enhancer",
+      "path": "packs/lock-pin-dots"
+    }
+  ]
+}
