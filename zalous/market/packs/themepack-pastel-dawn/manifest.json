@@ -1,0 +1,12 @@
+{
+  "id": "themepack.pastel-dawn",
+  "name": "Theme Pack Pastel Dawn",
+  "type": "theme-pack",
+  "version": "1.0.0",
+  "description": "Theme pack nang cao: ket hop CSS + JS + HTML",
+  "assets": {
+    "css": "pastel-dawn.css",
+    "js": "pastel-dawn.js",
+    "html": "pastel-dawn.html"
+  }
+}

@@ -6,42 +6,85 @@
 1. `id`
 2. `data-*`, `aria-*`
 3. `role`
-4. `class*="..."` (chỉ khi cần)
+4. `class*="..."` (chỉ dùng khi không có lựa chọn ổn định hơn)
 
-## 2) Cấu trúc theme hiện tại
+## 2) Loại pack giao diện
 
-Theme không còn quản lý ở thư mục `themes/` repo.
+### `theme`
+- Chỉ có CSS.
+- Manifest tối thiểu:
 
-Nguồn chuẩn hiện tại:
-- `zalous/market/packs/<theme-id>/<theme-id>.css`
-- manifest tại `zalous/market/packs/<theme-id>/manifest.json`
+```json
+{
+  "id": "theme.xxx",
+  "type": "theme",
+  "entry": "xxx.css"
+}
+```
 
-Khi `apply`, CLI tự sync pack theme vào `%APPDATA%\Zalous\themes`.
+### `theme-pack`
+- Nâng cao hơn `theme`.
+- Có thể dùng đồng thời CSS, JS và HTML.
+- Manifest mẫu:
 
-## 3) Quy trình chỉnh theme
+```json
+{
+  "id": "themepack.xxx",
+  "type": "theme-pack",
+  "assets": {
+    "css": "theme.css",
+    "js": "theme.js",
+    "html": "theme.html"
+  }
+}
+```
 
-1. Sửa file theme trong `zalous/market/packs/...`.
+Ghi chú runtime:
+- CSS được inject vào style chính.
+- HTML được mount vào host `#zalous-theme-pack-html`.
+- JS được execute khi apply pack; có thể `return function cleanup(){...}` để dọn khi đổi theme.
+
+## 3) Quy trình chỉnh theme/theme-pack
+
+1. Sửa trong `zalous/market/packs/<pack-id>/`.
 2. Chạy:
+
 ```powershell
+node .\tools\zalous-cli.js init
 node .\tools\zalous-cli.js apply
 ```
+
 3. Restart Zalo.
 
 ## 4) Quy trình chỉnh extension
 
 1. Sửa extension trong `zalous/market/packs/<ext-id>/<entry>.js`.
-2. `apply` để sync + inject lại runtime payload.
-3. Restart Zalo.
+2. Nếu extension cần config, dùng API runtime `zalous.registerConfig(...)`, `zalous.getConfig(...)`, `zalous.setConfig(...)`.
+3. Schema config hiện hỗ trợ tối thiểu:
+   - `select`
+   - `checkbox`
+4. Nút `Config` trong Market Manager sẽ render theo schema để lưu vào `extensionConfigs`.
+5. `apply` để sync + inject payload/runtime mới.
+6. Restart Zalo.
+
+## 4.1) Blur extension (ví dụ)
+
+`extension.blur-elements` có 2 nhóm cấu hình độc lập:
+- `mode`: blur nhóm selector cũ (`content`/`name`/`all`/`off`)
+- `blurMessageWrapper`: blur riêng `.message-content-wrapper`
+
+Hai nhóm này có thể bật đồng thời.
 
 ## 5) Debug nhanh
 
 - DevTools endpoint: `http://localhost:9222/`
-- Nếu UI sai màu/tab:
-  - kiểm tra token trong theme đang active (`%APPDATA%\Zalous\config.json`)
-  - kiểm tra selector override trong theme pack
+- Nếu lỗi giao diện:
+  - kiểm tra `activeTheme` trong `%APPDATA%\Zalous\config.json`
+  - kiểm tra file trong `%APPDATA%\Zalous\themes` hoặc `%APPDATA%\Zalous\theme-packs`
+  - kiểm tra extension nào đang bật trong `enabledExtensions`
 
 ## 6) Lưu ý vận hành
 
 - `apply` luôn patch từ clean base theo version Zalo.
-- Config runtime ưu tiên external config, fallback localStorage.
-- Tránh chạy script patch cũ ngoài `zalous-cli.js` nếu không cần.
+- Runtime ưu tiên config external; fallback `localStorage`.
+- Không dùng script patch cũ ngoài `tools/zalous-cli.js` nếu không bắt buộc.

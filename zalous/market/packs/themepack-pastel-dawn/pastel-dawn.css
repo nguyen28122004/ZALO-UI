@@ -1,0 +1,30 @@
+:root, :root .light {
+  --layer-background-leftmenu: #9cbce5;
+  --layer-background-leftmenu-hover: #86aad8;
+  --layer-background-leftmenu-selected: #7399ca;
+  --layer-background-navbar-normal: #9cbce5;
+  --layer-background-navbar-hover: rgba(29, 62, 100, 0.18);
+  --layer-background-navbar-selected: rgba(29, 62, 100, 0.28);
+  --layer-background-selected: #e7f0fb;
+  --button-primary-normal: #7da3d6;
+  --button-primary-hover: #6a91c6;
+  --button-primary-pressed: #5b83b8;
+  --text-information: #476b9e;
+  --icon-information: #476b9e;
+  --border-focused: #6a91c6;
+  --progress-indicator: #6a91c6;
+}
+
+#zalous-theme-pack-html .zalous-pack-shell {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#zalous-theme-pack-html .zalous-pack-wash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 10% 0%, rgba(255, 232, 214, 0.16), transparent 38%),
+    radial-gradient(circle at 100% 12%, rgba(192, 233, 245, 0.18), transparent 40%);
+}

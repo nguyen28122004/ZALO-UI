@@ -24,6 +24,7 @@
 
   const css = loadCss();
   if (!css) return;
+  const forceHideCss = '\n.app-lock__main__input.disableBtn{display:none !important;visibility:hidden !important;opacity:0 !important;pointer-events:none !important;}';
 
   let tag = document.getElementById(STYLE_ID);
   if (!tag) {
@@ -31,5 +32,5 @@
     tag.id = STYLE_ID;
     document.head.appendChild(tag);
   }
-  tag.textContent = css;
+  tag.textContent = css + forceHideCss;
 })();

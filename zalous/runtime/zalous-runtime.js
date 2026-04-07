@@ -4,6 +4,7 @@
   const CTRL_ID = 'zalous-controls';
   const MARKET_MODAL_ID = 'zalous-market-modal';
   const MAIN_TAB_FIX_ID = 'zalous-main-tab-fix';
+  const THEME_PACK_HTML_ID = 'zalous-theme-pack-html';
   const LOCAL_CONFIG_KEY = 'zalous.config.v1';
 
   function log(...args) {
@@ -16,6 +17,7 @@
       meta: embedded.meta || {},
       config: embedded.config || {},
       themes: embedded.themes || {},
+      themePacks: embedded.themePacks || {},
       extensions: embedded.extensions || {}
     };
   }
@@ -55,6 +57,7 @@
 
       const config = JSON.parse(fs.readFileSync(cfgPath, 'utf8').replace(/^\uFEFF/, ''));
       const themes = {};
+      const themePacks = {};
       const extensions = {};
 
       const themeDir = path.join(root, 'themes');
@@ -73,7 +76,37 @@
         }
       }
 
-      return { config, themes, extensions, source: 'external', root, cfgPath };
+      const packDir = path.join(root, 'theme-packs');
+      if (fs.existsSync(packDir)) {
+        for (const ent of fs.readdirSync(packDir, { withFileTypes: true })) {
+          if (!ent.isDirectory()) continue;
+          const dir = path.join(packDir, ent.name);
+          const manifestPath = path.join(dir, 'manifest.json');
+          if (!fs.existsSync(manifestPath)) continue;
+          let manifest = null;
+          try {
+            manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8').replace(/^\uFEFF/, ''));
+          } catch (_) {
+            manifest = null;
+          }
+          if (!manifest || manifest.type !== 'theme-pack') continue;
+
+          const assets = manifest.assets || {};
+          const cssPath = assets.css ? path.join(dir, assets.css) : (manifest.entry ? path.join(dir, manifest.entry) : '');
+          const jsPath = assets.js ? path.join(dir, assets.js) : '';
+          const htmlPath = assets.html ? path.join(dir, assets.html) : '';
+          const id = String(manifest.id || ent.name);
+          themePacks[`pack:${id}`] = {
+            id,
+            name: manifest.name || id,
+            css: cssPath && fs.existsSync(cssPath) ? fs.readFileSync(cssPath, 'utf8') : '',
+            js: jsPath && fs.existsSync(jsPath) ? fs.readFileSync(jsPath, 'utf8') : '',
+            html: htmlPath && fs.existsSync(htmlPath) ? fs.readFileSync(htmlPath, 'utf8') : ''
+          };
+        }
+      }
+
+      return { config, themes, themePacks, extensions, source: 'external', root, cfgPath };
     } catch (err) {
       log('external load failed', err && err.message ? err.message : err);
       return null;
@@ -86,13 +119,15 @@
       activeTheme: null,
       enabledExtensions: [],
       patchEnabled: false,
-      ui: { controls: true }
+      ui: { controls: true },
+      extensionConfigs: {}
     }, cfg || {});
 
     if (!Array.isArray(next.enabledExtensions)) next.enabledExtensions = [];
     if (!next.ui || typeof next.ui !== 'object') next.ui = { controls: true };
     if (typeof next.ui.controls !== 'boolean') next.ui.controls = true;
     if (typeof next.patchEnabled !== 'boolean') next.patchEnabled = false;
+    if (!next.extensionConfigs || typeof next.extensionConfigs !== 'object') next.extensionConfigs = {};
     return next;
   }
 
@@ -109,15 +144,73 @@
   function clearTheme() {
     const tag = document.getElementById(STYLE_ID);
     if (tag) tag.textContent = '';
+    clearThemePackArtifacts();
   }
 
-  function applyTheme(themeName, themes) {
-    const keys = Object.keys(themes || {});
-    if (!keys.length) return { ok: false, reason: 'no_theme' };
-    const picked = themeName && themes[themeName] ? themeName : keys[0];
-    const css = themes[picked] || '';
+  function getAllThemeKeys(state) {
+    const themeKeys = Object.keys((state && state.themes) || {});
+    const packKeys = Object.keys((state && state.themePacks) || {});
+    return themeKeys.concat(packKeys);
+  }
+
+  function clearThemePackArtifacts() {
+    try {
+      if (typeof window.__zalousThemePackCleanup === 'function') window.__zalousThemePackCleanup();
+    } catch (err) {
+      log('theme-pack cleanup failed', err && err.message ? err.message : err);
+    }
+    window.__zalousThemePackCleanup = null;
+    const root = document.getElementById(THEME_PACK_HTML_ID);
+    if (root && root.parentElement) root.remove();
+  }
+
+  function applyTheme(themeName, state) {
+    const allKeys = getAllThemeKeys(state);
+    if (!allKeys.length) return { ok: false, reason: 'no_theme' };
+    const hasTheme = !!(state.themes && state.themes[themeName]);
+    const hasPack = !!(state.themePacks && state.themePacks[themeName]);
+    const picked = (themeName && (hasTheme || hasPack)) ? themeName : allKeys[0];
+
+    if (state.themePacks && state.themePacks[picked]) {
+      const pack = state.themePacks[picked] || {};
+      ensureStyleTag().textContent = pack.css || '';
+      clearThemePackArtifacts();
+
+      if (pack.html) {
+        const host = document.createElement('div');
+        host.id = THEME_PACK_HTML_ID;
+        host.style.display = 'contents';
+        host.innerHTML = pack.html;
+        (document.body || document.documentElement).appendChild(host);
+      }
+
+      if (pack.js) {
+        try {
+          const fn = new Function(
+            'window',
+            'document',
+            'console',
+            'themePack',
+            `${pack.js}\n//# sourceURL=zalous-theme-pack-${String(pack.id || picked).replace(/[^a-zA-Z0-9_.-]/g, '_')}`
+          );
+          const maybeCleanup = fn(window, document, console, {
+            id: pack.id || picked,
+            key: picked,
+            hostId: THEME_PACK_HTML_ID
+          });
+          if (typeof maybeCleanup === 'function') window.__zalousThemePackCleanup = maybeCleanup;
+        } catch (err) {
+          log('theme-pack js failed', err && err.message ? err.message : err);
+        }
+      }
+
+      return { ok: true, name: picked, length: (pack.css || '').length, type: 'theme-pack' };
+    }
+
+    const css = (state.themes && state.themes[picked]) || '';
+    clearThemePackArtifacts();
     ensureStyleTag().textContent = css;
-    return { ok: true, name: picked, length: css.length };
+    return { ok: true, name: picked, length: css.length, type: 'theme' };
   }
 
   function ensureMainTabFix() {
@@ -167,17 +260,17 @@
     });
   }
 
-  function applyThemeHard(themeName, themes) {
+  function applyThemeHard(themeName, state) {
     clearTheme();
-    const first = applyTheme(themeName, themes);
+    const first = applyTheme(themeName, state);
     ensureMainTabFix();
-    requestAnimationFrame(() => applyTheme(themeName, themes));
-    setTimeout(() => applyTheme(themeName, themes), 40);
+    requestAnimationFrame(() => applyTheme(themeName, state));
+    setTimeout(() => applyTheme(themeName, state), 40);
     forceThemeRefresh();
     return first;
   }
 
-  function runExtensions(enabledExtensions, extensionMap) {
+  function runExtensions(enabledExtensions, extensionMap, hooks) {
     const loaded = [];
     const failed = [];
     const names = Array.isArray(enabledExtensions) ? enabledExtensions : [];
@@ -189,8 +282,22 @@
         continue;
       }
       try {
-        const fn = new Function('window', 'document', 'console', code + '\n//# sourceURL=zalous-extension-' + extName.replace(/[^a-zA-Z0-9_.-]/g, '_'));
-        fn(window, document, console);
+        const api = {
+          name: extName,
+          getConfig: (fallbackValue) => {
+            if (hooks && typeof hooks.getConfig === 'function') return hooks.getConfig(extName, fallbackValue);
+            return fallbackValue || {};
+          },
+          setConfig: (nextValue) => {
+            if (hooks && typeof hooks.setConfig === 'function') return hooks.setConfig(extName, nextValue);
+            return false;
+          },
+          registerConfig: (definition) => {
+            if (hooks && typeof hooks.registerConfig === 'function') hooks.registerConfig(extName, definition);
+          }
+        };
+        const fn = new Function('window', 'document', 'console', 'zalous', code + '\n//# sourceURL=zalous-extension-' + extName.replace(/[^a-zA-Z0-9_.-]/g, '_'));
+        fn(window, document, console, api);
         loaded.push(extName);
       } catch (err) {
         failed.push({ name: extName, reason: err && err.message ? err.message : String(err) });
@@ -288,7 +395,7 @@
           state.themes[name] = raw;
           if (state.writeAsset) state.writeAsset('themes', name, raw);
           if (!state.config.activeTheme) state.config.activeTheme = name;
-          if (state.config.patchEnabled) applyTheme(state.config.activeTheme, state.themes);
+          if (state.config.patchEnabled) applyTheme(state.config.activeTheme, state);
         } else {
           state.extensions[name] = raw;
           if (state.writeAsset) state.writeAsset('extensions', name, raw);
@@ -303,23 +410,33 @@
     }
 
     function render() {
-      const themeRows = Object.keys(state.themes).sort().map((name) => {
+      const themeRows = getAllThemeKeys(state).sort().map((name) => {
         const active = state.config.activeTheme === name;
+        const isPack = !!(state.themePacks && state.themePacks[name]);
+        const label = isPack
+          ? ((state.themePacks[name] && state.themePacks[name].name) || name.replace(/^pack:/, ''))
+          : name.replace(/\.css$/i, '');
         return `
           <button data-theme="${name}" style="display:flex;align-items:center;justify-content:space-between;width:100%;border:1px solid #c8d8d0;background:${active ? '#dff0e8' : '#ffffff'};border-radius:8px;padding:8px 10px;margin:0 0 6px 0;cursor:pointer">
-            <span style="font-size:12px;color:#234536">${name.replace(/\.css$/i, '')}</span>
-            <span style="font-size:11px;color:${active ? '#14532d' : '#72877b'}">${active ? 'active' : 'set'}</span>
+            <span style="font-size:12px;color:#234536">${label}</span>
+            <span style="font-size:11px;color:${active ? '#14532d' : '#72877b'}">${active ? 'active' : (isPack ? 'pack' : 'set')}</span>
           </button>
         `;
       }).join('');
 
       const extSet = new Set(state.config.enabledExtensions || []);
-      const extRows = Object.keys(state.extensions).sort().map((name) => `
-        <label style="display:flex;align-items:center;justify-content:space-between;border:1px solid #c8d8d0;background:#fff;border-radius:8px;padding:8px 10px;margin:0 0 6px 0;cursor:pointer">
-          <span style="font-size:12px;color:#234536">${name.replace(/\.js$/i, '')}</span>
-          <input type="checkbox" data-ext="${name}" ${extSet.has(name) ? 'checked' : ''} />
-        </label>
-      `).join('');
+      const extRows = Object.keys(state.extensions).sort().map((name) => {
+        const hasCfg = !!state.extensionConfigDefs[name];
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;border:1px solid #c8d8d0;background:#fff;border-radius:8px;padding:8px 10px;margin:0 0 6px 0">
+            <span style="font-size:12px;color:#234536">${name.replace(/\.js$/i, '')}</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button data-ext-config="${name}" ${hasCfg ? '' : 'disabled'} style="height:24px;padding:0 8px;border:1px solid #b8cfc1;border-radius:6px;background:${hasCfg ? '#eef4f1' : '#f3f6f4'};cursor:${hasCfg ? 'pointer' : 'not-allowed'};font-size:11px;color:${hasCfg ? '#224536' : '#8aa095'}">Config</button>
+              <input type="checkbox" data-ext="${name}" ${extSet.has(name) ? 'checked' : ''} />
+            </div>
+          </div>
+        `;
+      }).join('');
 
       modal.innerHTML = `
         <div id="zalous-market-card" style="width:min(560px,92vw);max-height:78vh;overflow:auto;background:#f4faf7;border-radius:14px;border:1px solid #b9cec3;box-shadow:0 20px 50px rgba(0,0,0,.25);padding:14px;box-sizing:border-box">
@@ -372,7 +489,7 @@
         btn.onclick = () => {
           const name = btn.getAttribute('data-theme');
           state.config.activeTheme = name;
-          if (state.config.patchEnabled) applyThemeHard(name, state.themes);
+          if (state.config.patchEnabled) applyThemeHard(name, state);
           state.saveConfig();
           render();
           refreshControls();
@@ -385,13 +502,100 @@
           const set = new Set(state.config.enabledExtensions || []);
           if (ck.checked) {
             set.add(name);
-            runExtensions([name], state.extensions);
           } else {
             set.delete(name);
           }
           state.config.enabledExtensions = [...set];
           state.saveConfig();
+          state.reloadExtensions();
+          render();
           refreshControls();
+        };
+      });
+
+      modal.querySelectorAll('[data-ext-config]').forEach((btn) => {
+        btn.onclick = () => {
+          const name = btn.getAttribute('data-ext-config');
+          const def = state.extensionConfigDefs[name];
+          if (!def) return;
+
+          const existing = state.config.extensionConfigs[name] || {};
+          const fields = Array.isArray(def.fields) ? def.fields : [];
+          if (!fields.length) return;
+
+          const escapeAttr = (v) => String(v || '').replace(/"/g, '&quot;');
+          const rowHtml = fields.map((field) => {
+            const key = String(field.key || '').trim();
+            if (!key) return '';
+
+            if (field.type === 'checkbox') {
+              const checked = Object.prototype.hasOwnProperty.call(existing, key)
+                ? !!existing[key]
+                : !!field.default;
+              return `
+                <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#234536;margin-bottom:8px">
+                  <input data-cfg-key="${escapeAttr(key)}" data-cfg-type="checkbox" type="checkbox" ${checked ? 'checked' : ''} />
+                  <span>${field.label || key}</span>
+                </label>
+              `;
+            }
+
+            if (field.type === 'select' && Array.isArray(field.options) && field.options.length) {
+              const current = Object.prototype.hasOwnProperty.call(existing, key)
+                ? existing[key]
+                : (field.default || field.options[0].value);
+              const optionsHtml = field.options
+                .map((op) => `<option value="${escapeAttr(op.value)}" ${String(op.value) === String(current) ? 'selected' : ''}>${op.label}</option>`)
+                .join('');
+              return `
+                <label style="display:block;font-size:12px;color:#234536;margin-bottom:6px">${field.label || key}</label>
+                <select data-cfg-key="${escapeAttr(key)}" data-cfg-type="select" style="width:100%;height:32px;border:1px solid #b8cfc1;border-radius:8px;padding:0 8px;background:#fff;margin-bottom:8px">${optionsHtml}</select>
+              `;
+            }
+
+            return '';
+          }).join('');
+          if (!rowHtml.trim()) return;
+
+          let cfg = document.getElementById('zalous-ext-config-modal');
+          if (!cfg) {
+            cfg = document.createElement('div');
+            cfg.id = 'zalous-ext-config-modal';
+            cfg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:2147483647';
+            document.body.appendChild(cfg);
+          }
+          cfg.innerHTML = `
+            <div style="width:min(420px,92vw);background:#f7fbf9;border:1px solid #b9cec3;border-radius:12px;padding:12px;box-sizing:border-box">
+              <div style="font-size:14px;font-weight:700;color:#1f4734;margin-bottom:8px">${def.title || name}</div>
+              <div style="font-size:12px;color:#4d6c5d;margin-bottom:10px">${def.description || ''}</div>
+              <div id="zalous-ext-config-body">${rowHtml}</div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+                <button id="zalous-ext-config-cancel" style="height:30px;padding:0 10px;border:1px solid #b8cfc1;border-radius:8px;background:#fff">Cancel</button>
+                <button id="zalous-ext-config-save" style="height:30px;padding:0 10px;border:1px solid #a7c6b7;border-radius:8px;background:#e8f3ee">Save</button>
+              </div>
+            </div>
+          `;
+          const closeCfg = () => { if (cfg && cfg.parentElement) cfg.remove(); };
+          cfg.querySelector('#zalous-ext-config-cancel').onclick = closeCfg;
+          cfg.onclick = (e) => { if (e.target === cfg) closeCfg(); };
+          cfg.querySelector('#zalous-ext-config-save').onclick = () => {
+            if (!state.config.extensionConfigs[name] || typeof state.config.extensionConfigs[name] !== 'object') state.config.extensionConfigs[name] = {};
+            cfg.querySelectorAll('[data-cfg-key]').forEach((node) => {
+              const key = node.getAttribute('data-cfg-key');
+              const type = node.getAttribute('data-cfg-type');
+              if (!key) return;
+              if (type === 'checkbox') {
+                state.config.extensionConfigs[name][key] = !!node.checked;
+              } else {
+                state.config.extensionConfigs[name][key] = node.value;
+              }
+            });
+            state.saveConfig();
+            state.reloadExtensions();
+            render();
+            refreshControls();
+            closeCfg();
+          };
         };
       });
     }
@@ -507,10 +711,14 @@
       tgl.style.background = state.config.patchEnabled ? '#2f7a49' : '#dbe6df';
       tgl.style.color = state.config.patchEnabled ? '#fff' : '#2b3f34';
 
-      const keys = Object.keys(state.themes);
+      const keys = getAllThemeKeys(state);
       const hasActive = !!(state.config.activeTheme && keys.includes(state.config.activeTheme));
       const idx = hasActive ? keys.indexOf(state.config.activeTheme) : -1;
-      const label = hasActive ? (keys[idx] || '--').replace(/\.css$/i, '').slice(0, 2).toUpperCase() : '--';
+      const activeKey = hasActive ? (keys[idx] || '--') : '--';
+      const rawLabel = (state.themePacks && state.themePacks[activeKey] && state.themePacks[activeKey].name)
+        ? state.themePacks[activeKey].name
+        : String(activeKey).replace(/\.css$/i, '').replace(/^pack:/, '');
+      const label = hasActive ? rawLabel.slice(0, 2).toUpperCase() : '--';
       thm.textContent = label;
       thm.style.background = '#eef4f1';
       thm.style.color = '#254437';
@@ -528,7 +736,7 @@
       e.preventDefault();
       e.stopPropagation();
       state.config.patchEnabled = !state.config.patchEnabled;
-      if (state.config.patchEnabled) applyThemeHard(state.config.activeTheme, state.themes);
+      if (state.config.patchEnabled) applyThemeHard(state.config.activeTheme, state);
       else clearTheme();
       state.saveConfig();
       refresh();
@@ -537,12 +745,12 @@
     thm.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const keys = Object.keys(state.themes);
+      const keys = getAllThemeKeys(state);
       if (!keys.length) return;
       const idx = Math.max(0, keys.indexOf(state.config.activeTheme || keys[0]));
       const next = keys[(idx + 1) % keys.length];
       state.config.activeTheme = next;
-      if (state.config.patchEnabled) applyThemeHard(next, state.themes);
+      if (state.config.patchEnabled) applyThemeHard(next, state);
       state.saveConfig();
       refresh();
     };
@@ -573,19 +781,22 @@
 
     const config = normalizeConfig((external && external.config) || localConfig || embedded.config || {});
     const themes = Object.assign({}, embedded.themes || {}, (external && external.themes) || {});
+    const themePacks = Object.assign({}, embedded.themePacks || {}, (external && external.themePacks) || {});
     const extensions = Object.assign({}, embedded.extensions || {}, (external && external.extensions) || {});
 
     if (config.patchEnabled && !config.activeTheme) {
-      const names = Object.keys(themes);
+      const names = Object.keys(themes).concat(Object.keys(themePacks));
       config.activeTheme = names.length ? names[0] : null;
     }
-    if (config.patchEnabled) applyThemeHard(config.activeTheme, themes);
+    if (config.patchEnabled) applyThemeHard(config.activeTheme, { themes, themePacks });
     else clearTheme();
 
     const state = {
       config,
       themes,
+      themePacks,
       extensions,
+      extensionConfigDefs: {},
       saveConfig: () => false,
       writeAsset: null,
       reloadExtensions: () => ({ loaded: [], failed: [] })
@@ -595,8 +806,9 @@
 
     // Keep runtime behavior strictly aligned with persisted Zalous config/assets.
     let configChanged = false;
-    const themeNames = Object.keys(state.themes);
+    const themeNames = getAllThemeKeys(state);
     const nextTheme = (state.config.activeTheme && state.themes[state.config.activeTheme])
+      || (state.config.activeTheme && state.themePacks[state.config.activeTheme])
       ? state.config.activeTheme
       : (themeNames[0] || null);
     if (state.config.activeTheme !== nextTheme) {
@@ -611,8 +823,24 @@
     }
     if (configChanged) state.saveConfig();
 
-    state.reloadExtensions = () => runExtensions(state.config.enabledExtensions, state.extensions);
-    const extResult = runExtensions(state.config.enabledExtensions, state.extensions);
+    const extensionHooks = {
+      getConfig: (name, fallbackValue) => {
+        const value = state.config.extensionConfigs && state.config.extensionConfigs[name];
+        if (value && typeof value === 'object') return value;
+        return fallbackValue || {};
+      },
+      setConfig: (name, nextValue) => {
+        if (!state.config.extensionConfigs || typeof state.config.extensionConfigs !== 'object') state.config.extensionConfigs = {};
+        state.config.extensionConfigs[name] = Object.assign({}, state.config.extensionConfigs[name] || {}, nextValue || {});
+        state.saveConfig();
+        return true;
+      },
+      registerConfig: (name, definition) => {
+        state.extensionConfigDefs[name] = definition || null;
+      }
+    };
+    state.reloadExtensions = () => runExtensions(state.config.enabledExtensions, state.extensions, extensionHooks);
+    const extResult = runExtensions(state.config.enabledExtensions, state.extensions, extensionHooks);
     mountControls(state);
 
     window.zalous = {
@@ -621,20 +849,22 @@
       getState: () => ({
         config: JSON.parse(JSON.stringify(state.config)),
         themes: Object.keys(state.themes),
-        extensions: Object.keys(state.extensions)
+        themePacks: Object.keys(state.themePacks || {}),
+        extensions: Object.keys(state.extensions),
+        extensionConfigurable: Object.keys(state.extensionConfigDefs || {})
       }),
-      apply: () => applyTheme(state.config.activeTheme, state.themes),
+      apply: () => applyTheme(state.config.activeTheme, state),
       clear: clearTheme,
       setTheme: (name) => {
-        if (!state.themes[name]) return false;
+        if (!state.themes[name] && !(state.themePacks && state.themePacks[name])) return false;
         state.config.activeTheme = name;
-        if (state.config.patchEnabled) applyThemeHard(name, state.themes);
+        if (state.config.patchEnabled) applyThemeHard(name, state);
         state.saveConfig();
         return true;
       },
       enablePatch: (on) => {
         state.config.patchEnabled = !!on;
-        if (state.config.patchEnabled) applyThemeHard(state.config.activeTheme, state.themes);
+        if (state.config.patchEnabled) applyThemeHard(state.config.activeTheme, state);
         else clearTheme();
         state.saveConfig();
       },

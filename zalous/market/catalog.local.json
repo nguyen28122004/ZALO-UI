@@ -1,6 +1,6 @@
 ﻿{
     "version":  1,
-    "updatedAt":  "2026-04-07",
+    "updatedAt":  "2026-04-08",
     "packs":  [
                   {
                       "id":  "theme.zalo-blue",
@@ -113,6 +113,20 @@
                       "type":  "theme",
                       "description":  "Pastel theme: Pastel Teal",
                       "path":  "packs/pastel-teal"
+                  },
+                  {
+                      "id":  "themepack.pastel-dawn",
+                      "name":  "Theme Pack Pastel Dawn",
+                      "type":  "theme-pack",
+                      "description":  "Theme pack nang cao: CSS + JS + HTML",
+                      "path":  "packs/themepack-pastel-dawn"
+                  },
+                  {
+                      "id":  "extension.blur-elements",
+                      "name":  "Blur Elements",
+                      "type":  "extension",
+                      "description":  "Configurable blur for chat-list elements",
+                      "path":  "packs/blur-elements"
                   }
               ]
 }

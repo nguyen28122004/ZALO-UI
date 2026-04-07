@@ -19,6 +19,7 @@ function defaultConfig() {
     version: 1,
     activeTheme: null,
     enabledExtensions: [],
+    extensionConfigs: {},
     patchEnabled: false,
     appAsarPath: '',
     ui: { controls: true },
@@ -30,6 +31,7 @@ async function ensureLayout() {
   for (const dir of [
     ZALOUS_ROOT,
     path.join(ZALOUS_ROOT, 'themes'),
+    path.join(ZALOUS_ROOT, 'theme-packs'),
     path.join(ZALOUS_ROOT, 'extensions'),
     path.join(ZALOUS_ROOT, 'backups'),
     path.join(ZALOUS_ROOT, 'logs')
@@ -50,13 +52,41 @@ async function readConfig() {
     ...cfg,
     ui: { controls: true, ...(cfg.ui || {}) },
     market: { source: 'local', catalogUrl: '', ...(cfg.market || {}) },
-    enabledExtensions: Array.isArray(cfg.enabledExtensions) ? cfg.enabledExtensions : []
+    enabledExtensions: Array.isArray(cfg.enabledExtensions) ? cfg.enabledExtensions : [],
+    extensionConfigs: (cfg.extensionConfigs && typeof cfg.extensionConfigs === 'object') ? cfg.extensionConfigs : {}
   };
 }
 
 async function saveConfig(cfg) {
   await ensureLayout();
   await fsp.writeFile(CONFIG_PATH, JSON.stringify(cfg, null, 2), 'utf8');
+}
+
+function themePackAssetFiles(manifest) {
+  const assets = manifest && manifest.assets && typeof manifest.assets === 'object' ? manifest.assets : {};
+  const files = [];
+  if (assets.css) files.push(assets.css);
+  if (assets.js) files.push(assets.js);
+  if (assets.html) files.push(assets.html);
+  if (!files.length && manifest && manifest.entry) files.push(manifest.entry);
+  return [...new Set(files)];
+}
+
+function safePackId(v, fallback = 'theme-pack') {
+  const s = String(v || fallback).trim().replace(/[^a-zA-Z0-9._-]/g, '-');
+  return s || fallback;
+}
+
+async function copyThemePackDir(srcDir, dstDir, manifest) {
+  await fsp.mkdir(dstDir, { recursive: true });
+  await fsp.copyFile(path.join(srcDir, 'manifest.json'), path.join(dstDir, 'manifest.json'));
+  for (const rel of themePackAssetFiles(manifest)) {
+    const src = path.join(srcDir, rel);
+    if (!fs.existsSync(src)) continue;
+    const dst = path.join(dstDir, rel);
+    await fsp.mkdir(path.dirname(dst), { recursive: true });
+    await fsp.copyFile(src, dst);
+  }
 }
 
 async function copyBuiltInThemes() {
@@ -83,6 +113,32 @@ async function copyBuiltInThemes() {
     const src = path.join(packDir, manifest.entry);
     if (!fs.existsSync(src)) continue;
     await fsp.copyFile(src, path.join(dstDir, path.basename(manifest.entry)));
+  }
+}
+
+async function copyBuiltInThemePacks() {
+  await ensureLayout();
+  const packsRoot = path.join(REPO_ROOT, 'zalous', 'market', 'packs');
+  const dstRoot = path.join(ZALOUS_ROOT, 'theme-packs');
+  if (!fs.existsSync(packsRoot)) return;
+
+  const packs = await fsp.readdir(packsRoot, { withFileTypes: true });
+  for (const p of packs) {
+    if (!p.isDirectory()) continue;
+    const packDir = path.join(packsRoot, p.name);
+    const manifestPath = path.join(packDir, 'manifest.json');
+    if (!fs.existsSync(manifestPath)) continue;
+
+    let manifest;
+    try {
+      manifest = JSON.parse((await fsp.readFile(manifestPath, 'utf8')).replace(/^\uFEFF/, ''));
+    } catch (_) {
+      continue;
+    }
+
+    if (!manifest || manifest.type !== 'theme-pack') continue;
+    const id = safePackId(manifest.id || p.name, p.name);
+    await copyThemePackDir(packDir, path.join(dstRoot, id), manifest);
   }
 }
 
@@ -127,8 +183,49 @@ async function copyBuiltInExtensions() {
 
 async function syncBuiltInAssets() {
   await copyBuiltInThemes();
+  await copyBuiltInThemePacks();
   await copyLegacyThemesFromRoot();
   await copyBuiltInExtensions();
+}
+
+async function collectThemePacks() {
+  const packRoot = path.join(ZALOUS_ROOT, 'theme-packs');
+  const out = {};
+  if (!fs.existsSync(packRoot)) return out;
+
+  const dirs = await fsp.readdir(packRoot, { withFileTypes: true });
+  for (const ent of dirs) {
+    if (!ent.isDirectory()) continue;
+    const dir = path.join(packRoot, ent.name);
+    const manifestPath = path.join(dir, 'manifest.json');
+    if (!fs.existsSync(manifestPath)) continue;
+
+    let manifest;
+    try {
+      manifest = JSON.parse((await fsp.readFile(manifestPath, 'utf8')).replace(/^\uFEFF/, ''));
+    } catch (_) {
+      continue;
+    }
+    if (!manifest || manifest.type !== 'theme-pack') continue;
+
+    const assets = manifest.assets || {};
+    const cssRel = assets.css || manifest.entry || '';
+    const jsRel = assets.js || '';
+    const htmlRel = assets.html || '';
+    const id = safePackId(manifest.id || ent.name, ent.name);
+    const cssPath = cssRel ? path.join(dir, cssRel) : '';
+    const jsPath = jsRel ? path.join(dir, jsRel) : '';
+    const htmlPath = htmlRel ? path.join(dir, htmlRel) : '';
+
+    out[`pack:${id}`] = {
+      id,
+      name: manifest.name || id,
+      css: cssPath && fs.existsSync(cssPath) ? await fsp.readFile(cssPath, 'utf8') : '',
+      js: jsPath && fs.existsSync(jsPath) ? await fsp.readFile(jsPath, 'utf8') : '',
+      html: htmlPath && fs.existsSync(htmlPath) ? await fsp.readFile(htmlPath, 'utf8') : ''
+    };
+  }
+  return out;
 }
 
 async function resolveAsar(preferred) {
@@ -233,11 +330,12 @@ async function syncConfigWithAssets() {
   const cfg = await readConfig();
   const themes = await collectMap('themes', '.css');
   delete themes['zalo-common.css'];
+  const themePacks = await collectThemePacks();
   const extensions = await collectMap('extensions', '.js');
 
   let changed = false;
-  const themeNames = Object.keys(themes);
-  if (!cfg.activeTheme || !themes[cfg.activeTheme]) {
+  const themeNames = Object.keys(themes).concat(Object.keys(themePacks));
+  if (!cfg.activeTheme || (!themes[cfg.activeTheme] && !themePacks[cfg.activeTheme])) {
     const next = themeNames.length ? themeNames[0] : null;
     if (cfg.activeTheme !== next) {
       cfg.activeTheme = next;
@@ -260,9 +358,13 @@ async function syncConfigWithAssets() {
     cfg.ui.controls = true;
     changed = true;
   }
+  if (!cfg.extensionConfigs || typeof cfg.extensionConfigs !== 'object') {
+    cfg.extensionConfigs = {};
+    changed = true;
+  }
 
   if (changed) await saveConfig(cfg);
-  return { cfg, themes, extensions };
+  return { cfg, themes, themePacks, extensions };
 }
 
 function escapeScript(text) {
@@ -276,14 +378,18 @@ async function applyPatch({ asarPath, noBackup }) {
   const synced = await syncConfigWithAssets();
   const cfg = synced.cfg;
   const themes = synced.themes;
+  const themePacks = synced.themePacks;
   const extensions = synced.extensions;
-  if (!Object.keys(themes).length) throw new Error('Chua co theme trong %APPDATA%\\Zalous\\themes');
+  if (!Object.keys(themes).length && !Object.keys(themePacks).length) {
+    throw new Error('Chua co theme/theme-pack trong %APPDATA%\\Zalous');
+  }
 
   const runtimeCode = escapeScript(await fsp.readFile(RUNTIME_PATH, 'utf8'));
   const payload = {
     meta: { version: '0.2.0', generatedAt: new Date().toISOString(), engine: 'hara-zalous' },
     config: cfg,
     themes,
+    themePacks,
     extensions
   };
 
@@ -376,10 +482,22 @@ async function installPack(packId, catalogPath) {
   const manifestPath = path.join(packDir, 'manifest.json');
   const manifest = JSON.parse((await fsp.readFile(manifestPath, 'utf8')).replace(/^\uFEFF/, ''));
   const entryPath = path.join(packDir, manifest.entry);
-  if (!fs.existsSync(entryPath)) throw new Error(`Pack missing entry ${entryPath}`);
+  if (manifest.type !== 'theme-pack' && !fs.existsSync(entryPath)) {
+    throw new Error(`Pack missing entry ${entryPath}`);
+  }
 
   if (manifest.type === 'theme') {
     await importFile('theme', entryPath, manifest.entry);
+  } else if (manifest.type === 'theme-pack') {
+    const id = safePackId(manifest.id || path.basename(packDir), path.basename(packDir));
+    const dst = path.join(ZALOUS_ROOT, 'theme-packs', id);
+    await copyThemePackDir(packDir, dst, manifest);
+    const cfg = await readConfig();
+    const key = `pack:${id}`;
+    if (!cfg.activeTheme) {
+      cfg.activeTheme = key;
+      await saveConfig(cfg);
+    }
   } else if (manifest.type === 'extension') {
     await importFile('extension', entryPath, manifest.entry);
     const cfg = await readConfig();
@@ -416,6 +534,7 @@ async function printStatus() {
   const cfg = await readConfig();
   const themes = await collectMap('themes', '.css');
   delete themes['zalo-common.css'];
+  const themePacks = await collectThemePacks();
   const exts = await collectMap('extensions', '.js');
   console.log(JSON.stringify({
     root: ZALOUS_ROOT,
@@ -424,6 +543,7 @@ async function printStatus() {
     patchEnabled: cfg.patchEnabled,
     enabledExtensions: cfg.enabledExtensions,
     themeCount: Object.keys(themes).length,
+    themePackCount: Object.keys(themePacks).length,
     extensionCount: Object.keys(exts).length
   }, null, 2));
 }
@@ -438,7 +558,7 @@ function printHelp() {
   console.log('  apply [--asar <path>] [--no-backup]');
   console.log('  restore [--asar <path>]');
   console.log('  list-themes');
-  console.log('  set-theme --theme <file.css>');
+  console.log('  set-theme --theme <file.css|pack:pack-id>');
   console.log('  list-extensions');
   console.log('  enable-extension --name <file.js>');
   console.log('  disable-extension --name <file.js>');
@@ -486,13 +606,16 @@ async function main() {
       const themes = await collectMap('themes', '.css');
       delete themes['zalo-common.css'];
       Object.keys(themes).sort().forEach((t) => console.log(t));
+      const packs = await collectThemePacks();
+      Object.keys(packs).sort().forEach((t) => console.log(t));
       break;
     }
     case 'set-theme': {
-      if (!flags.theme) throw new Error('Can --theme <file.css>');
+      if (!flags.theme) throw new Error('Can --theme <file.css|pack:pack-id>');
       const themes = await collectMap('themes', '.css');
       delete themes['zalo-common.css'];
-      if (!themes[flags.theme]) throw new Error(`Theme khong ton tai ${flags.theme}`);
+      const packs = await collectThemePacks();
+      if (!themes[flags.theme] && !packs[flags.theme]) throw new Error(`Theme khong ton tai ${flags.theme}`);
       const cfg = await readConfig();
       cfg.activeTheme = flags.theme;
       await saveConfig(cfg);

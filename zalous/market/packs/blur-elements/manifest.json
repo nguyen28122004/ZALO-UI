@@ -1,0 +1,8 @@
+﻿{
+  "id": "extension.blur-elements",
+  "name": "Blur Elements",
+  "type": "extension",
+  "entry": "blur-elements.js",
+  "description": "Blur selected chat list elements with configurable level",
+  "version": "1.0.0"
+}

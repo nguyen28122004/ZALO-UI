@@ -20,8 +20,26 @@
       '.zalous-pin-host{display:flex;justify-content:center;align-items:center;width:220px;max-width:82vw;height:40px;margin:0 auto;border:1px solid #b8cfc1;border-radius:12px;background:#fff;box-sizing:border-box;cursor:text;position:relative;z-index:2}',
       '.zalous-pin-dots{display:grid;grid-template-columns:repeat(4,10px);column-gap:14px;align-items:center;justify-items:center;height:10px}',
       '.zalous-pin-dot{width:10px;height:10px;border-radius:999px;background:#c9ddd1;transition:transform .15s ease,background-color .15s ease}',
-      '.zalous-pin-dot.filled{background:#14532d;transform:scale(1.14)}'
+      '.zalous-pin-dot.filled{background:#14532d;transform:scale(1.14)}',
+      '[data-zalous-hide-unlock=\"1\"]{display:none !important;visibility:hidden !important;opacity:0 !important;pointer-events:none !important;}'
     ].join('');
+  }
+
+  function hideUnlockControls(scope) {
+    const root = scope || document;
+    const nodes = root.querySelectorAll('button,[role=\"button\"],input[type=\"submit\"],input[type=\"button\"],[class*=\"unlock\" i],[id*=\"unlock\" i]');
+    nodes.forEach((el) => {
+      const txt = String((el.textContent || el.value || '')).trim().toLowerCase();
+      const cls = String(el.className || '').toLowerCase();
+      const id = String(el.id || '').toLowerCase();
+      const isUnlock = txt.includes('unlock') || txt.includes('mở khóa') || cls.includes('unlock') || id.includes('unlock');
+      if (!isUnlock) return;
+      el.setAttribute('data-zalous-hide-unlock', '1');
+      el.style.setProperty('display', 'none', 'important');
+      el.style.setProperty('visibility', 'hidden', 'important');
+      el.style.setProperty('opacity', '0', 'important');
+      el.style.setProperty('pointer-events', 'none', 'important');
+    });
   }
 
   function restoreInput(input) {
@@ -72,6 +90,7 @@
     const isPin = input.type === 'password' || hint.includes('passcode') || hint.includes('mã khóa') || hint.includes('ma khoa') || hint.includes('pin') || hint.includes('lock');
     if (!isPin) return;
     if (!isVisible(parent) && !isVisible(input)) return;
+    hideUnlockControls(parent.closest('.app-lock__main') || parent.closest('[class*="app-lock"]') || parent);
 
     parent.querySelectorAll('.zalo-lock-pin-host').forEach((el) => el.remove());
     parent.querySelectorAll('.zalous-pin-host').forEach((el) => el.remove());
@@ -150,6 +169,7 @@
 
   function scan() {
     ensureStyle();
+    hideUnlockControls(document);
     pickCandidates().forEach((input) => {
       const host = input.__zalousHost || (input.parentElement && input.parentElement.querySelector('.zalous-pin-host'));
       if (input.dataset.zalousPinReady === '1' && (!host || !isVisible(host))) {
