@@ -133,12 +133,20 @@ function Invoke-Cdp {
       $themeOrder = @($themeDefs | Where-Object { $themeCssB64.ContainsKey($_.key) } | ForEach-Object { $_.key })
       if ($themeOrder.Count -eq 0) { $themeOrder = @($themeCssB64.Keys) }
       $themeOrderJson = $themeOrder | ConvertTo-Json -Compress
+      $commonCssPath = '.\themes\zalo-common.css'
+      if (-not (Test-Path -LiteralPath $commonCssPath)) {
+        throw "Khong tim thay file CSS chung: $commonCssPath"
+      }
+      [string]$commonCss = Get-Content -LiteralPath $commonCssPath -Raw
+      $commonCssB64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($commonCss))
 
       $script = @"
 (() => {
-  const STYLE_ID = 'zalo-runtime-patch';
+  const STYLE_ID = 'zalo-runtime-theme';
+  const COMMON_STYLE_ID = 'zalo-runtime-common';
   const CTRL_ID = 'zalo-theme-controls';
   const LOCK_STYLE_ID = 'zalo-lock-pin-style';
+  const COMMON_CSS = atob('$commonCssB64');
   const THEMES_B64 = $themeCssB64Json;
   const THEMES_META = $themeLabelsJson;
   const THEME_ORDER = $themeOrderJson;
@@ -152,6 +160,14 @@ function Invoke-Cdp {
 
     window.__zaloThemeKey = key;
 
+    let commonTag = document.getElementById(COMMON_STYLE_ID);
+    if (!commonTag) {
+      commonTag = document.createElement('style');
+      commonTag.id = COMMON_STYLE_ID;
+      document.head.appendChild(commonTag);
+    }
+    commonTag.textContent = COMMON_CSS;
+
     let tag = document.getElementById(STYLE_ID);
     if (!tag) {
       tag = document.createElement('style');
@@ -162,10 +178,12 @@ function Invoke-Cdp {
     const css = THEMES_CSS[key] || THEMES_CSS[THEME_ORDER[0]] || '';
     tag.textContent = css;
     window.__zaloThemeCss = css;
-    return tag.textContent.length;
+    return commonTag.textContent.length + tag.textContent.length;
   }
 
   function clearTheme() {
+    const commonTag = document.getElementById(COMMON_STYLE_ID);
+    if (commonTag) commonTag.remove();
     const tag = document.getElementById(STYLE_ID);
     if (tag) tag.remove();
   }
@@ -596,7 +614,9 @@ function Invoke-Cdp {
     else {
       $script = @"
 (() => {
-  const tag = document.getElementById('zalo-runtime-patch');
+  const commonTag = document.getElementById('zalo-runtime-common');
+  if (commonTag) commonTag.remove();
+  const tag = document.getElementById('zalo-runtime-theme');
   if (tag) tag.remove();
   return { ok: true, mode: 'clear' };
 })()

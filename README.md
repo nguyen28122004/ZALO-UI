@@ -14,27 +14,23 @@ Invoke-WebRequest -UseBasicParsing http://127.0.0.1:9222/json/list | Select-Obje
 
 Luu y: Tai lieu nay KHONG huong dan kill/mo Zalo kem debug argument.
 
-## 2) Patch runtime bang tool
+## 2) Kien truc theme
 
-File tool: `tools/zalo-cdp-patch.ps1`
+- `themes/zalo-common.css`: phan layout/selector chung, luon duoc apply khi bat `ON`.
+- `themes/zalo-<color>.css`: chi chua token mau cho tung theme (`green/pink/blue/purple/orange`).
 
-Apply theme bat ky:
+## 3) Patch runtime
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\zalo-green.css -TargetMatch Zalo
-```
-
-Clear patch:
-
-```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action clear -Port 9222 -TargetMatch Zalo
 ```
 
-Sau khi `apply`, script inject cum nut giao dien o left nav:
-- `ON/OFF`: bat/tat patch
-- nut theme: chuyen vong qua `green -> pink -> blue -> purple -> orange`
+Sau khi `apply`, UI co cum nut giao dien:
+- `ON/OFF`: bat/tat patch (common + theme)
+- nut theme: chuyen vong `green -> pink -> blue -> purple -> orange`
 
-## 3) Patch nhanh theo ten theme
+## 4) Patch nhanh theo ten theme
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme green
@@ -44,35 +40,13 @@ powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme purpl
 powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme orange
 ```
 
-## 4) Runtime mod thu cong trong DevTools
+## 5) Cau truc file
 
-Trong DevTools Console, nap `snippets/zalo-runtime-mod.js`, sau do:
-
-```js
-zaloMod.apply(`
-  :root { --accent: #22c55e !important; }
-  [class*="sidebar"] { background: #dcfce7 !important; }
-`);
-```
-
-Rollback:
-
-```js
-zaloMod.clear();
-```
-
-## 5) Tim selector va debug style
-
-Dung playbook: `docs/ZALO_UI_MOD_GUIDE.md`.
-
-## 6) Cau truc file
-
-- `tools/zalo-cdp-patch.ps1`: patch/clear CSS qua CDP websocket + UI controls
+- `tools/zalo-cdp-patch.ps1`: patch/clear CSS qua CDP websocket + controls
 - `tools/patch-zalo-now.ps1`: patch nhanh theo ten theme
-- `themes/zalo-green.css`: pastel green
-- `themes/zalo-pink.css`: pastel pink
-- `themes/zalo-blue.css`: pastel blue
-- `themes/zalo-purple.css`: pastel purple
-- `themes/zalo-orange.css`: pastel orange
-- `snippets/zalo-selector-probe.js`: scan UI va goi y selector
-- `snippets/zalo-runtime-mod.js`: inject/remove CSS runtime trong DevTools
+- `themes/zalo-common.css`: css chung
+- `themes/zalo-green.css`: pastel green tokens
+- `themes/zalo-pink.css`: pastel pink tokens
+- `themes/zalo-blue.css`: pastel blue tokens
+- `themes/zalo-purple.css`: pastel purple tokens
+- `themes/zalo-orange.css`: pastel orange tokens
