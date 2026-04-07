@@ -1,20 +1,31 @@
-﻿# Zalo UI Mod Guide (Selector + CSS Vars)
+﻿# Zalo UI Mod Guide (Selector + Theme Workflow)
 
-## A. Nguyen tac chon selector ben vung
+## A. Nguyen tac selector
 
-Uu tien: `id` -> `data/aria` -> `role` -> `class contains`.
+Uu tien theo thu tu:
+1. `id` on dinh
+2. `data-*` / `aria-*`
+3. `role`
+4. `class contains` (chi dung khi can)
 
-## B. Kien truc theme
+Tranh selector qua sau va class hash khong on dinh.
 
-- `zalo-common.css`: rule chung (layout/selectors), luon duoc apply khi bat `ON`.
-- `zalo-<color>.css`: chi token mau theo theme.
+## B. Kien truc css
 
-## C. Quy trinh sua giao dien
+- `zalo-common.css`: rule chung cho toan bo giao dien light.
+- `zalo-<color>.css`: chi chua token mau.
 
-1. Inspect element.
+Khi ON:
+- script inject `zalo-common.css`
+- script inject theme dang chon (`green/pink/blue/purple/orange`)
+
+## C. Quy trinh chinh giao dien
+
+1. Inspect element trong DevTools.
 2. Tim selector on dinh.
-3. Sua token mau trong file theme dang dung.
-4. Apply lai:
+3. Neu la mau: sua trong file `themes/zalo-<color>.css`.
+4. Neu la rule chung/layout: sua trong `themes/zalo-common.css`.
+5. Patch lai:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\zalo-green.css -TargetMatch Zalo
@@ -33,7 +44,8 @@ powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme orang
 ## E. Troubleshooting
 
 - Khong thay target: check `http://127.0.0.1:9222/json/list`.
+- Patch thanh cong nhung UI khong doi: bam ON/OFF 1 lan hoac doi tab chat de re-render.
 - Style khong an: tang specificity hoac them `!important`.
-- Mo nhieu target: them `-TargetMatch Zalo`.
+- Nhieu target: them `-TargetMatch Zalo`.
 
-Luu y: tai lieu nay khong bao gom buoc kill/mo Zalo kem debug argument.
+Luu y: guide nay khong bao gom buoc kill/mo Zalo kem debug argument.

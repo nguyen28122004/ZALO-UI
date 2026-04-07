@@ -1,10 +1,10 @@
-﻿# Zalo Runtime UI Mod (CDP + CSS/JS)
+﻿# Zalo Runtime UI Mod (CDP + Multi-Theme)
 
-Muc tieu: patch giao dien Zalo runtime qua Chrome DevTools Protocol (CDP), khong sua file goc cua app.
+Patch giao dien Zalo runtime qua Chrome DevTools Protocol (CDP), khong sua file goc cua app.
 
 ## 1) Dieu kien tien quyet
 
-- CDP endpoint da san sang tren `127.0.0.1:9222`.
+- CDP da mo tren `127.0.0.1:9222`.
 - Kiem tra nhanh:
 
 ```powershell
@@ -12,23 +12,33 @@ Invoke-WebRequest -UseBasicParsing http://127.0.0.1:9222/json/version | Select-O
 Invoke-WebRequest -UseBasicParsing http://127.0.0.1:9222/json/list | Select-Object -ExpandProperty Content
 ```
 
-Luu y: Tai lieu nay KHONG huong dan kill/mo Zalo kem debug argument.
+Luu y: README nay KHONG huong dan kill/mo Zalo voi debug argument.
 
 ## 2) Kien truc theme
 
-- `themes/zalo-common.css`: phan layout/selector chung, luon duoc apply khi bat `ON`.
-- `themes/zalo-<color>.css`: chi chua token mau cho tung theme (`green/pink/blue/purple/orange`).
+- `themes/zalo-common.css`: phan rule chung (layout, selector, behavior), luon duoc apply khi theme ON.
+- `themes/zalo-<color>.css`: token mau theo theme.
 
-## 3) Patch runtime
+Theme hien co:
+- `green`
+- `pink`
+- `blue`
+- `purple`
+- `orange`
+
+## 3) Patch/Clear bang script chinh
+
+Apply:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\zalo-green.css -TargetMatch Zalo
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action clear -Port 9222 -TargetMatch Zalo
 ```
 
-Sau khi `apply`, UI co cum nut giao dien:
-- `ON/OFF`: bat/tat patch (common + theme)
-- nut theme: chuyen vong `green -> pink -> blue -> purple -> orange`
+Clear:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action clear -Port 9222 -TargetMatch Zalo
+```
 
 ## 4) Patch nhanh theo ten theme
 
@@ -40,13 +50,20 @@ powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme purpl
 powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme orange
 ```
 
-## 5) Cau truc file
+## 5) In-app controls sau khi apply
 
-- `tools/zalo-cdp-patch.ps1`: patch/clear CSS qua CDP websocket + controls
-- `tools/patch-zalo-now.ps1`: patch nhanh theo ten theme
+Sau khi patch, left nav co cum controls:
+- `ON/OFF`: bat/tat patch (`common + theme color`).
+- nut theme: cycle theme theo thu tu `green -> pink -> blue -> purple -> orange`.
+
+## 6) Cau truc file
+
+- `tools/zalo-cdp-patch.ps1`: patch/clear qua CDP + inject controls
+- `tools/patch-zalo-now.ps1`: wrapper patch nhanh theo `-Theme`
 - `themes/zalo-common.css`: css chung
-- `themes/zalo-green.css`: pastel green tokens
-- `themes/zalo-pink.css`: pastel pink tokens
-- `themes/zalo-blue.css`: pastel blue tokens
-- `themes/zalo-purple.css`: pastel purple tokens
-- `themes/zalo-orange.css`: pastel orange tokens
+- `themes/zalo-green.css`: token mau green pastel
+- `themes/zalo-pink.css`: token mau pink pastel
+- `themes/zalo-blue.css`: token mau blue pastel
+- `themes/zalo-purple.css`: token mau purple pastel
+- `themes/zalo-orange.css`: token mau orange pastel
+- `docs/ZALO_UI_MOD_GUIDE.md`: playbook selector/theme workflow
