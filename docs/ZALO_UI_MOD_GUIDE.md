@@ -1,59 +1,47 @@
-﻿# Hướng dẫn chỉnh UI Zalo (Selector + Theme Workflow)
+﻿# Hướng dẫn chỉnh UI (Zalous)
 
-## 1) Nguyên tắc chọn selector
+## 1) Quy tắc selector
 
-Ưu tiên theo thứ tự:
-1. `id` ổn định
+Ưu tiên selector ổn định:
+1. `id`
 2. `data-*`, `aria-*`
 3. `role`
-4. `class*="..."` (chỉ dùng khi không có lựa chọn tốt hơn)
+4. `class*="..."` (chỉ khi cần)
 
-Tránh selector quá sâu hoặc class hash thay đổi theo build.
+## 2) Cấu trúc theme hiện tại
 
-## 2) Cấu trúc CSS trong dự án
+Theme không còn quản lý ở thư mục `themes/` repo.
 
-- `themes/zalo-common.css`: rule layout/chung cho light mode
-- `themes/zalo-<màu>.css`: token màu theo từng theme
+Nguồn chuẩn hiện tại:
+- `zalous/market/packs/<theme-id>/<theme-id>.css`
+- manifest tại `zalous/market/packs/<theme-id>/manifest.json`
 
-Khi runtime bật patch:
-- Inject `zalo-common.css`
-- Inject theme active (`zalo-green.css`, `zalo-blue.css`, ...)
+Khi `apply`, CLI tự sync pack theme vào `%APPDATA%\Zalous\themes`.
 
-## 3) Quy trình chỉnh giao diện đúng chuẩn
+## 3) Quy trình chỉnh theme
 
-1. Inspect phần tử bằng DevTools/CDP
-2. Xác định selector ổn định
-3. Nếu là token màu: sửa `themes/zalo-<màu>.css`
-4. Nếu là layout/chung: sửa `themes/zalo-common.css`
-5. Chạy patch lại:
-
+1. Sửa file theme trong `zalous/market/packs/...`.
+2. Chạy:
 ```powershell
 node .\tools\zalous-cli.js apply
 ```
+3. Restart Zalo.
 
-Lưu ý: `apply` đã tự sync theme/extension vào `%APPDATA%\Zalous` trước khi patch.
+## 4) Quy trình chỉnh extension
 
-## 4) Patch live qua CDP (không cần restart)
+1. Sửa extension trong `zalous/market/packs/<ext-id>/<entry>.js`.
+2. `apply` để sync + inject lại runtime payload.
+3. Restart Zalo.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\zalo-green.css -TargetMatch Zalo
-```
+## 5) Debug nhanh
 
-Dùng khi cần thử nhanh selector/màu trong phiên đang mở.
+- DevTools endpoint: `http://localhost:9222/`
+- Nếu UI sai màu/tab:
+  - kiểm tra token trong theme đang active (`%APPDATA%\Zalous\config.json`)
+  - kiểm tra selector override trong theme pack
 
-## 5) Kiểm tra nhanh khi màu không ăn
+## 6) Lưu ý vận hành
 
-1. Kiểm tra file runtime đang dùng trong `%APPDATA%\Zalous\themes`
-2. Kiểm tra selector có match đúng node thực tế chưa
-3. Tăng specificity hoặc thêm `!important` cho vùng xung đột
-4. Thử ON/OFF patch trong control UI hoặc đổi tab để ép re-render
-5. Nếu cần, patch lại `app.asar` bằng `node .\tools\zalous-cli.js apply`
-
-## 6) Troubleshooting
-
-- Không thấy target CDP:
-  - Mở `http://127.0.0.1:9222/json/list` để kiểm tra
-- Patch thành công nhưng UI không đổi:
-  - Thường do selector không trúng hoặc đang dùng cache view cũ
-- Nhiều target CDP:
-  - Dùng `-TargetMatch Zalo` để lọc đúng tab
+- `apply` luôn patch từ clean base theo version Zalo.
+- Config runtime ưu tiên external config, fallback localStorage.
+- Tránh chạy script patch cũ ngoài `zalous-cli.js` nếu không cần.
