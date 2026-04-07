@@ -513,7 +513,7 @@ async function installPack(packId, catalogPath) {
 }
 
 function parseArgv(argv) {
-  const [command = 'help', ...rest] = argv;
+  const [command = 'patch-now', ...rest] = argv;
   const flags = {};
   for (let i = 0; i < rest.length; i += 1) {
     const t = rest[i];
@@ -551,7 +551,10 @@ async function printStatus() {
 function printHelp() {
   console.log('hara-zalous CLI (Node)');
   console.log('');
+  console.log('Mac dinh (khong truyen command): patch-now');
+  console.log('');
   console.log('Commands:');
+  console.log('  patch-now [--asar <path>] [--no-backup]');
   console.log('  init');
   console.log('  detect [--asar <path>]');
   console.log('  status');
@@ -574,6 +577,12 @@ async function main() {
   await ensureLayout();
 
   switch (command) {
+    case 'patch-now':
+      await applyPatch({
+        asarPath: flags.asar ? await resolveAsar(flags.asar) : await detectLatestAsar(),
+        noBackup: !!flags['no-backup']
+      });
+      break;
     case 'help':
       printHelp();
       break;
