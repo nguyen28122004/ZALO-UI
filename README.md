@@ -1,4 +1,5 @@
 ﻿# ZALO-UI / hara-zalous
+# Con hàng vibecode theo nhu cầu cá nhân, anh em đóng góp cho vui thì được, đừng nặng nề chuyên môn quá =)))
 
 `hara-zalous` là bộ patch giao diện cho Zalo Desktop, quản lý theme/extension theo mô hình pack.
 
