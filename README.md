@@ -1,69 +1,46 @@
-﻿# Zalo Runtime UI Mod (Electron + Remote Debugging)
+﻿# Zalo Runtime UI Mod (CDP + CSS/JS)
 
-Muc tieu: hook vao renderer cua Zalo (Electron) qua Chrome DevTools Protocol, sau do mod giao dien runtime bang CSS/JS.
+Muc tieu: patch giao dien Zalo runtime qua Chrome DevTools Protocol (CDP), khong sua file goc cua app.
 
-## 1) Chay Zalo voi remote debug
+## 1) Dieu kien tien quyet
 
-```powershell
-Get-Process -Name Zalo,ZaloCall,ZaloCap -ErrorAction SilentlyContinue | Stop-Process -Force
-Start-Process "C:\Users\Lien\AppData\Local\Programs\Zalo\Zalo.exe" "--remote-debugging-port=9222"
-```
-
-Neu launcher khong an argument, thu binary versioned:
-
-```powershell
-Start-Process "C:\Users\Lien\AppData\Local\Programs\Zalo\Zalo-26.3.20\Zalo.exe" "--remote-debugging-port=9222"
-```
-
-Kiem tra cong debug:
+- Zalo da co CDP endpoint dang mo tren `127.0.0.1:9222`.
+- Kiem tra nhanh:
 
 ```powershell
 Invoke-WebRequest -UseBasicParsing http://127.0.0.1:9222/json/version | Select-Object -ExpandProperty Content
 Invoke-WebRequest -UseBasicParsing http://127.0.0.1:9222/json/list | Select-Object -ExpandProperty Content
 ```
 
-## 2) Mo Chrome Inspect
+Luu y: Tai lieu nay KHONG huong dan kill/mo Zalo kem debug argument.
 
-1. Mo `chrome://inspect/#devices`
-2. Bam `Configure...` va them `localhost:9222`
-3. Chon target cua Zalo va bam `Inspect`
-
-Hoac mo truc tiep danh sach target: `http://127.0.0.1:9222/json/list`
-
-## 3) Tool patch runtime (tu dong)
+## 2) Patch runtime bang tool
 
 File tool: `tools/zalo-cdp-patch.ps1`
 
-Apply giao dien xanh la:
+Apply theme hien tai:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222
+powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\zalo-green.css -TargetMatch Zalo
 ```
 
-Rollback theme da patch:
+Clear patch:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action clear -Port 9222
+powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action clear -Port 9222 -TargetMatch Zalo
 ```
 
-Doi CSS theo theme khac:
+Dung CSS khac:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\zalo-green.css
+powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\my-theme.css -TargetMatch Zalo
 ```
 
-Loc target theo title/url neu mo nhieu webcontents:
+Sau khi `apply`, script se inject 1 nut tron `ON/OFF` o thanh left nav de bat/tat theme nhanh.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -TargetMatch Zalo
-```
+## 3) Runtime mod thu cong trong DevTools
 
-Sau khi `apply`, tool se tao 2 nut trong `#titleBar`:
-- `Apply Pastel`: apply lai theme ngay trong UI
-- `Clear Theme`: go bo theme runtime
-## 4) Runtime mod thu cong trong DevTools
-
-Trong DevTools Console, nap file `snippets/zalo-runtime-mod.js` roi dung:
+Trong DevTools Console, nap `snippets/zalo-runtime-mod.js`, sau do:
 
 ```js
 zaloMod.apply(`
@@ -72,40 +49,25 @@ zaloMod.apply(`
 `);
 ```
 
-## 5) Tim selector tung UI element
+Rollback:
+
+```js
+zaloMod.clear();
+```
+
+## 4) Tim selector va debug style
 
 Dung playbook: `docs/ZALO_UI_MOD_GUIDE.md`
 
-Noi dung co:
-- cach tim selector ben vung (tranh class hash bi doi)
-- script probe auto map cac khu vuc UI
-- cach dump va override `:root` / CSS vars
+Noi dung chinh:
+- quy tac chon selector ben vung
+- script probe de map UI nhanh
+- cach tra CSS vars va override an toan
 
-## 6) Files
+## 5) Cau truc file
 
 - `tools/zalo-cdp-patch.ps1`: patch/clear CSS qua CDP websocket
-- `themes/zalo-green.css`: preset giao dien xanh la
+- `tools/start-zalo-auto-patch.ps1`: auto apply khi CDP san sang (khong trinh bay buoc kill/mo app trong README)
+- `themes/zalo-green.css`: theme pastel light
 - `snippets/zalo-selector-probe.js`: scan UI va goi y selector
 - `snippets/zalo-runtime-mod.js`: inject/remove CSS runtime trong DevTools
-
-
-## 7) Auto patch khi mo Zalo
-
-Chay script auto:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\start-zalo-auto-patch.ps1 -Port 9222
-```
-
-Neu muon kill Zalo cu truoc khi mo lai:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\start-zalo-auto-patch.ps1 -Port 9222 -KillExisting
-```
-
-Script se:
-1. Mo Zalo voi `--remote-debugging-port=9222`
-2. Cho CDP san sang
-3. Tu dong apply theme va inject icon controls vao `#main-tab.nav__tabs__bottom`
-
-File: `tools/start-zalo-auto-patch.ps1`

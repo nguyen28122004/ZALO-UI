@@ -1,4 +1,4 @@
-﻿# Zalo UI Mod Guide (Selector + Root CSS)
+﻿# Zalo UI Mod Guide (Selector + CSS Vars)
 
 ## A. Nguyen tac chon selector ben vung
 
@@ -10,12 +10,10 @@ Uu tien theo thu tu:
 5. class contains (`[class*="..."]`) chi dung khi khong con lua chon tot hon
 
 Tranh:
-- class hash/minified dai, de doi theo version
+- class hash/minified de doi theo version
 - selector qua sau (qua 5-6 cap)
 
 ## B. Mapping UI element thuong gap
-
-Luu y: ten class Zalo co the thay doi. Hay inspect lai va cap nhat theo app build hien tai.
 
 | UI element | Selector goi y (uu tien trai -> phai) |
 |---|---|
@@ -23,54 +21,40 @@ Luu y: ten class Zalo co the thay doi. Hay inspect lai va cap nhat theo app buil
 | Left sidebar | `[role="navigation"]`, `nav`, `[class*="sidebar"]` |
 | Conversation list | `[aria-label*="conversation" i]`, `[class*="conversation"]`, `[class*="thread-list"]` |
 | Chat header | `header`, `[class*="chat-header"]`, `[class*="conversation-header"]` |
-| Message log/pane | `[role="log"]`, `[class*="message-pane"]`, `[class*="chat-content"]` |
-| Message bubble outgoing | `[data-msg-out="1"]`, `[class*="outgoing"]`, `[class*="self"]` |
-| Message bubble incoming | `[data-msg-in="1"]`, `[class*="incoming"]`, `[class*="other"]` |
-| Composer/editor | `textarea`, `[contenteditable="true"]`, `[class*="composer"]` |
+| Message pane | `[role="log"]`, `[class*="message-pane"]`, `[class*="chat-content"]` |
+| Outgoing bubble | `[data-msg-out="1"]`, `[class*="outgoing"]`, `[class*="self"]` |
+| Incoming bubble | `[data-msg-in="1"]`, `[class*="incoming"]`, `[class*="other"]` |
+| Composer | `textarea`, `[contenteditable="true"]`, `[class*="composer"]` |
 | Send button | `button[aria-label*="send" i]`, `button[type="submit"]`, `[class*="send"]` |
 | Search box | `input[type="search"]`, `input[placeholder*="search" i]`, `[class*="search"] input` |
 
-## C. Element Checklist (Pastel full-app)
+## C. Workflow check theo element
 
-File theme hien tai: `themes/zalo-green.css`
+1. Inspect node trong Elements panel.
+2. Tim attr on dinh (id/data/aria/role).
+3. Thu selector trong Console: `document.querySelector('...')`.
+4. Sua token trong `themes/zalo-green.css` (uu tien sua token truoc khi sua selector).
+5. Apply lai:
 
-| Element | Rule nhom trong CSS | Muc tieu mau |
-|---|---|---|
-| Toan app nen | `/* 1) Global surfaces */` | `--pastel-bg-app` |
-| Cot trai + list chat | `/* 2) Left icon rail + conversation list */` | `--pastel-bg-pane` |
-| Thread row hover/active | `/* 3) Thread rows */` | `--pastel-bg-hover`, `--pastel-bg-active` |
-| Header tren | `/* 4) Top headers */` | `--pastel-bg-pane` |
-| Khung chat giua | `/* 5) Center chat area */` | `--pastel-bg-app` |
-| Bong bong tin nhan | `/* 6) Message cards/bubbles */` | outgoing `#cfeeda`, incoming `--pastel-bg-card` |
-| Panel thong tin phai | `/* 7) Right info panel */` | `--pastel-bg-pane`, `--pastel-bg-card` |
-| Composer + toolbar duoi | `/* 8) Composer + toolbar */` | `#fff`, `--pastel-bg-pane` |
-| Nut hanh dong | `/* 9) Buttons + actions */` | `--pastel-accent` |
-| Link/chu phu | `/* 10) Typography accents */` | `--pastel-text-soft` |
-| Focus/selection | `/* 11) Selection/focus */` | `--pastel-focus` |
-| Scrollbar | `/* 12) Scrollbar */` | mint pastel |
-
-Quy trinh check tung element:
-1. Dung inspect, click vao element can sua.
-2. Tim rule trung selector trong file `themes/zalo-green.css` theo table tren.
-3. Sua bien mau (`--pastel-*`) truoc, tranh sua tung selector le.
-4. Apply lai: `powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222`
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\zalo-green.css -TargetMatch Zalo
+```
 
 ## D. Script probe selector nhanh
 
-Mo DevTools Console, copy file `snippets/zalo-selector-probe.js` vao, chay:
+Trong DevTools Console, nap `snippets/zalo-selector-probe.js`, roi chay:
 
 ```js
 zaloProbe.run();
 ```
 
 Ket qua tra ve:
-- node da tim duoc cho tung khu vuc
-- cssPath tu dong cho tung node
-- de copy thanh selector mod runtime
+- node tim duoc cho tung khu vuc
+- cssPath goi y de copy thanh selector
 
-## E. Check `:root` va CSS custom properties
+## E. Check CSS custom properties
 
-### 1) Lay gia tri computed vars tren `:root`
+Lay computed vars tren root:
 
 ```js
 const cs = getComputedStyle(document.documentElement);
@@ -81,7 +65,7 @@ const vars = [...cs]
 console.table(vars);
 ```
 
-### 2) Tim var duoc khai bao trong stylesheet (`:root { --x: ... }`)
+Tim var khai bao trong stylesheet:
 
 ```js
 const out = [];
@@ -90,7 +74,7 @@ for (const sheet of [...document.styleSheets]) {
   try { rules = sheet.cssRules; } catch { continue; }
   for (const rule of [...rules]) {
     if (!rule.selectorText || !rule.style) continue;
-    if (!rule.selectorText.includes(':root')) continue;
+    if (!rule.selectorText.includes(':root') && !rule.selectorText.includes('body')) continue;
     for (const name of [...rule.style]) {
       if (name.startsWith('--')) {
         out.push({
@@ -106,9 +90,7 @@ for (const sheet of [...document.styleSheets]) {
 console.table(out);
 ```
 
-## F. Runtime override (safe pattern)
-
-Khuyen nghi dung 1 style tag rieng de rollback nhanh:
+## F. Runtime override nhanh
 
 ```js
 zaloMod.apply(`
@@ -120,10 +102,6 @@ zaloMod.apply(`
   [role="navigation"], [class*="sidebar"] {
     background: #ecf8f0 !important;
   }
-
-  [role="log"], [class*="message-pane"] {
-    background: #f4fbf6 !important;
-  }
 `);
 ```
 
@@ -133,39 +111,26 @@ Rollback:
 zaloMod.clear();
 ```
 
-## G. Quy trinh mod cho tung element
+## G. Patch tool qua CDP
 
-1. Inspect node trong Elements panel.
-2. Tim attr on dinh (id/data/aria/role).
-3. Thu selector trong Console: `document.querySelector('...')`.
-4. Them rule vao `zaloMod.apply(...)`.
-5. Test tren nhieu view (chat 1-1, group, settings).
-6. Luu snippet theo module (sidebar, chat, composer) de de bao tri.
-
-## H. Tool patch qua CDP (khong can mo Console)
-
-Apply theme xanh la:
+Apply:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222
+powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\zalo-green.css -TargetMatch Zalo
 ```
 
-Clear patch:
+Clear:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action clear -Port 9222
+powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action clear -Port 9222 -TargetMatch Zalo
 ```
 
-Dung file CSS khac:
+## H. Troubleshooting
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\my-theme.css
-```
-
-## I. Troubleshooting
-
-- Khong thay target trong `chrome://inspect`: kiem tra lai `http://127.0.0.1:9222/json/version`.
-- Khong doc duoc `cssRules`: stylesheet cross-origin, bo qua va dung computed style.
+- Khong thay target: check `http://127.0.0.1:9222/json/list`.
 - Style khong an: tang specificity hoac them `!important`.
-- Update Zalo lam vo selector: uu tien selector theo `data-*`, `aria-*`, `role` thay vi class hash.
-- Mo nhieu target cung luc: them `-TargetMatch Zalo` cho script CDP.
+- Khong doc duoc `cssRules`: stylesheet cross-origin, bo qua va dung computed style.
+- Update Zalo lam vo selector: uu tien `data-*`, `aria-*`, `role` thay vi class hash.
+- Mo nhieu target: them `-TargetMatch Zalo`.
+
+Luu y: Tai lieu nay khong bao gom buoc kill/mo Zalo kem debug argument.

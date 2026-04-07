@@ -1,4 +1,4 @@
-param(
+ï»¿param(
   [ValidateSet('apply','clear')]
   [string]$Action = 'apply',
   [int]$Port = 9222,
@@ -202,7 +202,7 @@ function Invoke-Cdp {
     if (!parent) return false;
 
     const hint = ((input.id || '') + ' ' + (input.className || '') + ' ' + (input.placeholder || '')).toLowerCase();
-    const isLockLike = input.type === 'password' || hint.includes('passcode') || hint.includes('mã khóa') || hint.includes('ma khoa') || hint.includes('lock');
+    const isLockLike = input.type === 'password' || hint.includes('passcode') || hint.includes('mÃ£ khÃ³a') || hint.includes('ma khoa') || hint.includes('lock');
     if (!isLockLike) return false;
 
     // Remove stale hosts from older patches in this container.
@@ -331,7 +331,7 @@ function Invoke-Cdp {
       '.app-lock__main__input',
       'input#passcode',
       'input[type="password"]',
-      'input[placeholder*="mã khóa" i]',
+      'input[placeholder*="mÃ£ khÃ³a" i]',
       'input[placeholder*="ma khoa" i]',
       'input[placeholder*="pin" i]',
       'input[name*="pass" i]'
@@ -378,86 +378,79 @@ function Invoke-Cdp {
     if (!wrap) {
       wrap = document.createElement('div');
       wrap.id = CTRL_ID;
-      wrap.style.cssText = [
-        'display:flex',
-        'flex-direction:column',
-        'align-items:center',
-        'justify-content:center',
-        'gap:8px',
-        'width:100%',
-        'padding:8px 0',
-        'box-sizing:border-box',
-        'position:relative',
-        'z-index:2147483647',
-        '-webkit-app-region:no-drag'
-      ].join(';');
-
-      const mkBtn = (title, text) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.title = title;
-        b.textContent = text;
-        b.style.cssText = [
-          'height:28px',
-          'width:28px',
-          'padding:0',
-          'display:inline-flex',
-          'align-items:center',
-          'justify-content:center',
-          'border-radius:999px',
-          'border:1px solid rgba(255,255,255,0.95)',
-          'background:transparent',
-          'color:#ffffff',
-          'font-size:11px',
-          'font-weight:700',
-          'line-height:1',
-          'cursor:pointer',
-          'outline:none',
-          'box-shadow:none',
-          '-webkit-app-region:no-drag'
-        ].join(';');
-        b.onmouseenter = () => { b.style.background = 'rgba(255,255,255,0.10)'; };
-        b.onmouseleave = () => { b.style.background = 'transparent'; };
-        return b;
-      };
-
-      const toggleBtn = mkBtn('Toggle Pastel Theme', 'ON');
-      const pinBtn = mkBtn('Apply PIN Dot UI', 'PIN');
-
-      const refresh = () => {
-        const active = !!document.getElementById(STYLE_ID);
-        toggleBtn.textContent = active ? 'ON' : 'OFF';
-        toggleBtn.style.opacity = active ? '1' : '0.8';
-      };
-
-      toggleBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (document.getElementById(STYLE_ID)) {
-          clearTheme();
-        } else {
-          applyTheme();
-          ensureLockPinUI();
-        }
-        refresh();
-      };
-
-      pinBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        ensureLockPinStyle();
-        ensureLockPinUI();
-      };
-
-      wrap.appendChild(toggleBtn);
-      wrap.appendChild(pinBtn);
       target.appendChild(wrap);
-      refresh();
     }
 
+    wrap.style.cssText = [
+      'display:flex',
+      'flex-direction:column',
+      'align-items:center',
+      'justify-content:center',
+      'gap:8px',
+      'width:100%',
+      'padding:8px 0',
+      'box-sizing:border-box',
+      'position:relative',
+      'z-index:2147483647',
+      '-webkit-app-region:no-drag'
+    ].join(';');
+
+    const TOGGLE_ID = 'zalo-theme-toggle-btn';
+    let toggleBtn = document.getElementById(TOGGLE_ID);
+    if (!toggleBtn) {
+      toggleBtn = document.createElement('button');
+      toggleBtn.id = TOGGLE_ID;
+      wrap.appendChild(toggleBtn);
+    }
+
+    // Remove legacy controls from old patch versions (ex: PIN button).
+    [...wrap.querySelectorAll('button')].forEach((btn) => {
+      if (btn !== toggleBtn) btn.remove();
+    });
+
+    toggleBtn.type = 'button';
+    toggleBtn.title = 'Toggle Pastel Theme';
+    toggleBtn.style.cssText = [
+      'height:28px',
+      'width:28px',
+      'padding:0',
+      'display:inline-flex',
+      'align-items:center',
+      'justify-content:center',
+      'border-radius:999px',
+      'font-size:11px',
+      'font-weight:700',
+      'line-height:1',
+      'cursor:pointer',
+      'outline:none',
+      'box-shadow:none',
+      '-webkit-app-region:no-drag'
+    ].join(';');
+
+    const refresh = () => {
+      const active = !!document.getElementById(STYLE_ID);
+      toggleBtn.textContent = active ? 'ON' : 'OFF';
+      toggleBtn.style.opacity = '1';
+      toggleBtn.style.border = '1px solid ' + (active ? '#3a8457' : '#b8cfc1');
+      toggleBtn.style.background = active ? '#4fa871' : '#e4efe8';
+      toggleBtn.style.color = active ? '#ffffff' : '#244638';
+    };
+
+    toggleBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (document.getElementById(STYLE_ID)) {
+        clearTheme();
+      } else {
+        applyTheme();
+        ensureLockPinUI();
+      }
+      refresh();
+    };
+
+    refresh();
     return true;
   }
-
   window.__zaloThemeCss = cssText;
   window.__zaloThemeApply = applyTheme;
   window.__zaloThemeClear = clearTheme;
@@ -550,6 +543,11 @@ function Invoke-Cdp {
 }
 
 Invoke-Cdp -DebugPort $Port -Mode $Action -ThemeCssPath $CssPath -Match $TargetMatch
+
+
+
+
+
 
 
 
