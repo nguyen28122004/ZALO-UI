@@ -119,9 +119,9 @@
   /* Chat bubble */
   --blue-message: #d9eee2;
   --blue-message-selected: #cce7d8;
-  --white-message: #fbfffd;
+  --white-message: #f5f9f7;
   --white-quote: #f3faf6;
-  --white-message-selected: #fbfffd;
+  --white-message-selected: #f5f9f7;
   --white-quote-selected: #e7f3ec;
 
   /* Buttons */
@@ -989,7 +989,7 @@ body:not(.dark) {
   --input-field-bg-filled: #f7fbf9;
 
   --white-message: #ffffff;
-  --white-message-selected: #fbfffd;
+  --white-message-selected: #f5f9f7;
   --white-quote: #eef6f1;
   --blue-message: #cfe5d8;
   --blue-message-selected: #c3dccd;

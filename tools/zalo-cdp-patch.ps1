@@ -370,6 +370,29 @@ function Invoke-Cdp {
     });
   }
 
+
+  function triggerThemeFade() {
+    const el = document.getElementById('app') || document.body || document.documentElement;
+    if (!el) return;
+
+    const prevTransition = el.style.transition || '';
+    const prevWillChange = el.style.willChange || '';
+
+    el.style.willChange = 'opacity';
+    el.style.transition = 'opacity 400ms ease';
+    el.style.opacity = '0.88';
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.style.opacity = '1';
+      });
+    });
+
+    setTimeout(() => {
+      el.style.willChange = prevWillChange;
+      el.style.transition = prevTransition;
+    }, 430);
+  }
   function ensureControls() {
     const target = document.querySelector('.nav__tabs__bottom');
     if (!target) return false;
@@ -439,12 +462,21 @@ function Invoke-Cdp {
     toggleBtn.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (document.getElementById(STYLE_ID)) {
+      triggerThemeFade();
+
+      const active = !!document.getElementById(STYLE_ID);
+      if (active) {
         clearTheme();
       } else {
+        // Force a full re-patch cycle every time user turns it ON.
+        clearTheme();
         applyTheme();
-        ensureLockPinUI();
+        setTimeout(() => {
+          applyTheme();
+          ensureLockPinUI();
+        }, 30);
       }
+
       refresh();
     };
 
@@ -543,6 +575,9 @@ function Invoke-Cdp {
 }
 
 Invoke-Cdp -DebugPort $Port -Mode $Action -ThemeCssPath $CssPath -Match $TargetMatch
+
+
+
 
 
 
