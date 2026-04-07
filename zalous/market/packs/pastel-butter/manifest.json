@@ -1,0 +1,8 @@
+﻿{
+    "id":  "theme.pastel-butter",
+    "name":  "Pastel Butter",
+    "type":  "theme",
+    "entry":  "pastel-butter.css",
+    "description":  "Theme pastel pastel butter",
+    "version":  "1.0.0"
+}

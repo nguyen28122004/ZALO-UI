@@ -1,51 +1,59 @@
-﻿# Zalo UI Mod Guide (Selector + Theme Workflow)
+﻿# Hướng dẫn chỉnh UI Zalo (Selector + Theme Workflow)
 
-## A. Nguyen tac selector
+## 1) Nguyên tắc chọn selector
 
-Uu tien theo thu tu:
-1. `id` on dinh
-2. `data-*` / `aria-*`
+Ưu tiên theo thứ tự:
+1. `id` ổn định
+2. `data-*`, `aria-*`
 3. `role`
-4. `class contains` (chi dung khi can)
+4. `class*="..."` (chỉ dùng khi không có lựa chọn tốt hơn)
 
-Tranh selector qua sau va class hash khong on dinh.
+Tránh selector quá sâu hoặc class hash thay đổi theo build.
 
-## B. Kien truc css
+## 2) Cấu trúc CSS trong dự án
 
-- `zalo-common.css`: rule chung cho toan bo giao dien light.
-- `zalo-<color>.css`: chi chua token mau.
+- `themes/zalo-common.css`: rule layout/chung cho light mode
+- `themes/zalo-<màu>.css`: token màu theo từng theme
 
-Khi ON:
-- script inject `zalo-common.css`
-- script inject theme dang chon (`green/pink/blue/purple/orange`)
+Khi runtime bật patch:
+- Inject `zalo-common.css`
+- Inject theme active (`zalo-green.css`, `zalo-blue.css`, ...)
 
-## C. Quy trinh chinh giao dien
+## 3) Quy trình chỉnh giao diện đúng chuẩn
 
-1. Inspect element trong DevTools.
-2. Tim selector on dinh.
-3. Neu la mau: sua trong file `themes/zalo-<color>.css`.
-4. Neu la rule chung/layout: sua trong `themes/zalo-common.css`.
-5. Patch lai:
+1. Inspect phần tử bằng DevTools/CDP
+2. Xác định selector ổn định
+3. Nếu là token màu: sửa `themes/zalo-<màu>.css`
+4. Nếu là layout/chung: sửa `themes/zalo-common.css`
+5. Chạy patch lại:
+
+```powershell
+node .\tools\zalous-cli.js apply
+```
+
+Lưu ý: `apply` đã tự sync theme/extension vào `%APPDATA%\Zalous` trước khi patch.
+
+## 4) Patch live qua CDP (không cần restart)
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\zalo-cdp-patch.ps1 -Action apply -Port 9222 -CssPath .\themes\zalo-green.css -TargetMatch Zalo
 ```
 
-## D. Theme nhanh
+Dùng khi cần thử nhanh selector/màu trong phiên đang mở.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme green
-powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme pink
-powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme blue
-powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme purple
-powershell -ExecutionPolicy Bypass -File .\tools\patch-zalo-now.ps1 -Theme orange
-```
+## 5) Kiểm tra nhanh khi màu không ăn
 
-## E. Troubleshooting
+1. Kiểm tra file runtime đang dùng trong `%APPDATA%\Zalous\themes`
+2. Kiểm tra selector có match đúng node thực tế chưa
+3. Tăng specificity hoặc thêm `!important` cho vùng xung đột
+4. Thử ON/OFF patch trong control UI hoặc đổi tab để ép re-render
+5. Nếu cần, patch lại `app.asar` bằng `node .\tools\zalous-cli.js apply`
 
-- Khong thay target: check `http://127.0.0.1:9222/json/list`.
-- Patch thanh cong nhung UI khong doi: bam ON/OFF 1 lan hoac doi tab chat de re-render.
-- Style khong an: tang specificity hoac them `!important`.
-- Nhieu target: them `-TargetMatch Zalo`.
+## 6) Troubleshooting
 
-Luu y: guide nay khong bao gom buoc kill/mo Zalo kem debug argument.
+- Không thấy target CDP:
+  - Mở `http://127.0.0.1:9222/json/list` để kiểm tra
+- Patch thành công nhưng UI không đổi:
+  - Thường do selector không trúng hoặc đang dùng cache view cũ
+- Nhiều target CDP:
+  - Dùng `-TargetMatch Zalo` để lọc đúng tab

@@ -1,0 +1,8 @@
+﻿{
+  "id": "extension.theme-common-mod",
+  "name": "Theme Common Mod",
+  "type": "extension",
+  "entry": "theme-common-mod.js",
+  "description": "Apply zalo-common.css as independent toggleable mod",
+  "version": "1.0.0"
+}

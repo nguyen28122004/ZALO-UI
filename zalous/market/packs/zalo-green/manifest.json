@@ -1,0 +1,8 @@
+﻿{
+    "id":  "theme.zalo-green",
+    "name":  "Zalo Green",
+    "description":  "Built-in Zalo green theme",
+    "type":  "theme",
+    "version":  "1.0.0",
+    "entry":  "zalo-green.css"
+}

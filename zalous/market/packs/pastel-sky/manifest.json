@@ -1,0 +1,8 @@
+﻿{
+    "id":  "theme.pastel-sky",
+    "name":  "Pastel Sky",
+    "type":  "theme",
+    "entry":  "pastel-sky.css",
+    "description":  "Theme pastel pastel sky",
+    "version":  "1.0.0"
+}

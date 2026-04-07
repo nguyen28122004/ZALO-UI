@@ -1,0 +1,8 @@
+﻿{
+    "id":  "theme.pastel-rose",
+    "name":  "Pastel Rose",
+    "type":  "theme",
+    "entry":  "pastel-rose.css",
+    "description":  "Theme pastel pastel rose",
+    "version":  "1.0.0"
+}

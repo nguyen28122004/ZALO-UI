@@ -1,49 +1,73 @@
-# Zalous Architecture
+﻿# Kiến trúc Zalous
 
-## Components
+## 1) Tổng quan thành phần
 
-1. `tools/zalous-cli.js` (CLI control plane)
-- Detect Zalo install + `app.asar`.
-- Manage `%APPDATA%\Zalous` config/assets.
-- Inject runtime bootstrap vao `pc-dist/index.html`.
-- Backup/restore `app.asar`.
-- Install pack tu local market catalog.
+1. `tools/zalous-cli.js` (control plane)
+- Quản lý `%APPDATA%\Zalous` (config, themes, extensions, backups)
+- Tìm `app.asar` của Zalo
+- Patch `pc-dist/index.html` trong `app.asar`
+- Backup và restore
+- Cài pack từ local market
+- Đồng bộ built-in theme/extension trước khi patch
 
-2. `zalous-runtime.js` (injected runtime)
-- Khoi tao khi Zalo renderer load.
-- Doc embedded payload (`window.__ZALOUS_EMBEDDED__`).
-- Co gang doc external config/themes/extensions tu `%APPDATA%\Zalous` neu `require` kha dung.
-- Apply theme, execute extensions, mount control UI.
+2. `zalous/runtime/zalous-runtime.js` (runtime trong renderer)
+- Chạy khi Zalo load `index.html`
+- Đọc payload embedded: `window.__ZALOUS_EMBEDDED__`
+- Thử nạp dữ liệu external từ `%APPDATA%\Zalous` khi có quyền `require`
+- Áp theme đang active, chạy extension đã bật
+- Render control UI (ON/OFF, chuyển theme, market)
 
 3. Data store `%APPDATA%\Zalous`
-- `config.json`: active theme, enabled extensions, appAsar path.
-- `themes/*.css`: giao dien.
-- `extensions/*.js`: code runtime plugin.
-- `backups/*.bak`: rollback asar.
+- `config.json`: trạng thái runtime (`activeTheme`, `enabledExtensions`, `patchEnabled`, `appAsarPath`...)
+- `themes/*.css`: theme runtime sử dụng
+- `extensions/*.js`: extension runtime sử dụng
+- `backups/*.bak`: backup để rollback
 
 4. Market layer
-- `zalous/market/catalog.local.json` la source catalog local.
-- `zalous/market/packs/*` la pack template.
-- `market-install` copy pack assets vao data store runtime.
+- `zalous/market/catalog.local.json`: danh sách pack local
+- `zalous/market/packs/*`: pack theme/extension mẫu
+- `market-install`: copy entry của pack vào `%APPDATA%\Zalous`
 
-## Injection Strategy
+## 2) Chiến lược inject
 
-Patch engine thay doi duy nhat `pc-dist/index.html` trong `app.asar`:
-- Insert marker block:
+Patch engine chỉ sửa `pc-dist/index.html` bên trong `app.asar`:
+- Chèn hoặc thay thế block marker:
   - `<!-- ZALOUS:BEGIN -->`
-  - payload script
-  - runtime script
+  - script payload (`window.__ZALOUS_EMBEDDED__ = ...`)
+  - script runtime (`zalous-runtime.js`)
   - `<!-- ZALOUS:END -->`
-- Neu marker da ton tai: replace idempotent.
 
-## Security Model (current)
+Thiết kế này idempotent: patch nhiều lần vẫn thay đúng block cũ.
 
-- Local-only trust model.
-- Extensions chay qua `new Function(...)` trong renderer context.
-- Khong co signature check cho local pack.
+## 3) Mô hình cấu hình
 
-## Security Model (target online market)
+Nguồn dữ liệu runtime có hai lớp:
+1. Embedded payload (được chèn lúc patch)
+2. External payload từ `%APPDATA%\Zalous` (ưu tiên khi runtime có quyền đọc file)
 
-- Signed catalog + checksum pack.
-- Optional publisher keys.
-- Disable unsigned extension by policy.
+Mục tiêu:
+- Zalo vẫn chạy được nếu external không đọc được
+- Khi external đọc được, có thể cập nhật theme/extension mà không cần thay mã runtime
+
+## 4) Đồng bộ assets khi patch
+
+Trong cấu trúc hiện tại:
+- `init` và `apply` đều đồng bộ built-in assets từ repo vào `%APPDATA%\Zalous`
+- Theme: copy từ `themes/*.css`
+- Extension built-in: quét `zalous/market/packs/*/manifest.json`, lấy pack `type: extension` rồi copy file `entry`
+
+Nhờ đó tránh tình trạng code repo mới nhưng `%APPDATA%` vẫn giữ theme/extension cũ.
+
+## 5) Bảo mật hiện tại
+
+- Mô hình local trust
+- Extension chạy bằng `new Function(...)` trong renderer context
+- Chưa có chữ ký số cho local pack
+
+## 6) Định hướng online market
+
+- Catalog HTTPS có chữ ký
+- Tải pack kèm checksum/signature
+- Quản lý version/dependency rõ ràng
+- Chính sách chặn extension không đáng tin cậy
+- Rollback theo từng pack

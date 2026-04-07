@@ -1,0 +1,8 @@
+﻿{
+    "id":  "theme.pastel-sage",
+    "name":  "Pastel Sage",
+    "type":  "theme",
+    "entry":  "pastel-sage.css",
+    "description":  "Theme pastel pastel sage",
+    "version":  "1.0.0"
+}

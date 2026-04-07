@@ -1,4 +1,4 @@
-﻿body:not(.dark) {
+body:not(.dark) {
   transition: background-color 1s, border-color .8s, color .8s, filter .5s;
 
   /* Core green pastel scale */
@@ -70,12 +70,12 @@
   --layer-background-disabled: #d2e4d9;
   --layer-background-selected: #cbe6d6;
   --layer-background-inverse: #ffffff;
-  --layer-background-leftmenu: #e4f2e9;
-  --layer-background-leftmenu-hover: #dbeee2;
-  --layer-background-leftmenu-selected: #cde6d7;
-  --layer-background-navbar-normal: #e6f3ea;
-  --layer-background-navbar-hover: #dceee3;
-  --layer-background-navbar-selected: #d2e8db;
+  --layer-background-leftmenu: #57b678;
+  --layer-background-leftmenu-hover: #4da96f;
+  --layer-background-leftmenu-selected: #409160;
+  --layer-background-navbar-normal: #57b678;
+  --layer-background-navbar-hover: rgba(0,0,0,0.15);
+  --layer-background-navbar-selected: rgba(0,0,0,0.25);
   --layer-background-navbar-sublevel-normal: #eaf5ee;
   --layer-background-navbar-sublevel-hover: #dceee3;
   --layer-background-navbar-sublevel-selected: #c7e2d1;
@@ -838,3 +838,4 @@ body:not(.dark) {
   --button-tertiary-neutral-normal: #e4efe8;
   --button-tertiary-neutral-text: #244638;
 }
+

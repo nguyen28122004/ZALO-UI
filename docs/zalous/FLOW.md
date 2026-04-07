@@ -1,59 +1,70 @@
-# Zalous Flow
+﻿# Luồng hoạt động Zalous
 
-## A. Provisioning Flow
+## A) Provisioning (`init`)
 
-1. User chay `init`.
-2. CLI tao `%APPDATA%\Zalous` + file `config.json`.
-3. CLI copy built-in theme vao `%APPDATA%\Zalous\themes`.
+1. Tạo workspace `%APPDATA%\Zalous`
+2. Tạo `config.json` mặc định nếu chưa có
+3. Đồng bộ built-in theme vào `%APPDATA%\Zalous\themes`
+4. Đồng bộ built-in extension vào `%APPDATA%\Zalous\extensions`
 
-## B. Patch Flow (`apply`)
+## B) Patch Flow (`apply`)
 
-1. Resolve `app.asar`:
-- uu tien `-AsarPath`
-- roi `config.appAsarPath`
-- roi auto detect `%LOCALAPPDATA%\Programs\Zalo\Zalo-*\resources\app.asar`
+1. Resolve `app.asar`
+- Ưu tiên `--asar <path>`
+- Sau đó `config.appAsarPath`
+- Cuối cùng auto detect `%LOCALAPPDATA%\Programs\Zalo\Zalo-*\resources\app.asar`
 
-2. Load runtime assets:
-- runtime template `zalous/runtime/zalous-runtime.js`
-- config + themes + extensions tu `%APPDATA%\Zalous`
+2. Đồng bộ assets trước patch
+- Copy `themes/*.css` từ repo vào `%APPDATA%\Zalous\themes`
+- Quét `zalous/market/packs/*`, với pack `type: extension` thì copy `entry` vào `%APPDATA%\Zalous\extensions`
 
-3. Build embedded payload JSON.
+3. Nạp runtime data
+- Đọc `config.json`
+- Đọc theme từ `%APPDATA%\Zalous\themes` (trừ `zalo-common.css`)
+- Đọc extension từ `%APPDATA%\Zalous\extensions`
+- Lọc `enabledExtensions` để bỏ extension không còn tồn tại
 
-4. Extract `app.asar` -> temp dir.
+4. Build payload embedded
+- `meta`
+- `config`
+- `themes`
+- `extensions`
 
-5. Edit `pc-dist/index.html`:
-- replace marker block neu da co
-- hoac inject truoc `</head>`
+5. Patch `app.asar`
+- Extract `app.asar` ra thư mục tạm
+- Sửa `pc-dist/index.html`:
+  - Nếu có marker `ZALOUS:BEGIN/END` thì replace
+  - Nếu chưa có thì inject trước `</head>`
+- Repack thành `app.asar` mới
 
-6. Pack lai asar.
+6. Backup và ghi đè
+- Backup asar cũ vào `%APPDATA%\Zalous\backups\app.asar.<timestamp>.bak`
+- Ghi đè `app.asar` mới
+- Cập nhật `config.appAsarPath`
 
-7. Backup asar cu vao `%APPDATA%\Zalous\backups`.
+## C) Runtime Boot Flow (khi mở Zalo)
 
-8. Replace asar moi.
+1. Zalo load `index.html` đã inject
+2. Runtime đọc `window.__ZALOUS_EMBEDDED__`
+3. Runtime thử nạp external data từ `%APPDATA%\Zalous` (nếu có quyền)
+4. Merge cấu hình và assets theo ưu tiên external
+5. Áp theme active
+6. Chạy danh sách extension đã bật
+7. Dựng control UI trong app
 
-## C. Runtime Boot Flow (inside Zalo)
+## D) Market Flow (local)
 
-1. Zalo load `index.html`.
-2. `window.__ZALOUS_EMBEDDED__` available.
-3. Runtime start:
-- Parse embedded payload
-- Try load external config/themes/extensions from `%APPDATA%\Zalous` (neu co `require`)
-- Merge external over embedded
-- Apply active theme
-- Execute enabled extensions
-- Render mini controls ON/OFF + theme cycle
+1. `market-list`
+- Đọc catalog local và liệt kê pack
 
-## D. Market Flow (local)
+2. `market-install --id <packId>`
+- Resolve pack path
+- Đọc `manifest.json`
+- Copy `entry` vào `themes` hoặc `extensions` trong `%APPDATA%\Zalous`
+- Nếu là extension thì tự add vào `enabledExtensions` (nếu chưa có)
 
-1. `market-list`: doc `catalog.local.json`.
-2. `market-install -PackId X`:
-- resolve pack path
-- doc `manifest.json`
-- copy entry file vao `%APPDATA%\Zalous\themes` hoac `extensions`
-- update config (enable extension hoac set default theme neu can)
+## E) Rollback Flow (`restore`)
 
-## E. Rollback Flow
-
-1. `restore` lay backup moi nhat.
-2. Copy de ghi de `app.asar`.
-
+1. Tìm backup mới nhất trong `%APPDATA%\Zalous\backups`
+2. Copy backup đè lại `app.asar`
+3. Mở lại Zalo để xác nhận rollback

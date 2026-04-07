@@ -142,9 +142,9 @@ function Invoke-Cdp {
 
       $script = @"
 (() => {
-  const STYLE_ID = 'zalo-runtime-theme';
-  const COMMON_STYLE_ID = 'zalo-runtime-common';
-  const CTRL_ID = 'zalo-theme-controls';
+  const STYLE_ID = 'zalous-runtime-theme';
+  const COMMON_STYLE_ID = 'zalous-runtime-common';
+  const CTRL_ID = 'zalous-controls';
   const LOCK_STYLE_ID = 'zalo-lock-pin-style';
   const COMMON_CSS = atob('$commonCssB64');
   const THEMES_B64 = $themeCssB64Json;
@@ -156,9 +156,9 @@ function Invoke-Cdp {
     function applyTheme(themeKey) {
     const key = (themeKey && THEMES_CSS[themeKey])
       ? themeKey
-      : (window.__zaloThemeKey || DEFAULT_THEME_KEY || THEME_ORDER[0]);
+      : (window.__zalousThemeKey || DEFAULT_THEME_KEY || THEME_ORDER[0]);
 
-    window.__zaloThemeKey = key;
+    window.__zalousThemeKey = key;
 
     let commonTag = document.getElementById(COMMON_STYLE_ID);
     if (!commonTag) {
@@ -177,7 +177,7 @@ function Invoke-Cdp {
 
     const css = THEMES_CSS[key] || THEMES_CSS[THEME_ORDER[0]] || '';
     tag.textContent = css;
-    window.__zaloThemeCss = css;
+    window.__zalousThemeCss = css;
     return commonTag.textContent.length + tag.textContent.length;
   }
 
@@ -478,8 +478,8 @@ function Invoke-Cdp {
       '-webkit-app-region:no-drag'
     ].join(';');
 
-    const TOGGLE_ID = 'zalo-theme-toggle-btn';
-    const THEME_ID = 'zalo-theme-picker-btn';
+    const TOGGLE_ID = 'zalous-toggle';
+    const THEME_ID = 'zalous-theme';
 
     let toggleBtn = document.getElementById(TOGGLE_ID);
     if (!toggleBtn) {
@@ -526,7 +526,7 @@ function Invoke-Cdp {
 
     const refresh = () => {
       const active = !!document.getElementById(STYLE_ID);
-      const key = window.__zaloThemeKey || DEFAULT_THEME_KEY || THEME_ORDER[0];
+      const key = window.__zalousThemeKey || DEFAULT_THEME_KEY || THEME_ORDER[0];
       const short = (key || 'th').slice(0, 2).toUpperCase();
 
       toggleBtn.textContent = active ? 'ON' : 'OFF';
@@ -552,9 +552,9 @@ function Invoke-Cdp {
         clearTheme();
       } else {
         clearTheme();
-        applyTheme(window.__zaloThemeKey || DEFAULT_THEME_KEY);
+        applyTheme(window.__zalousThemeKey || DEFAULT_THEME_KEY);
         setTimeout(() => {
-          applyTheme(window.__zaloThemeKey || DEFAULT_THEME_KEY);
+          applyTheme(window.__zalousThemeKey || DEFAULT_THEME_KEY);
           ensureLockPinUI();
         }, 30);
       }
@@ -566,10 +566,10 @@ function Invoke-Cdp {
       e.preventDefault();
       e.stopPropagation();
 
-      const current = window.__zaloThemeKey || DEFAULT_THEME_KEY || THEME_ORDER[0];
+      const current = window.__zalousThemeKey || DEFAULT_THEME_KEY || THEME_ORDER[0];
       const idx = Math.max(0, THEME_ORDER.indexOf(current));
       const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
-      window.__zaloThemeKey = next;
+      window.__zalousThemeKey = next;
 
       if (document.getElementById(STYLE_ID)) {
         triggerThemeFade();
@@ -582,14 +582,14 @@ function Invoke-Cdp {
     refresh();
     return true;
   }
-  window.__zaloThemes = THEMES_CSS;
-  window.__zaloThemeMeta = THEMES_META;
-  window.__zaloThemeOrder = THEME_ORDER;
-  window.__zaloThemeKey = (THEMES_CSS[DEFAULT_THEME_KEY] ? DEFAULT_THEME_KEY : (THEME_ORDER[0] || 'green'));
-  window.__zaloThemeApply = applyTheme;
-  window.__zaloThemeClear = clearTheme;
+  window.__zalousThemes = THEMES_CSS;
+  window.__zalousThemeMeta = THEMES_META;
+  window.__zalousThemeOrder = THEME_ORDER;
+  window.__zalousThemeKey = (THEMES_CSS[DEFAULT_THEME_KEY] ? DEFAULT_THEME_KEY : (THEME_ORDER[0] || 'green'));
+  window.__zalousThemeApply = applyTheme;
+  window.__zalousThemeClear = clearTheme;
 
-  const cssLength = applyTheme(window.__zaloThemeKey || DEFAULT_THEME_KEY);
+  const cssLength = applyTheme(window.__zalousThemeKey || DEFAULT_THEME_KEY);
   const controls = ensureControls();
   const pinUIs = ensureLockPinUI();
   ensureLockObserver();
@@ -607,16 +607,16 @@ function Invoke-Cdp {
     w: Math.round(el.getBoundingClientRect().width),
     h: Math.round(el.getBoundingClientRect().height)
   }));
-  return { ok: true, mode: 'apply', theme: window.__zaloThemeKey, cssLength, controls, pinUIs, hostMeta, inputCount, inputMeta };
+  return { ok: true, mode: 'apply', theme: window.__zalousThemeKey, cssLength, controls, pinUIs, hostMeta, inputCount, inputMeta };
 })()
 "@
     }
     else {
       $script = @"
 (() => {
-  const commonTag = document.getElementById('zalo-runtime-common');
+  const commonTag = document.getElementById('zalous-runtime-common');
   if (commonTag) commonTag.remove();
-  const tag = document.getElementById('zalo-runtime-theme');
+  const tag = document.getElementById('zalous-runtime-theme');
   if (tag) tag.remove();
   return { ok: true, mode: 'clear' };
 })()
@@ -679,6 +679,9 @@ function Invoke-Cdp {
 }
 
 Invoke-Cdp -DebugPort $Port -Mode $Action -ThemeCssPath $CssPath -Match $TargetMatch
+
+
+
 
 
 

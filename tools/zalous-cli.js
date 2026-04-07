@@ -4,7 +4,7 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 const os = require('os');
-const { createPackage, extractAll } = require('@electron/asar');
+const { createPackage, extractAll, extractFile } = require('@electron/asar');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const APPDATA = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
@@ -17,9 +17,9 @@ const RUNTIME_PATH = path.join(REPO_ROOT, 'zalous', 'runtime', 'zalous-runtime.j
 function defaultConfig() {
   return {
     version: 1,
-    activeTheme: 'zalo-green.css',
+    activeTheme: null,
     enabledExtensions: [],
-    patchEnabled: true,
+    patchEnabled: false,
     appAsarPath: '',
     ui: { controls: true },
     market: { source: 'local', catalogUrl: '' }
@@ -61,6 +61,33 @@ async function saveConfig(cfg) {
 
 async function copyBuiltInThemes() {
   await ensureLayout();
+  const packsRoot = path.join(REPO_ROOT, 'zalous', 'market', 'packs');
+  const dstDir = path.join(ZALOUS_ROOT, 'themes');
+  if (!fs.existsSync(packsRoot)) return;
+
+  const packs = await fsp.readdir(packsRoot, { withFileTypes: true });
+  for (const p of packs) {
+    if (!p.isDirectory()) continue;
+    const packDir = path.join(packsRoot, p.name);
+    const manifestPath = path.join(packDir, 'manifest.json');
+    if (!fs.existsSync(manifestPath)) continue;
+
+    let manifest;
+    try {
+      manifest = JSON.parse((await fsp.readFile(manifestPath, 'utf8')).replace(/^\uFEFF/, ''));
+    } catch (_) {
+      continue;
+    }
+
+    if (!manifest || manifest.type !== 'theme' || !manifest.entry) continue;
+    const src = path.join(packDir, manifest.entry);
+    if (!fs.existsSync(src)) continue;
+    await fsp.copyFile(src, path.join(dstDir, path.basename(manifest.entry)));
+  }
+}
+
+async function copyLegacyThemesFromRoot() {
+  await ensureLayout();
   const srcDir = path.join(REPO_ROOT, 'themes');
   const dstDir = path.join(ZALOUS_ROOT, 'themes');
   if (!fs.existsSync(srcDir)) return;
@@ -69,6 +96,39 @@ async function copyBuiltInThemes() {
     if (!ent.isFile() || !ent.name.toLowerCase().endsWith('.css')) continue;
     await fsp.copyFile(path.join(srcDir, ent.name), path.join(dstDir, ent.name));
   }
+}
+
+async function copyBuiltInExtensions() {
+  await ensureLayout();
+  const packsRoot = path.join(REPO_ROOT, 'zalous', 'market', 'packs');
+  const dstDir = path.join(ZALOUS_ROOT, 'extensions');
+  if (!fs.existsSync(packsRoot)) return;
+
+  const packs = await fsp.readdir(packsRoot, { withFileTypes: true });
+  for (const p of packs) {
+    if (!p.isDirectory()) continue;
+    const packDir = path.join(packsRoot, p.name);
+    const manifestPath = path.join(packDir, 'manifest.json');
+    if (!fs.existsSync(manifestPath)) continue;
+
+    let manifest;
+    try {
+      manifest = JSON.parse((await fsp.readFile(manifestPath, 'utf8')).replace(/^\uFEFF/, ''));
+    } catch (_) {
+      continue;
+    }
+
+    if (!manifest || manifest.type !== 'extension' || !manifest.entry) continue;
+    const src = path.join(packDir, manifest.entry);
+    if (!fs.existsSync(src)) continue;
+    await fsp.copyFile(src, path.join(dstDir, path.basename(manifest.entry)));
+  }
+}
+
+async function syncBuiltInAssets() {
+  await copyBuiltInThemes();
+  await copyLegacyThemesFromRoot();
+  await copyBuiltInExtensions();
 }
 
 async function resolveAsar(preferred) {
@@ -91,6 +151,72 @@ async function resolveAsar(preferred) {
   throw new Error('Khong tim thay app.asar. Dung --asar <path>');
 }
 
+async function detectLatestAsar() {
+  const zaloRoot = path.join(LOCALAPPDATA, 'Programs', 'Zalo');
+  if (!fs.existsSync(zaloRoot)) throw new Error('Khong tim thay thu muc cai Zalo');
+  const dirs = (await fsp.readdir(zaloRoot, { withFileTypes: true }))
+    .filter((d) => d.isDirectory() && /^Zalo-\d+/.test(d.name))
+    .map((d) => d.name);
+
+  dirs.sort((a, b) => b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' }));
+  for (const d of dirs) {
+    const p = path.join(zaloRoot, d, 'resources', 'app.asar');
+    if (fs.existsSync(p)) return p;
+  }
+  throw new Error('Khong tim thay app.asar ban moi nhat');
+}
+
+function cleanBackupPathForAsar(asarPath) {
+  const versionDir = path.basename(path.dirname(path.dirname(asarPath)));
+  const safeVersion = String(versionDir || 'unknown').replace(/[^a-zA-Z0-9._-]/g, '_');
+  return path.join(ZALOUS_ROOT, 'backups', `app.asar.clean.${safeVersion}.bak`);
+}
+
+function isZalousPatchedAsar(asarPath) {
+  try {
+    const html = String(extractFile(asarPath, 'pc-dist/index.html'));
+    return /<!-- ZALOUS:BEGIN -->[\s\S]*?<!-- ZALOUS:END -->/m.test(html);
+  } catch (_) {
+    return false;
+  }
+}
+
+async function pickUnpatchedBackupCandidate() {
+  const backupDir = path.join(ZALOUS_ROOT, 'backups');
+  if (!fs.existsSync(backupDir)) return null;
+  const files = (await fsp.readdir(backupDir))
+    .filter((f) => /^app\.asar\..+\.bak$/.test(f))
+    .sort((a, b) => b.localeCompare(a));
+
+  for (const f of files) {
+    const full = path.join(backupDir, f);
+    if (!isZalousPatchedAsar(full)) return full;
+  }
+  return null;
+}
+
+async function ensureCleanBaseForPatch(asarPath) {
+  await ensureLayout();
+  const cleanBackup = cleanBackupPathForAsar(asarPath);
+
+  if (!fs.existsSync(cleanBackup)) {
+    if (!isZalousPatchedAsar(asarPath)) {
+      await fsp.copyFile(asarPath, cleanBackup);
+      console.log(`[zalous] clean backup ${cleanBackup}`);
+    } else {
+      const candidate = await pickUnpatchedBackupCandidate();
+      if (!candidate) {
+        throw new Error('Khong tim thay clean backup chua patch. Hay restore app.asar sach roi apply lai.');
+      }
+      await fsp.copyFile(candidate, cleanBackup);
+      console.log(`[zalous] clean backup seeded ${candidate} -> ${cleanBackup}`);
+    }
+  }
+
+  await fsp.copyFile(cleanBackup, asarPath);
+  console.log(`[zalous] restored clean base ${cleanBackup}`);
+}
+
 async function collectMap(dirName, ext) {
   const dir = path.join(ZALOUS_ROOT, dirName);
   const out = {};
@@ -103,20 +229,55 @@ async function collectMap(dirName, ext) {
   return out;
 }
 
+async function syncConfigWithAssets() {
+  const cfg = await readConfig();
+  const themes = await collectMap('themes', '.css');
+  delete themes['zalo-common.css'];
+  const extensions = await collectMap('extensions', '.js');
+
+  let changed = false;
+  const themeNames = Object.keys(themes);
+  if (!cfg.activeTheme || !themes[cfg.activeTheme]) {
+    const next = themeNames.length ? themeNames[0] : null;
+    if (cfg.activeTheme !== next) {
+      cfg.activeTheme = next;
+      changed = true;
+    }
+  }
+
+  const normalizedEnabled = (cfg.enabledExtensions || []).filter((name) =>
+    Object.prototype.hasOwnProperty.call(extensions, name)
+  );
+  if (JSON.stringify(normalizedEnabled) !== JSON.stringify(cfg.enabledExtensions || [])) {
+    cfg.enabledExtensions = normalizedEnabled;
+    changed = true;
+  }
+
+  if (!cfg.ui || typeof cfg.ui !== 'object') {
+    cfg.ui = { controls: true };
+    changed = true;
+  } else if (typeof cfg.ui.controls !== 'boolean') {
+    cfg.ui.controls = true;
+    changed = true;
+  }
+
+  if (changed) await saveConfig(cfg);
+  return { cfg, themes, extensions };
+}
+
 function escapeScript(text) {
   return text.replace(/<\/script>/gi, '<\\/script>');
 }
 
 async function applyPatch({ asarPath, noBackup }) {
   await ensureLayout();
-  const cfg = await readConfig();
-  const themes = await collectMap('themes', '.css');
-  const extensions = await collectMap('extensions', '.js');
+  await ensureCleanBaseForPatch(asarPath);
+  await syncBuiltInAssets();
+  const synced = await syncConfigWithAssets();
+  const cfg = synced.cfg;
+  const themes = synced.themes;
+  const extensions = synced.extensions;
   if (!Object.keys(themes).length) throw new Error('Chua co theme trong %APPDATA%\\Zalous\\themes');
-
-  if (!cfg.activeTheme || !themes[cfg.activeTheme]) {
-    cfg.activeTheme = Object.keys(themes)[0];
-  }
 
   const runtimeCode = escapeScript(await fsp.readFile(RUNTIME_PATH, 'utf8'));
   const payload = {
@@ -149,10 +310,12 @@ async function applyPatch({ asarPath, noBackup }) {
   const marker = /<!-- ZALOUS:BEGIN -->[\s\S]*?<!-- ZALOUS:END -->/m;
   if (marker.test(html)) {
     html = html.replace(marker, injectBlock);
-  } else if (html.includes('</head>')) {
-    html = html.replace('</head>', `${injectBlock}\n</head>`);
+  } else if (/<\/head>/i.test(html)) {
+    html = html.replace(/<\/head>/i, `${injectBlock}\n</head>`);
+  } else if (/<\/body>/i.test(html)) {
+    html = html.replace(/<\/body>/i, `${injectBlock}\n</body>`);
   } else {
-    throw new Error('Khong tim thay </head> de chen runtime');
+    throw new Error('Khong tim thay </head> hoac </body> de chen runtime');
   }
   await fsp.writeFile(indexPath, html, 'utf8');
 
@@ -252,6 +415,7 @@ function parseArgv(argv) {
 async function printStatus() {
   const cfg = await readConfig();
   const themes = await collectMap('themes', '.css');
+  delete themes['zalo-common.css'];
   const exts = await collectMap('extensions', '.js');
   console.log(JSON.stringify({
     root: ZALOUS_ROOT,
@@ -294,7 +458,8 @@ async function main() {
       printHelp();
       break;
     case 'init':
-      await copyBuiltInThemes();
+      await syncBuiltInAssets();
+      await syncConfigWithAssets();
       console.log(`[zalous] initialized ${ZALOUS_ROOT}`);
       break;
     case 'detect': {
@@ -309,19 +474,24 @@ async function main() {
       await printStatus();
       break;
     case 'apply':
-      await applyPatch({ asarPath: await resolveAsar(flags.asar), noBackup: !!flags['no-backup'] });
+      await applyPatch({
+        asarPath: flags.asar ? await resolveAsar(flags.asar) : await detectLatestAsar(),
+        noBackup: !!flags['no-backup']
+      });
       break;
     case 'restore':
       await restoreLatest(await resolveAsar(flags.asar));
       break;
     case 'list-themes': {
       const themes = await collectMap('themes', '.css');
+      delete themes['zalo-common.css'];
       Object.keys(themes).sort().forEach((t) => console.log(t));
       break;
     }
     case 'set-theme': {
       if (!flags.theme) throw new Error('Can --theme <file.css>');
       const themes = await collectMap('themes', '.css');
+      delete themes['zalo-common.css'];
       if (!themes[flags.theme]) throw new Error(`Theme khong ton tai ${flags.theme}`);
       const cfg = await readConfig();
       cfg.activeTheme = flags.theme;

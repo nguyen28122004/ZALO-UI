@@ -1,0 +1,8 @@
+﻿{
+    "id":  "theme.pastel-peach",
+    "name":  "Pastel Peach",
+    "type":  "theme",
+    "entry":  "pastel-peach.css",
+    "description":  "Theme pastel pastel peach",
+    "version":  "1.0.0"
+}

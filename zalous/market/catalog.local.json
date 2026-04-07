@@ -1,20 +1,118 @@
 ﻿{
-  "version": 1,
-  "updatedAt": "2026-04-07",
-  "packs": [
-    {
-      "id": "theme.green-soft",
-      "name": "Green Soft",
-      "type": "theme",
-      "description": "Pastel green base theme",
-      "path": "packs/green-soft"
-    },
-    {
-      "id": "extension.lock-pin-dots",
-      "name": "Lock PIN Dots",
-      "type": "extension",
-      "description": "4-dot passcode enhancer",
-      "path": "packs/lock-pin-dots"
-    }
-  ]
+    "version":  1,
+    "updatedAt":  "2026-04-07",
+    "packs":  [
+                  {
+                      "id":  "theme.zalo-blue",
+                      "name":  "Zalo Blue",
+                      "type":  "theme",
+                      "description":  "Built-in Zalo blue theme",
+                      "path":  "packs/zalo-blue"
+                  },
+                  {
+                      "id":  "theme.zalo-green",
+                      "name":  "Zalo Green",
+                      "type":  "theme",
+                      "description":  "Built-in Zalo green theme",
+                      "path":  "packs/zalo-green"
+                  },
+                  {
+                      "id":  "theme.zalo-pink",
+                      "name":  "Zalo Pink",
+                      "type":  "theme",
+                      "description":  "Built-in Zalo pink theme",
+                      "path":  "packs/zalo-pink"
+                  },
+                  {
+                      "id":  "theme.zalo-purple",
+                      "name":  "Zalo Purple",
+                      "type":  "theme",
+                      "description":  "Built-in Zalo purple theme",
+                      "path":  "packs/zalo-purple"
+                  },
+                  {
+                      "id":  "theme.zalo-orange",
+                      "name":  "Zalo Orange",
+                      "type":  "theme",
+                      "description":  "Built-in Zalo orange theme",
+                      "path":  "packs/zalo-orange"
+                  },
+                  {
+                      "id":  "theme.green-soft",
+                      "name":  "Green Soft",
+                      "type":  "theme",
+                      "description":  "Pastel green base theme",
+                      "path":  "packs/green-soft"
+                  },
+                  {
+                      "id":  "extension.lock-pin-dots",
+                      "name":  "Lock PIN Dots",
+                      "type":  "extension",
+                      "description":  "4-dot passcode enhancer",
+                      "path":  "packs/lock-pin-dots"
+                  },
+                  {
+                      "id":  "extension.theme-common-mod",
+                      "name":  "Theme Common Mod",
+                      "type":  "extension",
+                      "description":  "Apply zalo-common.css as toggleable mod",
+                      "path":  "packs/theme-common-mod"
+                  },
+                  {
+                      "id":  "theme.pastel-mint",
+                      "name":  "Pastel Mint",
+                      "type":  "theme",
+                      "description":  "Pastel theme: Pastel Mint",
+                      "path":  "packs/pastel-mint"
+                  },
+                  {
+                      "id":  "theme.pastel-sage",
+                      "name":  "Pastel Sage",
+                      "type":  "theme",
+                      "description":  "Pastel theme: Pastel Sage",
+                      "path":  "packs/pastel-sage"
+                  },
+                  {
+                      "id":  "theme.pastel-peach",
+                      "name":  "Pastel Peach",
+                      "type":  "theme",
+                      "description":  "Pastel theme: Pastel Peach",
+                      "path":  "packs/pastel-peach"
+                  },
+                  {
+                      "id":  "theme.pastel-rose",
+                      "name":  "Pastel Rose",
+                      "type":  "theme",
+                      "description":  "Pastel theme: Pastel Rose",
+                      "path":  "packs/pastel-rose"
+                  },
+                  {
+                      "id":  "theme.pastel-lilac",
+                      "name":  "Pastel Lilac",
+                      "type":  "theme",
+                      "description":  "Pastel theme: Pastel Lilac",
+                      "path":  "packs/pastel-lilac"
+                  },
+                  {
+                      "id":  "theme.pastel-sky",
+                      "name":  "Pastel Sky",
+                      "type":  "theme",
+                      "description":  "Pastel theme: Pastel Sky",
+                      "path":  "packs/pastel-sky"
+                  },
+                  {
+                      "id":  "theme.pastel-butter",
+                      "name":  "Pastel Butter",
+                      "type":  "theme",
+                      "description":  "Pastel theme: Pastel Butter",
+                      "path":  "packs/pastel-butter"
+                  },
+                  {
+                      "id":  "theme.pastel-teal",
+                      "name":  "Pastel Teal",
+                      "type":  "theme",
+                      "description":  "Pastel theme: Pastel Teal",
+                      "path":  "packs/pastel-teal"
+                  }
+              ]
 }

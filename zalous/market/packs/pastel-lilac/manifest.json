@@ -1,0 +1,8 @@
+﻿{
+    "id":  "theme.pastel-lilac",
+    "name":  "Pastel Lilac",
+    "type":  "theme",
+    "entry":  "pastel-lilac.css",
+    "description":  "Theme pastel pastel lilac",
+    "version":  "1.0.0"
+}

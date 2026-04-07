@@ -1,0 +1,8 @@
+﻿{
+    "id":  "theme.zalo-blue",
+    "name":  "Zalo Blue",
+    "description":  "Built-in Zalo blue theme",
+    "type":  "theme",
+    "version":  "1.0.0",
+    "entry":  "zalo-blue.css"
+}

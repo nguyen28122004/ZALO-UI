@@ -1,64 +1,67 @@
-# hara-zalous (zalous)
+﻿# hara-zalous (zalous)
 
-`hara-zalous` (goi tat `zalous`) la bo patch engine cho Zalo Desktop theo huong giong Spicetify:
-- Patch mot lan vao `app.asar` de cam runtime bootstrap.
-- Theme/extension duoc quan ly rieng o `%APPDATA%\Zalous`.
-- Khi mo Zalo, runtime tu nap config + theme + extension de apply.
-- Co local market de cai pack, san sang mo rong online market sau nay.
+`hara-zalous` là bộ patch giao diện cho Zalo Desktop theo hướng tương tự Spicetify:
+- Patch một lần vào `app.asar` để cắm runtime bootstrap.
+- Theme/extension được quản lý riêng trong `%APPDATA%\Zalous`.
+- Khi mở Zalo, runtime nạp cấu hình + theme + extension để áp dụng.
+- Có local market để cài pack, sẵn sàng mở rộng online market.
 
-## 1) Cau truc tong quan
+## 1) Cấu trúc dự án
 
-- `tools/zalous-cli.js`: CLI chinh (`init`, `apply`, `market-install`, ...)
-- `zalous/runtime/zalous-runtime.js`: runtime bootstrap inject vao `index.html` trong `app.asar`
+- `tools/zalous-cli.js`: CLI chính (`init`, `apply`, `market-install`, ...)
+- `zalous/runtime/zalous-runtime.js`: runtime bootstrap inject vào `pc-dist/index.html`
 - `zalous/market/catalog.local.json`: catalog local
-- `zalous/market/packs/*`: cac pack mau (theme/extension)
+- `zalous/market/packs/*`: pack mẫu theme/extension
+- `themes/*`: bộ theme nguồn của repo
+- `docs/zalous/*`: tài liệu chi tiết
 
-Du lieu runtime tren may:
+Dữ liệu runtime trên máy:
 - `%APPDATA%\Zalous\config.json`
 - `%APPDATA%\Zalous\themes\*.css`
 - `%APPDATA%\Zalous\extensions\*.js`
 - `%APPDATA%\Zalous\backups\app.asar.*.bak`
 
-## 2) Quick Start
+## 2) Điểm mới quan trọng
 
-### 2.0 Cai dependency
+Từ cấu trúc hiện tại, lệnh `apply` sẽ:
+1. Tự đồng bộ built-in theme từ `themes/*.css` vào `%APPDATA%\Zalous\themes`
+2. Tự đồng bộ built-in extension từ `zalous/market/packs/*` (manifest `type: extension`) vào `%APPDATA%\Zalous\extensions`
+3. Sau đó mới build payload và patch `app.asar`
+
+Điều này đảm bảo runtime luôn dùng bản theme/extension mới nhất theo repo khi patch.
+
+## 3) Quick Start
+
+### 3.1 Cài dependency
 
 ```powershell
 npm install
 ```
 
-### 2.1 Khoi tao
+### 3.2 Khởi tạo workspace
 
 ```powershell
 node .\tools\zalous-cli.js init
 ```
 
-### 2.2 Tu dong tim app.asar
+### 3.3 Tự động tìm `app.asar`
 
 ```powershell
 node .\tools\zalous-cli.js detect
 ```
 
-### 2.3 Cai pack local market (vi du)
-
-```powershell
-node .\tools\zalous-cli.js market-list
-node .\tools\zalous-cli.js market-install --id theme.green-soft
-node .\tools\zalous-cli.js market-install --id extension.lock-pin-dots
-```
-
-### 2.4 Patch vao Zalo
+### 3.4 Patch vào Zalo
 
 ```powershell
 node .\tools\zalous-cli.js apply
 ```
 
-Mo lai Zalo de runtime bootstrap hoat dong.
+Mở lại Zalo để runtime hoạt động ổn định.
 
-## 3) Cac lenh quan trong
+## 4) Lệnh thường dùng
 
 ```powershell
-# Trang thai
+# Trạng thái
 node .\tools\zalous-cli.js status
 
 # Theme
@@ -72,11 +75,16 @@ node .\tools\zalous-cli.js enable-extension --name lock-pin-dots.js
 node .\tools\zalous-cli.js disable-extension --name lock-pin-dots.js
 node .\tools\zalous-cli.js import-extension --file C:\path\ext.js --name ext.js
 
-# Restore backup gan nhat
+# Market local
+node .\tools\zalous-cli.js market-list
+node .\tools\zalous-cli.js market-install --id theme.zalo-green
+node .\tools\zalous-cli.js market-install --id extension.lock-pin-dots
+
+# Restore backup gần nhất
 node .\tools\zalous-cli.js restore
 ```
 
-## 4) Build `.exe` CLI
+## 5) Build CLI `.exe`
 
 ```powershell
 npm run build:exe
@@ -85,30 +93,9 @@ npm run build:exe
 Output:
 - `dist/zalous.exe`
 
-## 5) Runtime behavior
+## 6) Tài liệu chi tiết
 
-Khi Zalo mo:
-1. `zalous-runtime.js` doc payload duoc inject trong `index.html`.
-2. Thu nap external config/files tu `%APPDATA%\Zalous` (neu renderer co quyen Node `require`).
-3. Merge `embedded + external`.
-4. Apply theme dang active.
-5. Run danh sach extensions duoc enable.
-6. Render control nho trong nav (ON/OFF + doi theme).
-
-## 6) Local Market va mo rong Online Market
-
-Hien tai:
-- `catalog.local.json` quan ly pack local.
-- `market-install` copy file tu `zalous/market/packs/*` vao `%APPDATA%\Zalous`.
-
-Roadmap online market:
-1. Them schema catalog URL (HTTPS, signed).
-2. Download pack zip/js/css + verify checksum/signature.
-3. Store metadata version + dependency.
-4. Add rollback theo tung pack.
-
-## 7) Tai lieu chi tiet
-
-- [Architecture](./docs/zalous/ARCHITECTURE.md)
-- [Operational Flow](./docs/zalous/FLOW.md)
+- [Kiến trúc](./docs/zalous/ARCHITECTURE.md)
+- [Luồng hoạt động](./docs/zalous/FLOW.md)
 - [CLI Reference](./docs/zalous/CLI.md)
+- [Hướng dẫn chỉnh UI](./docs/ZALO_UI_MOD_GUIDE.md)

@@ -1,0 +1,8 @@
+﻿{
+    "id":  "theme.pastel-mint",
+    "name":  "Pastel Mint",
+    "type":  "theme",
+    "entry":  "pastel-mint.css",
+    "description":  "Theme pastel pastel mint",
+    "version":  "1.0.0"
+}

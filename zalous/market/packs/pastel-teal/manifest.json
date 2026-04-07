@@ -1,0 +1,8 @@
+﻿{
+    "id":  "theme.pastel-teal",
+    "name":  "Pastel Teal",
+    "type":  "theme",
+    "entry":  "pastel-teal.css",
+    "description":  "Theme pastel pastel teal",
+    "version":  "1.0.0"
+}
