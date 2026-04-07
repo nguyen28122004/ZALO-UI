@@ -5,7 +5,7 @@
     off: '',
     content: '.conv-message.truncate',
     name: '.conv-item-title__name.truncate.grid-item',
-    all: '.msg-item[data-id="div_TabMsg_ThrdChItem"], .msg-item[data-id^="div_TabMsg_ThrdChItem"]'
+    all: '.msg-item'
   };
 
   const api = zalous || {};
@@ -15,25 +15,25 @@
 
   if (api.registerConfig) {
     api.registerConfig({
-      title: 'Blur Elements',
-      description: 'Chon vung can lam mo trong danh sach hoi thoai.',
+      title: 'Làm mờ hội thoại',
+      description: 'Chọn vùng cần làm mờ trong danh sách hội thoại.',
       fields: [
         {
           key: 'mode',
           type: 'select',
-          label: 'Muc blur',
+          label: 'Kiểu làm mờ',
           default: 'content',
           options: [
-            { value: 'off', label: 'Tat blur cu' },
-            { value: 'content', label: 'conv-message truncate (mo noi dung)' },
-            { value: 'name', label: 'conv-item-title__name... (mo ten)' },
-            { value: 'all', label: 'msg-item[data-id=\"div_TabMsg_ThrdChItem\"] (mo toan bo)' }
+            { value: 'off', label: 'Tắt làm mờ danh sách cũ' },
+            { value: 'content', label: 'Làm mờ nội dung xem trước (.conv-message.truncate)' },
+            { value: 'name', label: 'Làm mờ tên hội thoại (.conv-item-title__name...)' },
+            { value: 'all', label: 'Làm mờ toàn bộ item (.msg-item)' }
           ]
         },
         {
           key: 'blurMessageWrapper',
           type: 'checkbox',
-          label: 'Them blur rieng cho .message-content-wrapper',
+          label: 'Làm mờ thêm vùng tin nhắn cá nhân (.message-content-wrapper)',
           default: false
         }
       ]
