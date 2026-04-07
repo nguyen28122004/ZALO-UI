@@ -1,0 +1,7 @@
+backup/
+_asar_extract/
+_asar_verify/
+.tmp-asar-extract/
+.tmp-app.asar
+temp-index.html
+index.html

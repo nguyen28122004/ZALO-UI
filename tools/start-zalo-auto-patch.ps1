@@ -1,6 +1,6 @@
 ﻿param(
   [int]$Port = 9222,
-  [string]$ZaloExe = 'C:\Users\Lien\AppData\Local\Programs\Zalo\Zalo.exe',
+  [string]$ZaloExe = "$env:LOCALAPPDATA\Programs\Zalo\Zalo.exe",
   [string]$CssPath = '.\themes\zalo-green.css',
   [int]$Retry = 45,
   [int]$DelayMs = 1200,
@@ -18,7 +18,7 @@ function Get-ZaloCandidates {
     $null = $candidates.Add((Resolve-Path -LiteralPath $Preferred).Path)
   }
 
-  $installRoot = 'C:\Users\Lien\AppData\Local\Programs\Zalo'
+  $installRoot = "$env:LOCALAPPDATA\Programs\Zalo"
   $rootExe = Join-Path $installRoot 'Zalo.exe'
   if (Test-Path -LiteralPath $rootExe) {
     $null = $candidates.Add((Resolve-Path -LiteralPath $rootExe).Path)
