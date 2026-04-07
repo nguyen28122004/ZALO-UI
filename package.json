@@ -10,6 +10,13 @@
     "zalous": "node tools/zalous-cli.js",
     "build:exe": "pkg . --targets node18-win-x64 --output dist/zalous.exe"
   },
+  "pkg": {
+    "assets": [
+      "zalous/runtime/**/*.js",
+      "zalous/market/**/*.json",
+      "zalous/market/packs/**/*"
+    ]
+  },
   "dependencies": {
     "@electron/asar": "^3.2.8"
   },
