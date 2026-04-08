@@ -4,7 +4,7 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 const os = require('os');
-const { createPackage, extractAll, extractFile } = require('@electron/asar');
+const { createPackage, createPackageWithOptions, extractAll, extractFile, getRawHeader } = require('@electron/asar');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const APPDATA = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
@@ -371,7 +371,56 @@ function escapeScript(text) {
   return text.replace(/<\/script>/gi, '<\\/script>');
 }
 
-async function applyPatch({ asarPath, noBackup }) {
+
+function collectUnpackDirs(asarPath) {
+  const raw = getRawHeader(asarPath);
+  const dirs = new Set();
+
+  function walk(node, curr) {
+    if (!node || typeof node !== 'object') return;
+
+    if (node.unpacked === true) {
+      const posixPath = String(curr || '').replace(/\\/g, '/');
+      const asDir = node.files ? posixPath : path.posix.dirname(posixPath);
+      if (asDir && asDir !== '.') dirs.add(asDir);
+    }
+
+    if (node.files && typeof node.files === 'object') {
+      for (const name of Object.keys(node.files)) {
+        const next = curr ? `${curr}/${name}` : name;
+        walk(node.files[name], next);
+      }
+    }
+  }
+
+  walk({ files: (raw && raw.header && raw.header.files) || {} }, '');
+
+  const sorted = [...dirs].sort((a, b) => a.length - b.length);
+  const roots = [];
+  for (const dir of sorted) {
+    if (!roots.some((r) => dir === r || dir.startsWith(`${r}/`))) {
+      roots.push(dir);
+    }
+  }
+  return roots;
+}
+
+async function createPackagePreserveUnpacked(extractDir, outAsar, sourceAsarPath) {
+  const unpackDirs = collectUnpackDirs(sourceAsarPath);
+  if (!unpackDirs.length) {
+    await createPackage(extractDir, outAsar);
+    return [];
+  }
+
+  const unpackDir = unpackDirs.length === 1
+    ? unpackDirs[0]
+    : `{${unpackDirs.join(',')}}`;
+
+  await createPackageWithOptions(extractDir, outAsar, { unpackDir });
+  return unpackDirs;
+}
+
+async function applyPatch({ asarPath, noBackup, fullPayload = false, keepControls = false }) {
   await ensureLayout();
   await ensureCleanBaseForPatch(asarPath);
   await syncBuiltInAssets();
@@ -385,12 +434,20 @@ async function applyPatch({ asarPath, noBackup }) {
   }
 
   const runtimeCode = escapeScript(await fsp.readFile(RUNTIME_PATH, 'utf8'));
+  if (!cfg.ui || typeof cfg.ui !== 'object') cfg.ui = { controls: true };
+  if (!keepControls) cfg.ui.controls = false;
+
   const payload = {
-    meta: { version: '0.2.0', generatedAt: new Date().toISOString(), engine: 'hara-zalous' },
+    meta: {
+      version: '0.2.1',
+      generatedAt: new Date().toISOString(),
+      engine: 'hara-zalous',
+      mode: fullPayload ? 'full' : 'lite'
+    },
     config: cfg,
-    themes,
-    themePacks,
-    extensions
+    themes: fullPayload ? themes : {},
+    themePacks: fullPayload ? themePacks : {},
+    extensions: fullPayload ? extensions : {}
   };
 
   const injectBlock = [
@@ -426,7 +483,8 @@ async function applyPatch({ asarPath, noBackup }) {
   await fsp.writeFile(indexPath, html, 'utf8');
 
   console.log('[zalous] repack');
-  await createPackage(extractDir, repackedAsar);
+  const unpackDirs = await createPackagePreserveUnpacked(extractDir, repackedAsar, asarPath);
+  if (unpackDirs.length) console.log(`[zalous] preserve unpacked ${unpackDirs.join(', ')}`);
 
   if (!noBackup) {
     const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
@@ -436,6 +494,20 @@ async function applyPatch({ asarPath, noBackup }) {
   }
 
   await fsp.copyFile(repackedAsar, asarPath);
+  const repackedUnpacked = `${repackedAsar}.unpacked`;
+  const targetUnpacked = `${asarPath}.unpacked`;
+  if (fs.existsSync(repackedUnpacked)) {
+    try {
+      await fsp.rm(targetUnpacked, { recursive: true, force: true });
+      await fsp.cp(repackedUnpacked, targetUnpacked, { recursive: true, force: true });
+      console.log(`[zalous] synced unpacked ${targetUnpacked}`);
+    } catch (err) {
+      // Fallback for locked native files while app is running.
+      await fsp.cp(repackedUnpacked, targetUnpacked, { recursive: true, force: true });
+      console.log(`[zalous] synced unpacked (merge) ${targetUnpacked}`);
+      if (err && err.code) console.log(`[zalous] unpacked replace fallback ${err.code}`);
+    }
+  }
   cfg.appAsarPath = asarPath;
   await saveConfig(cfg);
   await fsp.rm(tempRoot, { recursive: true, force: true });
@@ -554,11 +626,11 @@ function printHelp() {
   console.log('Mac dinh (khong truyen command): patch-now');
   console.log('');
   console.log('Commands:');
-  console.log('  patch-now [--asar <path>] [--no-backup]');
+  console.log('  patch-now [--asar <path>] [--no-backup] [--full-payload] [--keep-controls]');
   console.log('  init');
   console.log('  detect [--asar <path>]');
   console.log('  status');
-  console.log('  apply [--asar <path>] [--no-backup]');
+  console.log('  apply [--asar <path>] [--no-backup] [--full-payload] [--keep-controls]');
   console.log('  restore [--asar <path>]');
   console.log('  list-themes');
   console.log('  set-theme --theme <file.css|pack:pack-id>');
@@ -580,7 +652,9 @@ async function main() {
     case 'patch-now':
       await applyPatch({
         asarPath: flags.asar ? await resolveAsar(flags.asar) : await detectLatestAsar(),
-        noBackup: !!flags['no-backup']
+        noBackup: !!flags['no-backup'],
+        fullPayload: !!flags['full-payload'],
+        keepControls: !!flags['keep-controls']
       });
       break;
     case 'help':
@@ -605,7 +679,9 @@ async function main() {
     case 'apply':
       await applyPatch({
         asarPath: flags.asar ? await resolveAsar(flags.asar) : await detectLatestAsar(),
-        noBackup: !!flags['no-backup']
+        noBackup: !!flags['no-backup'],
+        fullPayload: !!flags['full-payload'],
+        keepControls: !!flags['keep-controls']
       });
       break;
     case 'restore':
@@ -695,3 +771,5 @@ main().catch((err) => {
   console.error('[zalous] ERROR', err && err.message ? err.message : err);
   process.exit(1);
 });
+
+
