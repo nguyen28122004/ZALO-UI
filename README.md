@@ -1,28 +1,24 @@
-﻿# ZALO-UI / hara-zalous
-# Con hàng vibecode theo nhu cầu cá nhân, anh em đóng góp cho vui thì được, đừng nặng nề chuyên môn quá =)))
+# ZALO-UI / hara-zalous
 
-`hara-zalous` là bộ patch giao diện cho Zalo Desktop, quản lý theme/extension theo mô hình pack.
+`hara-zalous` là bộ patch giao diện cho Zalo Desktop theo mô hình pack (`theme`, `theme-pack`, `extension`).
 
-## Mục tiêu hiện tại
+## Trạng thái hiện tại
 
-- Patch `app.asar` bằng runtime `zalous`.
-- Quản lý asset tập trung qua `zalous/market/packs`.
-- Hỗ trợ 3 loại pack:
-  - `theme` (CSS thuần)
-  - `theme-pack` (CSS + JS + HTML)
-  - `extension` (JS)
-- Mỗi lần patch luôn khôi phục từ clean base rồi mới inject.
-- Runtime ưu tiên config external trong `%APPDATA%\Zalous\config.json`.
+- Patch renderer bằng cách inject runtime vào `pc-dist/index.html` trong `app.asar`.
+- Runtime ưu tiên đọc config/assets external từ `%APPDATA%\Zalous`.
+- `apply` luôn restore từ clean base theo version trước khi inject.
+- Mặc định payload là `full`; dùng `--lite-payload` nếu cần patch lite.
+- Luồng patch cần `resources\app.asar.unpacked` đầy đủ để extract/repack ổn định.
 
 ## Cấu trúc repo
 
-- `tools/zalous-cli.js`: CLI chính
-- `zalous/runtime/zalous-runtime.js`: runtime inject vào renderer
-- `zalous/market/catalog.local.json`: catalog local
-- `zalous/market/packs/*`: pack theme/theme-pack/extension
-- `docs/zalous/*`: tài liệu kỹ thuật
+- `tools/zalous-cli.js`: CLI chính.
+- `zalous/runtime/zalous-runtime.js`: runtime inject vào renderer.
+- `zalous/market/catalog.local.json`: catalog local.
+- `zalous/market/packs/*`: pack theme/theme-pack/extension.
+- `docs/zalous/*`: tài liệu kiến trúc và flow.
 
-## Cấu trúc dữ liệu runtime trên máy
+## Dữ liệu trên máy
 
 - `%APPDATA%\Zalous\config.json`
 - `%APPDATA%\Zalous\themes\*.css`
@@ -30,15 +26,10 @@
 - `%APPDATA%\Zalous\extensions\*.js`
 - `%APPDATA%\Zalous\backups\app.asar.*.bak`
 - `%APPDATA%\Zalous\backups\app.asar.clean.<Zalo-Version>.bak`
+- `...\Zalo-<version>\resources\app.asar`
+- `...\Zalo-<version>\resources\app.asar.unpacked`
 
-## Nguyên tắc patch
-
-1. `apply` tự tìm bản Zalo mới nhất nếu không truyền `--asar`.
-2. Trước khi patch luôn restore từ `clean backup` theo version.
-3. Inject payload/runtime vào `pc-dist/index.html`.
-4. Repack và backup theo timestamp trước khi ghi đè.
-
-## Quick start
+## Quick Start
 
 ```powershell
 npm install
@@ -52,6 +43,7 @@ node .\tools\zalous-cli.js apply
 ```powershell
 node .\tools\zalous-cli.js status
 node .\tools\zalous-cli.js apply
+node .\tools\zalous-cli.js apply --lite-payload
 node .\tools\zalous-cli.js restore
 node .\tools\zalous-cli.js list-themes
 node .\tools\zalous-cli.js set-theme --theme pastel-mint.css
@@ -61,6 +53,12 @@ node .\tools\zalous-cli.js enable-extension --name blur-elements.js
 node .\tools\zalous-cli.js market-list
 node .\tools\zalous-cli.js market-install --id themepack.pastel-dawn
 ```
+
+## Ghi chú vận hành quan trọng
+
+- `apply` patch từ clean backup theo version.
+- `restore` ưu tiên backup patch theo timestamp, sau đó mới đến pre-restore.
+- Nếu `apply` lỗi `ENOENT ... app.asar.unpacked\...`, cần khôi phục `app.asar.unpacked` đầy đủ trước khi chạy lại.
 
 ## Tài liệu
 

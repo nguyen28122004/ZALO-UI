@@ -1,17 +1,18 @@
-﻿# Hướng dẫn chỉnh UI (Zalous)
+# Hướng dẫn chỉnh UI (Zalous)
 
 ## 1) Quy tắc selector
 
-Ưu tiên selector ổn định:
+Ưu tiên selector ổn định theo thứ tự:
 1. `id`
 2. `data-*`, `aria-*`
 3. `role`
-4. `class*="..."` (chỉ dùng khi không có lựa chọn ổn định hơn)
+4. `class*="..."` khi không còn lựa chọn tốt hơn
 
 ## 2) Loại pack giao diện
 
 ### `theme`
-- Chỉ có CSS.
+
+- Chỉ CSS.
 - Manifest tối thiểu:
 
 ```json
@@ -23,8 +24,8 @@
 ```
 
 ### `theme-pack`
-- Nâng cao hơn `theme`.
-- Có thể dùng đồng thời CSS, JS và HTML.
+
+- Hỗ trợ CSS + JS + HTML.
 - Manifest mẫu:
 
 ```json
@@ -39,14 +40,14 @@
 }
 ```
 
-Ghi chú runtime:
-- CSS được inject vào style chính.
-- HTML được mount vào host `#zalous-theme-pack-html`.
-- JS được execute khi apply pack; có thể `return function cleanup(){...}` để dọn khi đổi theme.
+Runtime behavior:
+- CSS: inject vào style host.
+- HTML: mount vào `#zalous-theme-pack-html`.
+- JS: execute khi apply pack, có thể trả `cleanup()`.
 
 ## 3) Quy trình chỉnh theme/theme-pack
 
-1. Sửa trong `zalous/market/packs/<pack-id>/`.
+1. Sửa pack tại `zalous/market/packs/<pack-id>/`.
 2. Chạy:
 
 ```powershell
@@ -58,33 +59,41 @@ node .\tools\zalous-cli.js apply
 
 ## 4) Quy trình chỉnh extension
 
-1. Sửa extension trong `zalous/market/packs/<ext-id>/<entry>.js`.
-2. Nếu extension cần config, dùng API runtime `zalous.registerConfig(...)`, `zalous.getConfig(...)`, `zalous.setConfig(...)`.
-3. Schema config hiện hỗ trợ tối thiểu:
+1. Sửa extension tại `zalous/market/packs/<ext-id>/<entry>.js`.
+2. Dùng API runtime nếu cần config:
+   - `zalous.registerConfig(...)`
+   - `zalous.getConfig(...)`
+   - `zalous.setConfig(...)`
+3. Schema config UI hiện hỗ trợ:
    - `select`
    - `checkbox`
-4. Nút `Config` trong Market Manager sẽ render theo schema để lưu vào `extensionConfigs`.
-5. `apply` để sync + inject payload/runtime mới.
-6. Restart Zalo.
+4. Chạy lại `apply` để sync payload/runtime.
+5. Restart Zalo.
 
-## 4.1) Blur extension (ví dụ)
+## 5) Flow an toàn khi patch
 
-`extension.blur-elements` có 2 nhóm cấu hình độc lập:
-- `mode`: blur nhóm selector cũ (`content`/`name`/`all`/`off`)
-- `blurMessageWrapper`: blur riêng `.message-content-wrapper`
+1. Đóng toàn bộ process Zalo.
+2. Đảm bảo `resources\app.asar.unpacked` đầy đủ.
+3. Chạy `apply`.
+4. Mở lại Zalo và verify UI.
 
-Hai nhóm này có thể bật đồng thời.
-
-## 5) Debug nhanh
+## 6) Debug nhanh
 
 - DevTools endpoint: `http://localhost:9222/`
-- Nếu lỗi giao diện:
-  - kiểm tra `activeTheme` trong `%APPDATA%\Zalous\config.json`
-  - kiểm tra file trong `%APPDATA%\Zalous\themes` hoặc `%APPDATA%\Zalous\theme-packs`
-  - kiểm tra extension nào đang bật trong `enabledExtensions`
+- Kiểm tra config: `%APPDATA%\Zalous\config.json`
+- Kiểm tra assets runtime:
+  - `%APPDATA%\Zalous\themes`
+  - `%APPDATA%\Zalous\theme-packs`
+  - `%APPDATA%\Zalous\extensions`
 
-## 6) Lưu ý vận hành
+Khi gặp lỗi `ENOENT` liên quan `app.asar.unpacked`:
+- nguyên nhân thường là thiếu file native unpacked,
+- cần khôi phục lại thư mục `resources\app.asar.unpacked` rồi chạy lại `apply`.
 
+## 7) Ghi chú vận hành
+
+- `apply` mặc định full payload, dùng `--lite-payload` nếu cần.
 - `apply` luôn patch từ clean base theo version Zalo.
-- Runtime ưu tiên config external; fallback `localStorage`.
-- Không dùng script patch cũ ngoài `tools/zalous-cli.js` nếu không bắt buộc.
+- Runtime ưu tiên config external, fallback `localStorage`.
+- `restore` ưu tiên backup patch timestamp, sau đó mới đến pre-restore.
+- Tránh dùng script patch cũ ngoài `tools/zalous-cli.js`.

@@ -1,75 +1,119 @@
-:root[data-zalous-theme-pack="console-minimal"],
+﻿:root[data-zalous-theme-pack="console-minimal"],
 :root[data-zalous-theme-pack="console-minimal"] .light {
-  --bg-default: #0a0f0d;
-  --surface-background: #0f1613;
-  --surface-background-subtle: #111a16;
-  --surface-alt: #0d1411;
-  --layer-background: #0f1613;
-  --layer-background-subtle: #111a16;
-  --layer-background-hover: #17211c;
-  --layer-background-selected: #1e2b24;
-  --layer-background-disabled: #161f1b;
-  --layer-background-inverse: #e7efe9;
+  --console-bg-0: #0a0f0d;
+  --console-bg-1: #0d1411;
+  --console-bg-2: #0f1613;
+  --console-bg-3: #111a16;
+  --console-bg-4: #16211c;
+  --console-bg-5: #1a2721;
+  --console-bg-6: #203129;
+  --console-bg-7: #294036;
+
+  --console-fg-0: #e8f4ed;
+  --console-fg-1: #d6e4dc;
+  --console-fg-2: #cfe1d6;
+  --console-fg-3: #a1b6ab;
+  --console-fg-4: #7f958a;
+  --console-fg-5: #657a70;
+
+  --console-accent: #88c19f;
+  --console-accent-hover: #79b291;
+  --console-accent-press: #669d7e;
+  --console-accent-soft: #a7dabd;
+  --console-accent-soft-2: #c2ead1;
+  --console-accent-weak: rgba(136, 193, 159, 0.16);
+
+  --console-border: rgba(198, 220, 207, 0.18);
+  --console-border-subtle: rgba(198, 220, 207, 0.12);
+  --console-border-strong: rgba(198, 220, 207, 0.28);
+  --console-divider: rgba(198, 220, 207, 0.18);
+  --console-divider-subtle: rgba(198, 220, 207, 0.08);
+
+  --bg-default: var(--console-bg-0);
+  --surface-background: var(--console-bg-2);
+  --surface-background-subtle: var(--console-bg-3);
+  --surface-alt: var(--console-bg-1);
+  --layer-background: var(--console-bg-2);
+  --layer-background-subtle: var(--console-bg-3);
+  --layer-background-hover: var(--console-bg-4);
+  --layer-background-selected: var(--console-bg-5);
+  --layer-background-disabled: var(--console-bg-3);
+  --layer-background-inverse: var(--console-fg-0);
   --layer-background-leftmenu: #0c1310;
-  --layer-background-leftmenu-hover: #17211c;
-  --layer-background-leftmenu-selected: #1e2b24;
+  --layer-background-leftmenu-hover: var(--console-bg-4);
+  --layer-background-leftmenu-selected: var(--console-bg-5);
   --layer-background-navbar-normal: #0c1310;
-  --layer-background-navbar-hover: #17211c;
-  --layer-background-navbar-selected: #1e2b24;
-  --layer-background-navbar-sublevel-normal: #0f1613;
-  --layer-background-navbar-sublevel-hover: #17211c;
-  --layer-background-navbar-sublevel-selected: #1e2b24;
-  --text-primary: #d6e4dc;
-  --text-secondary: #a1b6ab;
-  --text-placeholder: #7f958a;
-  --text-disabled: #657a70;
+  --layer-background-navbar-hover: var(--console-bg-4);
+  --layer-background-navbar-selected: var(--console-bg-5);
+  --layer-background-navbar-sublevel-normal: var(--console-bg-2);
+  --layer-background-navbar-sublevel-hover: var(--console-bg-4);
+  --layer-background-navbar-sublevel-selected: var(--console-bg-5);
+  --layer-alert-background: #3f2a2a;
+  --layer-error-background: #4d2c2c;
+  --layer-success-background: #1f2d26;
+  --layer-warning-background: #3a351f;
+  --layer-information-background: #1d2c25;
+  --layer-neutral-information-background: #17241e;
+
+  --text-primary: var(--console-fg-1);
+  --text-secondary: var(--console-fg-3);
+  --text-placeholder: var(--console-fg-4);
+  --text-disabled: var(--console-fg-5);
   --text-on-color: #0a100d;
   --text-information: #b4e1c4;
   --text-navbar-sublevel-normal: #d1e0d7;
-  --text-navbar-sublevel-selected: #e8f4ed;
+  --text-navbar-sublevel-selected: var(--console-fg-0);
+  --text-warning: #d3c88e;
+  --text-errors: #e1a0a0;
+
   --icon-primary: #d4e1d9;
   --icon-secondary: #9ab0a4;
   --icon-disabled: #6f8379;
   --icon-information: #b4e1c4;
   --icon-navbar-normal: #cfe0d6;
   --icon-navbar-sublevel-normal: #cfe0d6;
-  --icon-navbar-sublevel-selected: #e8f4ed;
-  --border: rgba(198, 220, 207, 0.18);
-  --border-subtle: rgba(198, 220, 207, 0.12);
-  --border-hover: rgba(198, 220, 207, 0.28);
-  --border-focused: #89c3a2;
-  --divider: rgba(198, 220, 207, 0.18);
-  --divider-subtle: rgba(198, 220, 207, 0.08);
-  --divider-bold: rgba(198, 220, 207, 0.26);
-  --button-primary-normal: #88c19f;
-  --button-primary-hover: #79b291;
-  --button-primary-pressed: #669d7e;
+  --icon-navbar-sublevel-selected: var(--console-fg-0);
+
+  --border: var(--console-border);
+  --border-subtle: var(--console-border-subtle);
+  --border-hover: var(--console-border-strong);
+  --border-focused: var(--console-accent);
+  --divider: var(--console-divider);
+  --divider-subtle: var(--console-divider-subtle);
+  --divider-bold: var(--console-border-strong);
+
+  --button-primary-normal: var(--console-accent);
+  --button-primary-hover: var(--console-accent-hover);
+  --button-primary-pressed: var(--console-accent-press);
   --button-primary-text: #0a100d;
-  --button-primary-tonal-normal: #1a2721;
-  --button-primary-tonal-hover: #203129;
-  --button-primary-tonal-pressed: #294036;
+  --button-primary-tonal-normal: var(--console-bg-5);
+  --button-primary-tonal-hover: var(--console-bg-6);
+  --button-primary-tonal-pressed: var(--console-bg-7);
   --button-primary-tonal-text: #cbe3d5;
   --button-secondary-neutral-normal: #141e19;
-  --button-secondary-neutral-hover: #1a2721;
-  --button-secondary-neutral-pressed: #203129;
+  --button-secondary-neutral-hover: var(--console-bg-5);
+  --button-secondary-neutral-pressed: var(--console-bg-6);
   --button-secondary-neutral-text: #cfe1d6;
   --button-tertiary-neutral-text: #cfe1d6;
-  --input-field-bg-filled: #111a16;
-  --input-field-bg-filled-hover: #16211c;
-  --input-field-bg-filled-pressed: #1a2721;
-  --input-field-bg-outline: #0f1613;
-  --input-field-bg-outline-hover: #17211c;
-  --input-field-bg-outline-pressed: #1d2c25;
-  --white-message: #111a16;
-  --white-message-selected: #1a2721;
+
+  --input-field-bg-filled: var(--console-bg-3);
+  --input-field-bg-filled-hover: var(--console-bg-4);
+  --input-field-bg-filled-pressed: var(--console-bg-5);
+  --input-field-bg-outline: var(--console-bg-2);
+  --input-field-bg-outline-hover: var(--console-bg-4);
+  --input-field-bg-outline-pressed: var(--console-bg-5);
+
+  --white-message: var(--console-bg-3);
+  --white-message-selected: var(--console-bg-5);
   --blue-message: #15201b;
   --blue-message-selected: #1d2c25;
-  --white-quote: #0f1613;
+  --white-quote: var(--console-bg-2);
   --blue-quote: #17241e;
-  --progress-indicator: #88c19f;
-  --link: #a7dabd;
-  --cta-link: #a7dabd;
-  --cta-link-hover: #c2ead1;
+
+  --progress-indicator: var(--console-accent);
+  --link: var(--console-accent-soft);
+  --cta-link: var(--console-accent-soft);
+  --cta-link-hover: var(--console-accent-soft-2);
 }
 
 :root[data-zalous-theme-pack="console-minimal"] body,
@@ -83,7 +127,9 @@
 
 :root[data-zalous-theme-pack="console-minimal"] body,
 :root[data-zalous-theme-pack="console-minimal"] #app,
-:root[data-zalous-theme-pack="console-minimal"] #container {
+:root[data-zalous-theme-pack="console-minimal"] #container,
+:root[data-zalous-theme-pack="console-minimal"] [class*="app"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="layout"] {
   background: var(--bg-default) !important;
   color: var(--text-primary) !important;
 }
@@ -107,9 +153,38 @@
 :root[data-zalous-theme-pack="console-minimal"] [class*="chat-list"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="chat-detail"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="right-panel"],
-:root[data-zalous-theme-pack="console-minimal"] [class*="panel"] {
+:root[data-zalous-theme-pack="console-minimal"] [class*="panel"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="thread"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="content"] {
   background: var(--layer-background) !important;
   border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="popup"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="popover"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="dropdown"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="tooltip"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="context-menu"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="menu"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="modal"] {
+  background: var(--surface-background-subtle) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="title"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="header"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="label"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="name"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="text"] {
+  color: var(--text-primary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="subtitle"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="desc"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="meta"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="secondary"] {
+  color: var(--text-secondary) !important;
 }
 
 :root[data-zalous-theme-pack="console-minimal"] .msg-item,
@@ -130,14 +205,59 @@
 
 :root[data-zalous-theme-pack="console-minimal"] input,
 :root[data-zalous-theme-pack="console-minimal"] textarea,
-:root[data-zalous-theme-pack="console-minimal"] select {
+:root[data-zalous-theme-pack="console-minimal"] select,
+:root[data-zalous-theme-pack="console-minimal"] [contenteditable="true"] {
   background: var(--input-field-bg-filled) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--border) !important;
 }
 
-:root[data-zalous-theme-pack="console-minimal"] button {
+:root[data-zalous-theme-pack="console-minimal"] input::placeholder,
+:root[data-zalous-theme-pack="console-minimal"] textarea::placeholder {
+  color: var(--text-placeholder) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] button,
+:root[data-zalous-theme-pack="console-minimal"] [role="button"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="btn"] {
   border: 1px solid var(--border) !important;
+  background: var(--button-secondary-neutral-normal) !important;
+  color: var(--button-secondary-neutral-text) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] button:hover,
+:root[data-zalous-theme-pack="console-minimal"] [role="button"]:hover,
+:root[data-zalous-theme-pack="console-minimal"] [class*="btn"]:hover {
+  background: var(--button-secondary-neutral-hover) !important;
+  border-color: var(--border-hover) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] button:active,
+:root[data-zalous-theme-pack="console-minimal"] [role="button"]:active,
+:root[data-zalous-theme-pack="console-minimal"] [class*="btn"]:active {
+  background: var(--button-secondary-neutral-pressed) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="primary"] button,
+:root[data-zalous-theme-pack="console-minimal"] button[class*="primary"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="btn-primary"] {
+  background: var(--button-primary-normal) !important;
+  border-color: var(--button-primary-normal) !important;
+  color: var(--button-primary-text) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="primary"] button:hover,
+:root[data-zalous-theme-pack="console-minimal"] button[class*="primary"]:hover,
+:root[data-zalous-theme-pack="console-minimal"] [class*="btn-primary"]:hover {
+  background: var(--button-primary-hover) !important;
+  border-color: var(--button-primary-hover) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="primary"] button:active,
+:root[data-zalous-theme-pack="console-minimal"] button[class*="primary"]:active,
+:root[data-zalous-theme-pack="console-minimal"] [class*="btn-primary"]:active {
+  background: var(--button-primary-pressed) !important;
+  border-color: var(--button-primary-pressed) !important;
 }
 
 :root[data-zalous-theme-pack="console-minimal"] [class*="nav__tabs"] *,
@@ -146,8 +266,18 @@
   border-color: var(--border) !important;
 }
 
+:root[data-zalous-theme-pack="console-minimal"] [class*="nav"] [class*="active"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="tab"][class*="active"] {
+  background: var(--layer-background-navbar-selected) !important;
+  color: var(--text-navbar-sublevel-selected) !important;
+}
+
 :root[data-zalous-theme-pack="console-minimal"] a {
-  color: #a7dabd !important;
+  color: var(--link) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] a:hover {
+  color: var(--cta-link-hover) !important;
 }
 
 :root[data-zalous-theme-pack="console-minimal"] [class*="avatar"],
@@ -170,9 +300,23 @@
   visibility: visible !important;
 }
 
+:root[data-zalous-theme-pack="console-minimal"] [class*="badge"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="count"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="notify"] {
+  background: var(--console-accent-weak) !important;
+  color: var(--console-accent-soft-2) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="divider"],
+:root[data-zalous-theme-pack="console-minimal"] hr {
+  border-color: var(--divider) !important;
+  background: var(--divider) !important;
+}
+
 :root[data-zalous-theme-pack="console-minimal"] ::selection {
-  background: #294036;
-  color: #dff4e7;
+  background: var(--button-primary-tonal-pressed);
+  color: var(--console-fg-0);
 }
 
 :root[data-zalous-theme-pack="console-minimal"] *::-webkit-scrollbar {
@@ -181,8 +325,8 @@
 }
 
 :root[data-zalous-theme-pack="console-minimal"] *::-webkit-scrollbar-thumb {
-  background: #21322a;
-  border: 1px solid #16211c;
+  background: var(--console-bg-6);
+  border: 1px solid var(--console-bg-4);
 }
 
 #zalous-theme-pack-html .zalous-console-minimal-overlay {
@@ -194,4 +338,140 @@
     linear-gradient(rgba(160, 205, 180, 0.028) 1px, transparent 1px),
     linear-gradient(90deg, rgba(160, 205, 180, 0.028) 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] #zalous-controls,
+:root[data-zalous-theme-pack="console-minimal"] #zalous-market-card,
+:root[data-zalous-theme-pack="console-minimal"] #zalous-ext-config-modal > div {
+  background: var(--surface-background-subtle) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] svg,
+:root[data-zalous-theme-pack="console-minimal"] [class*="icon"] svg,
+:root[data-zalous-theme-pack="console-minimal"] [class*="icon"] path {
+  color: var(--icon-primary) !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="chip"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="tag"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="pill"] {
+  background: var(--console-bg-5) !important;
+  color: var(--console-fg-2) !important;
+  border: 1px solid var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="toast"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="snackbar"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="alert"],
+:root[data-zalous-theme-pack="console-minimal"] [role="alert"] {
+  background: var(--surface-background-subtle) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="error"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="danger"] {
+  color: var(--text-errors) !important;
+  border-color: rgba(225, 160, 160, 0.3) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="warning"] {
+  color: var(--text-warning) !important;
+  border-color: rgba(211, 200, 142, 0.3) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] progress,
+:root[data-zalous-theme-pack="console-minimal"] [class*="progress"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="slider"] {
+  accent-color: var(--progress-indicator) !important;
+  color: var(--progress-indicator) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] table,
+:root[data-zalous-theme-pack="console-minimal"] thead,
+:root[data-zalous-theme-pack="console-minimal"] tbody,
+:root[data-zalous-theme-pack="console-minimal"] tr,
+:root[data-zalous-theme-pack="console-minimal"] td,
+:root[data-zalous-theme-pack="console-minimal"] th,
+:root[data-zalous-theme-pack="console-minimal"] [class*="row"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="item"] {
+  border-color: var(--divider-subtle) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="row"]:hover,
+:root[data-zalous-theme-pack="console-minimal"] [class*="item"]:hover {
+  background: var(--layer-background-hover) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] input[type="checkbox"],
+:root[data-zalous-theme-pack="console-minimal"] input[type="radio"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="switch"] {
+  accent-color: var(--console-accent) !important;
+  border-color: var(--border-focused) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="skeleton"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="placeholder"] {
+  background: linear-gradient(90deg, var(--console-bg-3), var(--console-bg-4), var(--console-bg-3)) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="composer"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="editor"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="search"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="filter"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="input"] {
+  background-color: var(--input-field-bg-filled) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="media"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="preview"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="attachment"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="upload"] {
+  background: var(--surface-background-subtle) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="media"] [class*="title"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="preview"] [class*="title"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="attachment"] [class*="title"] {
+  color: var(--text-primary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="media"] [class*="desc"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="preview"] [class*="desc"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="attachment"] [class*="desc"] {
+  color: var(--text-secondary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="dialog"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="sheet"],
+:root[data-zalous-theme-pack="console-minimal"] [class*="drawer"] {
+  background: var(--surface-background) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="dialog"] [class*="footer"] button,
+:root[data-zalous-theme-pack="console-minimal"] [class*="modal"] [class*="footer"] button {
+  min-height: 30px !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] #zalous-controls button,
+:root[data-zalous-theme-pack="console-minimal"] #zalous-market-card button,
+:root[data-zalous-theme-pack="console-minimal"] #zalous-ext-config-modal button {
+  border-radius: 0 !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] #zalous-theme-pack-html,
+:root[data-zalous-theme-pack="console-minimal"] #zalous-theme-pack-html * {
+  color-scheme: dark;
 }

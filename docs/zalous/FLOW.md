@@ -1,6 +1,6 @@
-﻿# Luồng hoạt động Zalous
+# Luồng hoạt động Zalous
 
-## A. Init
+## A) Init
 
 Lệnh:
 
@@ -8,47 +8,59 @@ Lệnh:
 node .\tools\zalous-cli.js init
 ```
 
-Kết quả:
-1. Tạo `%APPDATA%\Zalous` nếu chưa có.
-2. Tạo `config.json` mặc định.
-3. Đồng bộ built-in pack vào máy:
-   - `theme` -> `themes`
-   - `theme-pack` -> `theme-packs`
-   - `extension` -> `extensions`
-4. Chuẩn hóa config theo assets hợp lệ.
+Flow:
+1. Tạo `%APPDATA%\Zalous` và các thư mục con.
+2. Tạo `config.json` mặc định nếu chưa có.
+3. Sync built-in packs từ repo vào runtime workspace.
+4. Normalize config theo assets hiện có.
 
-## B. Apply
+## B) Detect
 
 Lệnh:
 
 ```powershell
-node .\tools\zalous-cli.js apply
+node .\tools\zalous-cli.js detect [--asar <path>]
 ```
 
-Luồng:
-1. Resolve `app.asar` mục tiêu (latest Zalo nếu không truyền `--asar`).
-2. Đảm bảo có clean backup cho version đó.
-3. Restore clean backup vào `app.asar`.
-4. Sync built-in assets vào `%APPDATA%\Zalous`.
-5. Sync config (`activeTheme`, `enabledExtensions`, `extensionConfigs`).
-6. Build payload (`themes`, `themePacks`, `extensions`) và inject runtime vào `pc-dist/index.html`.
-7. Repack và backup timestamp.
-8. Ghi đè `resources\app.asar`.
+Flow:
+1. Resolve `app.asar` mục tiêu.
+2. Ghi path vào `config.json` (`appAsarPath`).
 
-## C. Runtime boot
+## C) Apply (flow chính)
+
+Lệnh:
+
+```powershell
+node .\tools\zalous-cli.js apply [--asar <path>] [--no-backup] [--lite-payload] [--keep-controls]
+```
+
+Flow:
+1. Resolve `app.asar` (latest nếu không truyền `--asar`).
+2. `ensureCleanBaseForPatch`:
+   - đảm bảo có clean backup theo version.
+   - restore clean backup vào `app.asar`.
+3. Sync built-in assets + sync config.
+4. Build payload và inject runtime vào `pc-dist/index.html`.
+   - mặc định `full payload` (embed đầy đủ assets).
+   - nếu truyền `--lite-payload` thì chỉ embed config.
+5. Repack bằng `@electron/asar`.
+6. Backup timestamp hiện tại (trừ khi `--no-backup`).
+7. Ghi đè `resources\app.asar`.
+8. Sync `repacked.asar.unpacked` về `resources\app.asar.unpacked`.
+
+## D) Runtime boot
 
 Khi mở Zalo:
-1. Runtime đọc payload embedded.
-2. Runtime thử nạp external config/assets.
-3. Nếu không đọc được external config, fallback `localStorage`.
-4. Normalize config, lưu lại nếu cần.
-5. Nếu `patchEnabled=true`, apply theme hiện tại:
-   - nếu là `theme` -> inject CSS
-   - nếu là `theme-pack` -> inject CSS + mount HTML + execute JS (có cleanup)
-6. Chạy các extension đang bật.
-7. Gắn `zalous-controls` và Market Manager.
+1. Runtime đọc embedded payload.
+2. Runtime đọc external config/assets từ `%APPDATA%\Zalous`.
+3. Normalize config và lưu lại khi cần.
+4. Apply `activeTheme`:
+   - `theme`: inject CSS
+   - `theme-pack`: inject CSS + mount HTML + run JS
+5. Chạy các extension bật trong `enabledExtensions`.
+6. Render controls và market UI.
 
-## D. Market install
+## E) Market install
 
 Lệnh:
 
@@ -56,21 +68,40 @@ Lệnh:
 node .\tools\zalous-cli.js market-install --id <packId>
 ```
 
-Luồng:
-1. Đọc catalog local.
-2. Resolve pack + `manifest.json`.
+Flow:
+1. Đọc catalog.
+2. Resolve pack + manifest.
 3. Cài theo `manifest.type`:
-   - `theme`: copy CSS vào `themes`.
-   - `theme-pack`: copy `manifest + assets` vào `theme-packs/<id>`.
-   - `extension`: copy JS vào `extensions` và tự add vào `enabledExtensions`.
+   - `theme`: copy vào `themes`
+   - `theme-pack`: copy vào `theme-packs/<id>`
+   - `extension`: copy vào `extensions` và bật extension
 
-## E. Restore
+## F) Restore
 
 Lệnh:
 
 ```powershell
-node .\tools\zalous-cli.js restore
+node .\tools\zalous-cli.js restore [--asar <path>]
 ```
 
-Kết quả:
-- Khôi phục backup timestamp gần nhất vào `app.asar` mục tiêu.
+Flow hiện tại:
+1. Đọc `%APPDATA%\Zalous\backups`.
+2. Lấy backup theo thứ tự ưu tiên:
+   - `app.asar.<timestamp>.bak`
+   - `app.asar.pre_restore.<timestamp>.bak`
+3. Copy vào `app.asar` mục tiêu.
+
+Lưu ý:
+- `restore` không dùng `app.asar.clean.<version>.bak` mặc định.
+
+## G) Lỗi thường gặp
+
+### `ENOENT ... app.asar.unpacked\...`
+
+Nguyên nhân:
+- `resources\app.asar.unpacked` thiếu file native unpacked mà header trong `app.asar` đang tham chiếu.
+
+Xử lý:
+1. đóng toàn bộ process Zalo.
+2. khôi phục `app.asar.unpacked` đầy đủ.
+3. chạy lại `apply`.
