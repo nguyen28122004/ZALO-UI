@@ -156,6 +156,13 @@
     return hot.token ? String(hot.token) : '';
   }
 
+  function triggerRuntimeReload(reason) {
+    log('reload', { reason: reason || 'manual' });
+    setTimeout(() => {
+      try { window.location.reload(); } catch (_) {}
+    }, 60);
+  }
+
   function ensureStyleTag() {
     let tag = document.getElementById(STYLE_ID);
     if (!tag) {
@@ -387,21 +394,28 @@
     if (window.__zalousHotReloadWatcher) return;
 
     let fs = null;
+    let path = null;
     try {
       fs = require('fs');
+      path = require('path');
     } catch (_) {
       return;
     }
 
+    const cfgPath = external.cfgPath;
+    const cfgDir = path.dirname(cfgPath);
+    const cfgName = path.basename(cfgPath);
     let lastToken = readHotReloadToken(initialConfig);
     let reloading = false;
+    let readQueued = false;
+    let closed = false;
 
-    const timer = setInterval(() => {
-      if (reloading) return;
+    const readConfigAndReloadIfNeeded = () => {
+      if (reloading || closed) return;
 
       try {
-        if (!fs.existsSync(external.cfgPath)) return;
-        const raw = fs.readFileSync(external.cfgPath, 'utf8').replace(/^\uFEFF/, '');
+        if (!fs.existsSync(cfgPath)) return;
+        const raw = fs.readFileSync(cfgPath, 'utf8').replace(/^\uFEFF/, '');
         const cfg = normalizeConfig(JSON.parse(raw));
         const token = readHotReloadToken(cfg);
         if (!token || token === lastToken) return;
@@ -412,18 +426,51 @@
           type: cfg.hotReload && cfg.hotReload.type,
           name: cfg.hotReload && cfg.hotReload.name
         });
-        setTimeout(() => {
-          try { window.location.reload(); } catch (_) {}
-        }, 60);
+        triggerRuntimeReload('hot-reload-token');
       } catch (_) {
       }
-    }, 900);
+    };
 
-    window.__zalousHotReloadWatcher = timer;
-    window.addEventListener('beforeunload', () => {
-      try { clearInterval(timer); } catch (_) {}
+    const scheduleRead = () => {
+      if (readQueued || reloading || closed) return;
+      readQueued = true;
+      setTimeout(() => {
+        readQueued = false;
+        readConfigAndReloadIfNeeded();
+      }, 120);
+    };
+
+    let fileWatcher = null;
+    let dirWatcher = null;
+    try {
+      fileWatcher = fs.watch(cfgPath, { persistent: false }, () => scheduleRead());
+    } catch (_) {
+      fileWatcher = null;
+    }
+
+    try {
+      dirWatcher = fs.watch(cfgDir, { persistent: false }, (eventType, filename) => {
+        if (!filename || String(filename) === cfgName) scheduleRead();
+      });
+    } catch (_) {
+      dirWatcher = null;
+    }
+
+    if (!fileWatcher && !dirWatcher) return;
+    const closeWatcher = () => {
+      if (closed) return;
+      closed = true;
+      try { if (fileWatcher) fileWatcher.close(); } catch (_) {}
+      try { if (dirWatcher) dirWatcher.close(); } catch (_) {}
       window.__zalousHotReloadWatcher = null;
-    }, { once: true });
+    };
+
+    window.__zalousHotReloadWatcher = {
+      mode: 'fs.watch',
+      path: cfgPath,
+      close: closeWatcher
+    };
+    window.addEventListener('beforeunload', closeWatcher, { once: true });
   }
 
   function ensureMarketModal(state, refreshControls) {
@@ -552,7 +599,7 @@
       extInput.onchange = () => { installFromInput(extInput, 'extension'); };
       modal.querySelector('#zalous-reload-page').onclick = () => {
         try { state.saveConfig(); } catch (_) {}
-        window.location.reload();
+        triggerRuntimeReload('market-manual');
       };
 
       modal.querySelectorAll('[data-theme]').forEach((btn) => {
@@ -749,12 +796,15 @@
     const toggleId = 'zalous-toggle';
     const themeId = 'zalous-theme';
     const marketId = 'zalous-market-btn';
+    const reloadId = 'zalous-reload-btn';
     const tgl = document.getElementById(toggleId) || Object.assign(document.createElement('button'), { id: toggleId });
     const thm = document.getElementById(themeId) || Object.assign(document.createElement('button'), { id: themeId });
     const mkt = document.getElementById(marketId) || Object.assign(document.createElement('button'), { id: marketId });
+    const rld = document.getElementById(reloadId) || Object.assign(document.createElement('button'), { id: reloadId });
     if (!tgl.parentElement) wrap.appendChild(tgl);
     if (!thm.parentElement) wrap.appendChild(thm);
     if (!mkt.parentElement) wrap.appendChild(mkt);
+    if (!rld.parentElement) wrap.appendChild(rld);
 
     const base = [
       'height:28px',
@@ -775,6 +825,7 @@
     tgl.style.cssText = base;
     thm.style.cssText = base;
     mkt.style.cssText = base;
+    rld.style.cssText = base;
 
     function refresh() {
       tgl.textContent = state.config.patchEnabled ? 'ON' : 'OFF';
@@ -798,6 +849,12 @@
       mkt.style.background = '#e8f3ee';
       mkt.style.color = '#204534';
       mkt.style.border = '1px solid #b8cfc1';
+
+      rld.textContent = 'RL';
+      rld.title = 'Reload UI';
+      rld.style.background = '#eef4f1';
+      rld.style.color = '#204534';
+      rld.style.border = '1px solid #b8cfc1';
     }
 
     const marketModal = ensureMarketModal(state, refresh);
@@ -829,6 +886,12 @@
       e.preventDefault();
       e.stopPropagation();
       marketModal.open();
+    };
+
+    rld.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      triggerRuntimeReload('controls-manual');
     };
 
     refresh();
@@ -940,6 +1003,7 @@
         state.saveConfig();
       },
       reloadExtensions: () => state.reloadExtensions(),
+      reloadPage: (reason) => triggerRuntimeReload(reason || 'api'),
       openMarket: () => {
         const modal = document.getElementById(MARKET_MODAL_ID);
         if (modal) modal.style.display = 'flex';

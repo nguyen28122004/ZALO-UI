@@ -282,7 +282,6 @@
 
 :root[data-zalous-theme-pack="console-minimal"] [class*="avatar"],
 :root[data-zalous-theme-pack="console-minimal"] .avatar {
-  border: 1px solid var(--border-subtle) !important;
   filter: grayscale(0.2) contrast(1.05);
 }
 

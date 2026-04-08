@@ -13,6 +13,7 @@ const ZALOUS_ROOT = path.join(APPDATA, 'Zalous');
 const CONFIG_PATH = path.join(ZALOUS_ROOT, 'config.json');
 const LOCAL_CATALOG = path.join(REPO_ROOT, 'zalous', 'market', 'catalog.local.json');
 const RUNTIME_PATH = path.join(REPO_ROOT, 'zalous', 'runtime', 'zalous-runtime.js');
+let HOT_RELOAD_SEQ = 0;
 
 function defaultConfig() {
   return {
@@ -122,8 +123,13 @@ async function readJsonFile(filePath, label = 'JSON') {
 }
 
 function signalHotReload(cfg, { type = 'all', name = '', source = 'cli' } = {}) {
+  HOT_RELOAD_SEQ += 1;
+  const prevToken = cfg && cfg.hotReload ? String(cfg.hotReload.token || '') : '';
+  let nextToken = `${Date.now()}-${process.pid}-${HOT_RELOAD_SEQ}-${Math.random().toString(36).slice(2, 8)}`;
+  if (nextToken === prevToken) nextToken = `${nextToken}-1`;
+
   cfg.hotReload = {
-    token: String(Date.now()),
+    token: nextToken,
     type: normalizeAssetType(type),
     name: String(name || ''),
     source: String(source || 'cli'),

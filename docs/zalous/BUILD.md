@@ -42,10 +42,12 @@ Muc tieu: exe phai kem runtime + catalog + packs.
 
 ## 6) Release checklist
 
-1. Chay `init` + `apply` test local.
-2. Build exe.
-3. Copy exe vao `tools`.
-4. `git add` docs + cli + exe + packs (neu co).
-5. Commit.
-6. Push `master`.
-7. Tag release.
+1. Chay `init` test local.
+2. Chay safe `apply` flow (kill Zalo -> wait -> verify stopped -> apply -> mo shortcut).
+3. Verify runtime bang CDP script (`pass=true`).
+4. Build exe.
+5. Copy exe vao `tools`.
+6. `git add` docs + cli + exe + packs (neu co).
+7. Commit.
+8. Push `master`.
+9. Tag release.

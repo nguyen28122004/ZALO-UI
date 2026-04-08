@@ -6,6 +6,25 @@
 node .\tools\zalous-cli.js <command> [flags]
 ```
 
+## Safety First: `apply`
+
+Khi patch `app.asar`, bat buoc dung safe flow:
+
+```powershell
+$zaloShortcut = 'C:\Users\ACER\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Zalo.lnk'
+$zaloProc = Get-Process | Where-Object { $_.ProcessName -like 'Zalo*' -or $_.Path -like 'C:\Users\ACER\AppData\Local\Programs\Zalo*' }
+if ($zaloProc) { $zaloProc | Stop-Process -Force }
+Start-Sleep -Seconds 2
+
+$stillRunning = Get-Process | Where-Object { $_.ProcessName -like 'Zalo*' -or $_.Path -like 'C:\Users\ACER\AppData\Local\Programs\Zalo*' }
+if ($stillRunning) { throw 'Zalo is still running; abort apply.' }
+
+node .\tools\zalous-cli.js apply
+Start-Process -FilePath $zaloShortcut
+```
+
+Neu `apply` bao thieu file trong `app.asar.unpacked`, khoi phuc lai `resources\app.asar.unpacked` day du roi chay lai.
+
 ## Commands
 
 ### `init`
@@ -23,7 +42,7 @@ node .\tools\zalous-cli.js <command> [flags]
 - Restore clean base theo version.
 - Inject runtime + payload vao `pc-dist/index.html`.
 - Repack + sync `app.asar.unpacked`.
-- Mac dinh full payload; `--lite-payload` de dung lite.
+- Mac dinh full payload; `--lite-payload` de dung lite payload.
 
 ### `restore [--asar <path>]`
 - Restore backup theo thu tu uu tien:
@@ -73,7 +92,8 @@ node .\tools\zalous-cli.js <command> [flags]
 
 ### `reload [--type <all|theme|theme-pack|extension>] [--name <asset>] [--enable|--disable]`
 - Gui hot-reload signal qua `config.hotReload.token`.
-- Runtime Zalous dang chay se tu reload trang va nap lai asset moi tu `%APPDATA%\Zalous`.
+- Token duoc tao moi moi lan goi reload/add/patch co `--reload`.
+- Runtime se auto reload neu dang o mode co external watcher.
 - Co the ket hop:
   - `reload --type theme --name my-theme.css`
   - `reload --type theme-pack --name themepack-abc`
@@ -87,6 +107,24 @@ node .\tools\zalous-cli.js <command> [flags]
 
 ### `doctor`
 - In thong tin chan doan nhanh.
+
+## Mandatory CDP Verify
+
+Sau moi thay doi theme/theme-pack/extension, bat buoc verify bang CDP:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo'
+```
+
+Vi du assert:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -ExpectedActiveTheme 'pack:themepack.console-minimal' -ExpectedThemePackAttr 'console-minimal'
+```
+
+Neu report `hasWatcher=false`, auto reload tu token co the khong kich hoat trong runtime hien tai. Khi do, dung reload tay tren UI:
+- Nut `RL` trong controls.
+- Nut `Reload Trang` trong market modal.
 
 ## EXE mode
 
