@@ -130,7 +130,6 @@
 :root[data-zalous-theme-pack="console-minimal"] #container,
 :root[data-zalous-theme-pack="console-minimal"] [class*="app"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="layout"] {
-  background: var(--bg-default) !important;
   color: var(--text-primary) !important;
 }
 
@@ -167,7 +166,6 @@
 :root[data-zalous-theme-pack="console-minimal"] [class*="context-menu"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="modal"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="dialog"] {
-  background: var(--surface-background-subtle) !important;
   color: var(--text-primary) !important;
   border-color: var(--border) !important;
 }
@@ -208,7 +206,6 @@
 :root[data-zalous-theme-pack="console-minimal"] [contenteditable="true"] {
   background: var(--input-field-bg-filled) !important;
   color: var(--text-primary) !important;
-  border: 1px solid var(--border) !important;
 }
 
 :root[data-zalous-theme-pack="console-minimal"] input::placeholder,
@@ -219,7 +216,6 @@
 :root[data-zalous-theme-pack="console-minimal"] button,
 :root[data-zalous-theme-pack="console-minimal"] [role="button"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="btn"] {
-  border: 1px solid var(--border) !important;
   background: var(--button-secondary-neutral-normal) !important;
   color: var(--button-secondary-neutral-text) !important;
 }
@@ -288,9 +284,7 @@
 :root[data-zalous-theme-pack="console-minimal"] [class*="badge"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="count"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="notify"] {
-  background: var(--console-accent-weak) !important;
   color: var(--console-accent-soft-2) !important;
-  border-color: var(--border) !important;
 }
 
 :root[data-zalous-theme-pack="console-minimal"] [class*="divider"],
@@ -328,7 +322,6 @@
 :root[data-zalous-theme-pack="console-minimal"] #zalous-controls,
 :root[data-zalous-theme-pack="console-minimal"] #zalous-market-card,
 :root[data-zalous-theme-pack="console-minimal"] #zalous-ext-config-modal > div {
-  background: var(--surface-background-subtle) !important;
   color: var(--text-primary) !important;
   border-color: var(--border) !important;
 }
@@ -344,9 +337,7 @@
 :root[data-zalous-theme-pack="console-minimal"] [class*="chip"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="tag"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="pill"] {
-  background: var(--console-bg-5) !important;
   color: var(--console-fg-2) !important;
-  border: 1px solid var(--border) !important;
 }
 
 :root[data-zalous-theme-pack="console-minimal"] [class*="toast"],
@@ -410,7 +401,6 @@
 :root[data-zalous-theme-pack="console-minimal"] [class*="input"] {
   background-color: var(--input-field-bg-filled) !important;
   color: var(--text-primary) !important;
-  border-color: var(--border) !important;
 }
 
 :root[data-zalous-theme-pack="console-minimal"] [class*="media"],

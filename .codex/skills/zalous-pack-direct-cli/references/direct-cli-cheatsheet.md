@@ -4,6 +4,7 @@
 
 ```powershell
 $zaloShortcut = 'C:\Users\ACER\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Zalo.lnk'
+$zaloLauncherJs = '.\.codex\skills\zalous-pack-direct-cli\scripts\start-zalo.mjs'
 $zaloProc = Get-Process | Where-Object { $_.ProcessName -like 'Zalo*' -or $_.Path -like 'C:\Users\ACER\AppData\Local\Programs\Zalo*' }
 if ($zaloProc) { $zaloProc | Stop-Process -Force }
 Start-Sleep -Seconds 2
@@ -11,7 +12,18 @@ $stillRunning = Get-Process | Where-Object { $_.ProcessName -like 'Zalo*' -or $_
 if ($stillRunning) { throw 'Zalo is still running; abort apply.' }
 
 node .\tools\zalous-cli.js apply
-Start-Process -FilePath $zaloShortcut
+$opened = $false
+try {
+  Start-Process -FilePath $zaloShortcut
+  $opened = $true
+} catch {
+  $opened = $false
+}
+Start-Sleep -Milliseconds 900
+$runningAfterOpen = Get-Process | Where-Object { $_.ProcessName -like 'Zalo*' -or $_.Path -like 'C:\Users\ACER\AppData\Local\Programs\Zalo*' }
+if (-not $runningAfterOpen) {
+  node $zaloLauncherJs
+}
 ```
 
 ## CDP Verify (Mandatory)

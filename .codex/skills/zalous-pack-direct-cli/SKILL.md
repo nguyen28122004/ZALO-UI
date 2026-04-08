@@ -11,6 +11,8 @@ Use this skill to deliver pack changes through `%APPDATA%\\Zalous` assets and on
 ## Workflow Decision
 1. Run `apply` only when runtime payload changed or this machine has not been patched yet.
    - Mandatory safe flow: kill Zalo -> wait -> verify stopped -> `apply` -> open Zalo shortcut.
+   - If PowerShell cannot open `.lnk`, fallback to JS launcher:
+     - `node .\.codex\skills\zalous-pack-direct-cli\scripts\start-zalo.mjs`
 2. Run `add` when a new theme, theme-pack, or extension must be copied into workspace assets.
 3. Run `patch` when an existing workspace asset must be replaced in place.
 4. Run `reload` to update `config.hotReload.token` and request runtime refresh.
@@ -26,6 +28,7 @@ Use these commands from repo root (`node .\\tools\\zalous-cli.js ...`):
 - Safe `apply` (required for asar patch/runtime changes):
   ```powershell
   $zaloShortcut = 'C:\Users\ACER\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Zalo.lnk'
+  $zaloLauncherJs = '.\.codex\skills\zalous-pack-direct-cli\scripts\start-zalo.mjs'
   $zaloProc = Get-Process | Where-Object { $_.ProcessName -like 'Zalo*' -or $_.Path -like 'C:\Users\ACER\AppData\Local\Programs\Zalo*' }
   if ($zaloProc) { $zaloProc | Stop-Process -Force }
   Start-Sleep -Seconds 2
@@ -34,7 +37,18 @@ Use these commands from repo root (`node .\\tools\\zalous-cli.js ...`):
   if ($stillRunning) { throw 'Zalo is still running; abort apply.' }
 
   node .\tools\zalous-cli.js apply
-  Start-Process -FilePath $zaloShortcut
+  $opened = $false
+  try {
+    Start-Process -FilePath $zaloShortcut
+    $opened = $true
+  } catch {
+    $opened = $false
+  }
+  Start-Sleep -Milliseconds 900
+  $runningAfterOpen = Get-Process | Where-Object { $_.ProcessName -like 'Zalo*' -or $_.Path -like 'C:\Users\ACER\AppData\Local\Programs\Zalo*' }
+  if (-not $runningAfterOpen) {
+    node $zaloLauncherJs
+  }
   ```
 
 - CDP verify after any theme/pack change:
