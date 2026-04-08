@@ -1,19 +1,19 @@
-# Hướng dẫn chỉnh UI (Zalous)
+# UI Mod Guide
 
-## 1) Quy tắc selector
+## 1) Selector rules
 
-Ưu tiên selector ổn định theo thứ tự:
+Uu tien selector theo thu tu:
 1. `id`
 2. `data-*`, `aria-*`
 3. `role`
-4. `class*="..."` khi không còn lựa chọn tốt hơn
+4. `class*="..."` khi khong con lua chon tot hon
 
-## 2) Loại pack giao diện
+## 2) Pack types
 
 ### `theme`
+- CSS only.
 
-- Chỉ CSS.
-- Manifest tối thiểu:
+Manifest toi thieu:
 
 ```json
 {
@@ -24,9 +24,9 @@
 ```
 
 ### `theme-pack`
+- Ho tro CSS + JS + HTML.
 
-- Hỗ trợ CSS + JS + HTML.
-- Manifest mẫu:
+Manifest mau:
 
 ```json
 {
@@ -41,59 +41,45 @@
 ```
 
 Runtime behavior:
-- CSS: inject vào style host.
-- HTML: mount vào `#zalous-theme-pack-html`.
-- JS: execute khi apply pack, có thể trả `cleanup()`.
+- CSS inject vao style host.
+- HTML mount vao `#zalous-theme-pack-html`.
+- JS co the return `cleanup()`.
 
-## 3) Quy trình chỉnh theme/theme-pack
-
-1. Sửa pack tại `zalous/market/packs/<pack-id>/`.
-2. Chạy:
+## 3) Workflow update theme/theme-pack
 
 ```powershell
 node .\tools\zalous-cli.js init
 node .\tools\zalous-cli.js apply
 ```
 
-3. Restart Zalo.
+## 4) Workflow update extension
 
-## 4) Quy trình chỉnh extension
+- Edit `zalous/market/packs/<ext-id>/<entry>.js`.
+- Neu can config, dung API:
+  - `zalous.registerConfig(...)`
+  - `zalous.getConfig(...)`
+  - `zalous.setConfig(...)`
+- Chay lai `apply`.
 
-1. Sửa extension tại `zalous/market/packs/<ext-id>/<entry>.js`.
-2. Dùng API runtime nếu cần config:
-   - `zalous.registerConfig(...)`
-   - `zalous.getConfig(...)`
-   - `zalous.setConfig(...)`
-3. Schema config UI hiện hỗ trợ:
-   - `select`
-   - `checkbox`
-4. Chạy lại `apply` để sync payload/runtime.
-5. Restart Zalo.
+## 5) Patch safety
 
-## 5) Flow an toàn khi patch
-
-1. Đóng toàn bộ process Zalo.
-2. Đảm bảo `resources\app.asar.unpacked` đầy đủ.
-3. Chạy `apply`.
-4. Mở lại Zalo và verify UI.
+1. Dong toan bo process Zalo.
+2. Dam bao `resources\app.asar.unpacked` day du.
+3. Chay `apply`.
+4. Mo lai Zalo va verify.
 
 ## 6) Debug nhanh
 
 - DevTools endpoint: `http://localhost:9222/`
-- Kiểm tra config: `%APPDATA%\Zalous\config.json`
-- Kiểm tra assets runtime:
+- Config runtime: `%APPDATA%\Zalous\config.json`
+- Runtime assets:
   - `%APPDATA%\Zalous\themes`
   - `%APPDATA%\Zalous\theme-packs`
   - `%APPDATA%\Zalous\extensions`
 
-Khi gặp lỗi `ENOENT` liên quan `app.asar.unpacked`:
-- nguyên nhân thường là thiếu file native unpacked,
-- cần khôi phục lại thư mục `resources\app.asar.unpacked` rồi chạy lại `apply`.
+## 7) Luu y van hanh
 
-## 7) Ghi chú vận hành
-
-- `apply` mặc định full payload, dùng `--lite-payload` nếu cần.
-- `apply` luôn patch từ clean base theo version Zalo.
-- Runtime ưu tiên config external, fallback `localStorage`.
-- `restore` ưu tiên backup patch timestamp, sau đó mới đến pre-restore.
-- Tránh dùng script patch cũ ngoài `tools/zalous-cli.js`.
+- `apply` mac dinh full payload (`--lite-payload` neu can).
+- `apply` luon patch tu clean base.
+- `restore` uu tien backup patch timestamp.
+- Tranh dung script patch cu ngoai `tools/zalous-cli.js`.
