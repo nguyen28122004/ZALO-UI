@@ -47,7 +47,24 @@ Khi mo Zalo:
 5. Chay enabled extensions.
 6. Render controls + market UI.
 
-## E) Restore
+## E) Direct asset flow (khong qua asar)
+
+Sau khi da `apply` runtime toi thieu 1 lan, co the update asset truc tiep:
+
+```powershell
+node .\tools\zalous-cli.js add --type theme-pack --dir .\zalous\market\packs\themepack-hello-kitty --reload
+node .\tools\zalous-cli.js patch --type theme --name zalo-green.css --file .\zalous\market\packs\zalo-green\zalo-green.css --reload
+node .\tools\zalous-cli.js reload --type extension --name lock-pin-dots.js --enable
+```
+
+Flow:
+1. CLI copy file/dir vao `%APPDATA%\Zalous\themes|theme-packs|extensions`.
+2. CLI cap nhat `config.json` (active theme, enabled extensions neu can).
+3. CLI bump `config.hotReload.token`.
+4. Runtime watcher phat hien token moi.
+5. Runtime `window.location.reload()` de nap lai external assets moi.
+
+## F) Restore
 
 ```powershell
 node .\tools\zalous-cli.js restore [--asar <path>]
@@ -56,7 +73,7 @@ node .\tools\zalous-cli.js restore [--asar <path>]
 - Chon backup theo uu tien (patch timestamp truoc, pre_restore sau).
 - Copy vao `app.asar` target.
 
-## F) Loi thuong gap
+## G) Loi thuong gap
 
 ### `ENOENT ... app.asar.unpacked\...`
 

@@ -9,6 +9,9 @@
 - Sync built-in assets vao workspace.
 - Patch `app.asar` theo clean-base strategy.
 - Backup/restore.
+- Ho tro direct mode:
+  - `add`/`patch` cho `theme`, `theme-pack`, `extension` tren external workspace.
+  - `reload` bang hot-reload signal (`config.hotReload.token`), khong can repack asar.
 
 ### Runtime (`zalous/runtime/zalous-runtime.js`)
 
@@ -16,6 +19,7 @@
 - Doc embedded payload + merge voi external config/assets.
 - Apply `theme`/`theme-pack`.
 - Chay extension + quan ly extension config.
+- Watch `config.hotReload.token`; neu doi token thi runtime reload trang de nap lai asset moi.
 
 ### Market (`zalous/market/*`)
 
@@ -31,6 +35,13 @@ Config boot order:
 
 Assets priority:
 - External assets uu tien hon embedded assets neu doc duoc.
+
+Hot reload signal:
+- Duoc ghi boi CLI vao `%APPDATA%\Zalous\config.json`:
+  - `hotReload.token`
+  - `hotReload.type`
+  - `hotReload.name`
+- Runtime doc token moi va goi `window.location.reload()`.
 
 ## Patch strategy
 

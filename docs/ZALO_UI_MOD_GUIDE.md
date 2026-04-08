@@ -45,27 +45,37 @@ Runtime behavior:
 - HTML mount vao `#zalous-theme-pack-html`.
 - JS co the return `cleanup()`.
 
-## 3) Workflow update theme/theme-pack
+## 3) Workflow update theme/theme-pack (direct, khong qua asar)
 
 ```powershell
-node .\tools\zalous-cli.js init
-node .\tools\zalous-cli.js apply
+node .\tools\zalous-cli.js add --type theme --file .\my-theme.css --name my-theme.css
+node .\tools\zalous-cli.js patch --type theme-pack --id themepack-hello-kitty --dir .\zalous\market\packs\themepack-hello-kitty
+node .\tools\zalous-cli.js reload --type theme-pack --name themepack-hello-kitty
 ```
 
-## 4) Workflow update extension
+Ghi chu:
+- Chi can `apply` khi ban cap nhat runtime trong `app.asar`.
+- Sau do update asset co the chay bang `add/patch/reload`.
+
+## 4) Workflow update extension (direct)
 
 - Edit `zalous/market/packs/<ext-id>/<entry>.js`.
 - Neu can config, dung API:
   - `zalous.registerConfig(...)`
   - `zalous.getConfig(...)`
   - `zalous.setConfig(...)`
-- Chay lai `apply`.
+- Patch vao runtime workspace:
+
+```powershell
+node .\tools\zalous-cli.js patch --type extension --name lock-pin-dots.js --file .\zalous\market\packs\lock-pin-dots\lock-pin-dots.js
+node .\tools\zalous-cli.js reload --type extension --name lock-pin-dots.js --enable
+```
 
 ## 5) Patch safety
 
 1. Dong toan bo process Zalo.
 2. Dam bao `resources\app.asar.unpacked` day du.
-3. Chay `apply`.
+3. Chay `apply` khi can cap nhat runtime moi.
 4. Mo lai Zalo va verify.
 
 ## 6) Debug nhanh
@@ -81,5 +91,6 @@ node .\tools\zalous-cli.js apply
 
 - `apply` mac dinh full payload (`--lite-payload` neu can).
 - `apply` luon patch tu clean base.
+- `add/patch/reload` la luong cap nhat hang ngay cho pack.
 - `restore` uu tien backup patch timestamp.
 - Tranh dung script patch cu ngoai `tools/zalous-cli.js`.

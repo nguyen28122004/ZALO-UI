@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zalous Pack Direct CLI"
+  short_description: "Direct add/patch/reload for Zalous packs without asar repack"
+  default_prompt: "Use this skill to manage theme, theme-pack, and extension assets via the Zalous direct CLI workflow."

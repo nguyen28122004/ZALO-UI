@@ -120,7 +120,14 @@
       enabledExtensions: [],
       patchEnabled: false,
       ui: { controls: true },
-      extensionConfigs: {}
+      extensionConfigs: {},
+      hotReload: {
+        token: '',
+        type: 'all',
+        name: '',
+        source: '',
+        at: ''
+      }
     }, cfg || {});
 
     if (!Array.isArray(next.enabledExtensions)) next.enabledExtensions = [];
@@ -128,7 +135,25 @@
     if (typeof next.ui.controls !== 'boolean') next.ui.controls = true;
     if (typeof next.patchEnabled !== 'boolean') next.patchEnabled = false;
     if (!next.extensionConfigs || typeof next.extensionConfigs !== 'object') next.extensionConfigs = {};
+    if (!next.hotReload || typeof next.hotReload !== 'object') {
+      next.hotReload = { token: '', type: 'all', name: '', source: '', at: '' };
+    } else {
+      next.hotReload = {
+        token: next.hotReload.token ? String(next.hotReload.token) : '',
+        type: typeof next.hotReload.type === 'string' ? next.hotReload.type : 'all',
+        name: typeof next.hotReload.name === 'string' ? next.hotReload.name : '',
+        source: typeof next.hotReload.source === 'string' ? next.hotReload.source : '',
+        at: typeof next.hotReload.at === 'string' ? next.hotReload.at : ''
+      };
+    }
     return next;
+  }
+
+  function readHotReloadToken(cfg) {
+    if (!cfg || typeof cfg !== 'object') return '';
+    const hot = cfg.hotReload;
+    if (!hot || typeof hot !== 'object') return '';
+    return hot.token ? String(hot.token) : '';
   }
 
   function ensureStyleTag() {
@@ -355,6 +380,50 @@
     } catch (_) {
       return null;
     }
+  }
+
+  function startHotReloadWatcher(external, initialConfig) {
+    if (!external || !external.cfgPath || typeof require !== 'function') return;
+    if (window.__zalousHotReloadWatcher) return;
+
+    let fs = null;
+    try {
+      fs = require('fs');
+    } catch (_) {
+      return;
+    }
+
+    let lastToken = readHotReloadToken(initialConfig);
+    let reloading = false;
+
+    const timer = setInterval(() => {
+      if (reloading) return;
+
+      try {
+        if (!fs.existsSync(external.cfgPath)) return;
+        const raw = fs.readFileSync(external.cfgPath, 'utf8').replace(/^\uFEFF/, '');
+        const cfg = normalizeConfig(JSON.parse(raw));
+        const token = readHotReloadToken(cfg);
+        if (!token || token === lastToken) return;
+        lastToken = token;
+        reloading = true;
+        log('hot reload signal', {
+          token,
+          type: cfg.hotReload && cfg.hotReload.type,
+          name: cfg.hotReload && cfg.hotReload.name
+        });
+        setTimeout(() => {
+          try { window.location.reload(); } catch (_) {}
+        }, 60);
+      } catch (_) {
+      }
+    }, 900);
+
+    window.__zalousHotReloadWatcher = timer;
+    window.addEventListener('beforeunload', () => {
+      try { clearInterval(timer); } catch (_) {}
+      window.__zalousHotReloadWatcher = null;
+    }, { once: true });
   }
 
   function ensureMarketModal(state, refreshControls) {
@@ -804,6 +873,7 @@
     };
     state.saveConfig = createPersistFn(external, state);
     state.writeAsset = createWriteAssetFn(external);
+    startHotReloadWatcher(external, state.config);
 
     // Keep runtime behavior strictly aligned with persisted Zalous config/assets.
     let configChanged = false;

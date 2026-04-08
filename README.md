@@ -45,6 +45,16 @@ node .\tools\zalous-cli.js apply
 .\tools\zalous.exe apply
 ```
 
+## Direct Pack Update (khong repack asar)
+
+Sau khi da `apply` runtime 1 lan, update hang ngay co the dung:
+
+```powershell
+node .\tools\zalous-cli.js add --type theme-pack --dir .\zalous\market\packs\themepack-hello-kitty
+node .\tools\zalous-cli.js patch --type theme --name zalo-green.css --file .\zalous\market\packs\zalo-green\zalo-green.css
+node .\tools\zalous-cli.js reload --type all
+```
+
 ## Patch an toan
 
 1. Dong toan bo process Zalo.
@@ -55,6 +65,10 @@ node .\tools\zalous-cli.js apply
 ## Build va Release
 
 - Xem chi tiet trong [Build Guide](./docs/zalous/BUILD.md).
+
+## Agent Skill
+
+- `.codex/skills/zalous-pack-direct-cli/SKILL.md`: skill cho agent de thao tac pack bang CLI direct mode (`add`, `patch`, `reload`).
 
 ## Tai lieu
 
