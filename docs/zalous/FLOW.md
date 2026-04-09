@@ -1,4 +1,4 @@
-# Flow
+﻿# Flow
 
 ## A) Init
 
@@ -6,9 +6,9 @@
 node .\tools\zalous-cli.js init
 ```
 
-- Tao `%APPDATA%\Zalous` + cac folder can thiet.
-- Sync built-in packs vao runtime workspace.
-- Normalize config theo assets hien co.
+- Tạo `%APPDATA%\Zalous` + các folder cần thiết.
+- Sync built-in packs vào runtime workspace.
+- Normalize config theo assets hiện có.
 
 ## B) Detect
 
@@ -17,20 +17,20 @@ node .\tools\zalous-cli.js detect [--asar <path>]
 ```
 
 - Resolve `app.asar` target.
-- Ghi vao `config.appAsarPath`.
+- Ghi vào `config.appAsarPath`.
 
-## C) CDP Baseline (mandatory truoc khi sua)
+## C) CDP Baseline (bắt buộc trước khi sửa)
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo'
 ```
 
-Muc tieu:
-- Biet runtime source hien tai.
-- Biet active theme/theme-pack.
-- Biet co watcher va Node bridge hay khong.
+Mục tiêu:
+- Biết runtime source hiện tại.
+- Biết active theme/theme-pack.
+- Biết có watcher và Node bridge hay không.
 
-## D) Daily Direct Flow (khong repack asar)
+## D) Daily Direct Flow (không repack asar)
 
 ```powershell
 node .\tools\zalous-cli.js patch --type theme-pack --id themepack.console-minimal --dir .\zalous\market\packs\themepack-console-minimal --reload
@@ -38,30 +38,30 @@ node .\tools\zalous-cli.js reload --type theme-pack --name themepack.console-min
 ```
 
 Flow:
-1. CLI copy file/dir vao `%APPDATA%\Zalous\themes|theme-packs|extensions`.
-2. CLI cap nhat `config.json`.
+1. CLI copy file/dir vào `%APPDATA%\Zalous\themes|theme-packs|extensions`.
+2. CLI cập nhật `config.json`.
 3. CLI bump `config.hotReload.token`.
-4. Runtime watcher (neu bat) se theo doi token va reload.
-5. Neu watcher tat/khong co, dung `RL` de reload tay.
+4. Runtime watcher (nếu bật) sẽ theo dõi token và reload.
+5. Nếu watcher tắt/không có, dùng `RL` để reload tay.
 
-Quy tac:
-- Sua theme/theme-pack/extension theo direct flow thi khong kill Zalo.
-- `apply` (patch asar) chi chay khi user yeu cau ro rang.
+Quy tắc:
+- Sửa theme/theme-pack/extension theo direct flow thì không kill Zalo.
+- `apply` (patch asar) chỉ chạy khi user yêu cầu rõ ràng.
 
 ## E) Runtime Source Caveat
 
-Neu CDP cho thay:
+Nếu CDP cho thấy:
 - `source=local+embedded`
 - `hasRequire=false`
 
-Thi runtime co the khong doc external pack tu `%APPDATA%\Zalous` ngay tren tab dang mo.
+Thì runtime có thể không đọc external pack từ `%APPDATA%\Zalous` ngay trên tab đang mở.
 
-Cach xu ly:
-1. Van patch source trong repo + `%APPDATA%` binh thuong.
-2. Inject CSS/JS hotfix truc tiep qua CDP de UI doi ngay.
-3. Verify lai bang CDP.
+Cách xử lý:
+1. Vẫn patch source trong repo + `%APPDATA%` bình thường.
+2. Inject CSS/JS hotfix trực tiếp qua CDP để UI đổi ngay.
+3. Verify lại bằng CDP.
 
-## F) Apply (asar patch, chi khi duoc yeu cau)
+## F) Apply (asar patch, chỉ khi được yêu cầu)
 
 ```powershell
 $zaloShortcut = 'C:\Users\Lien\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Zalo.lnk'
@@ -79,17 +79,17 @@ Start-Process -FilePath $zaloShortcut
 Apply internals:
 1. Resolve `app.asar`.
 2. Restore clean base.
-3. Build payload va inject runtime.
+3. Build payload và inject runtime.
 4. Repack `app.asar`.
-5. Sync lai `app.asar.unpacked`.
+5. Sync lại `app.asar.unpacked`.
 
-## G) CDP Verify (mandatory sau khi patch)
+## G) CDP Verify (bắt buộc sau khi patch)
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1
 ```
 
-Chi coi la xong khi report `pass=true`.
+Chỉ coi là xong khi report `pass=true`.
 
 ## H) Restore
 
@@ -97,15 +97,15 @@ Chi coi la xong khi report `pass=true`.
 node .\tools\zalous-cli.js restore [--asar <path>]
 ```
 
-- Uu tien backup patch timestamp gan nhat.
+- Ưu tiên backup patch timestamp gần nhất.
 
-## I) Loi thuong gap
+## I) Lỗi thường gặp
 
 ### `ENOENT ... app.asar.unpacked\...`
 
-Nguyen nhan: thieu native files trong `.unpacked`.
+Nguyên nhân: thiếu native files trong `.unpacked`.
 
-Cach xu ly:
-1. Dong Zalo.
-2. Khoi phuc day du `resources\app.asar.unpacked`.
-3. Chay lai `apply`.
+Cách xử lý:
+1. Đóng Zalo.
+2. Khôi phục đầy đủ `resources\app.asar.unpacked`.
+3. Chạy lại `apply`.

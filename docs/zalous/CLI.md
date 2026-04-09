@@ -1,6 +1,6 @@
-# CLI Reference
+﻿# CLI Reference
 
-## Syntax
+## Cú pháp
 
 ```powershell
 node .\tools\zalous-cli.js <command> [flags]
@@ -9,78 +9,78 @@ node .\tools\zalous-cli.js <command> [flags]
 ## Commands
 
 ### `patch-now [--asar <path>] [--no-backup] [--lite-payload|--full-payload] [--keep-controls]`
-- Lenh mac dinh neu khong truyen command.
-- Tu dong detect latest `app.asar` va patch runtime.
+- Lệnh mặc định nếu không truyền command.
+- Tự động detect latest `app.asar` và patch runtime.
 
 ### `init`
-- Tao layout `%APPDATA%\Zalous`.
-- Sync built-in assets vao `themes`, `theme-packs`, `extensions`.
-- Normalize config.
+- Tạo layout `%APPDATA%\Zalous`.
+- Sync built-in assets vào `themes`, `theme-packs`, `extensions`.
+- Chuẩn hóa config.
 
 ### `detect [--asar <path>]`
-- Resolve `app.asar` va luu vao `config.appAsarPath`.
+- Resolve `app.asar` và lưu vào `config.appAsarPath`.
 
 ### `status`
-- In JSON trang thai runtime workspace.
+- In JSON trạng thái runtime workspace.
 
 ### `apply [--asar <path>] [--no-backup] [--lite-payload|--full-payload] [--keep-controls]`
 - Restore clean base theo version.
-- Inject runtime vao `pc-dist/index.html`.
-- Repack va sync lai `app.asar.unpacked`.
+- Inject runtime vào `pc-dist/index.html`.
+- Repack và sync lại `app.asar.unpacked`.
 
 ### `restore [--asar <path>]`
-- Restore backup patch gan nhat (`app.asar.<timestamp>.bak`) truoc.
+- Restore backup patch gần nhất (`app.asar.<timestamp>.bak`) trước.
 
 ### `list-themes`
-- Liet ke theme files va `pack:<id>`.
+- Liệt kê theme files và `pack:<id>`.
 
 ### `set-theme --theme <file.css|pack:pack-id>`
-- Dat `activeTheme`.
+- Đặt `activeTheme`.
 
 ### `list-extensions`
-- Liet ke extension va trang thai `[on]/[off]`.
+- Liệt kê extension và trạng thái `[on]/[off]`.
 
 ### `enable-extension --name <file.js>`
-- Bat extension.
+- Bật extension.
 
 ### `disable-extension --name <file.js>`
-- Tat extension.
+- Tắt extension.
 
 ### `import-theme --file <path.css> [--name custom.css]`
-- Import theme ngoai vao `%APPDATA%\Zalous\themes`.
+- Import theme ngoài vào `%APPDATA%\Zalous\themes`.
 
 ### `import-extension --file <path.js> [--name custom.js]`
-- Import extension ngoai vao `%APPDATA%\Zalous\extensions`.
+- Import extension ngoài vào `%APPDATA%\Zalous\extensions`.
 
 ### `add --type <theme|theme-pack|extension> ...`
-- Them asset moi truc tiep vao `%APPDATA%\Zalous` (khong repack asar).
+- Thêm asset mới trực tiếp vào `%APPDATA%\Zalous` (không repack asar).
 
 ### `patch --type <theme|theme-pack|extension> ...`
-- Patch asset da ton tai trong `%APPDATA%\Zalous` (khong repack asar).
+- Patch asset đã tồn tại trong `%APPDATA%\Zalous` (không repack asar).
 
 ### `reload [--type <all|theme|theme-pack|extension>] [--name <asset>] [--enable|--disable]`
-- Bump `config.hotReload.token` de runtime biet co thay doi.
+- Bump `config.hotReload.token` để runtime biết có thay đổi.
 
 ### `market-list [--catalog <path.json>]`
-- Liet ke packs trong catalog.
+- Liệt kê packs trong catalog.
 
 ### `market-install --id <packId> [--catalog <path.json>]`
-- Cai dat pack tu catalog.
+- Cài đặt pack từ catalog.
 
 ### `doctor`
-- In thong tin chan doan nhanh.
+- In thông tin chẩn đoán nhanh.
 
-## Daily Runtime Patch Flow (khuyen dung)
+## Daily Runtime Patch Flow (khuyến nghị)
 
 ```powershell
 node .\tools\zalous-cli.js patch --type theme-pack --id themepack.console-minimal --dir .\zalous\market\packs\themepack-console-minimal --reload
 node .\tools\zalous-cli.js reload --type theme-pack --name themepack.console-minimal
 ```
 
-- `add`/`patch`/`reload` cho theme/theme-pack/extension: khong can kill Zalo.
-- Ch? patch `asar` khi user yeu cau ro rang (`apply`).
+- `add`/`patch`/`reload` cho theme/theme-pack/extension: không cần kill Zalo.
+- Chỉ patch `asar` khi user yêu cầu rõ ràng (`apply`).
 
-## Safe Apply Flow (chi khi patch asar)
+## Safe Apply Flow (chỉ khi patch asar)
 
 ```powershell
 $zaloShortcut = 'C:\Users\Lien\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Zalo.lnk'
@@ -97,11 +97,11 @@ Start-Process -FilePath $zaloShortcut
 
 ## Hot Reload Watcher
 
-- `reload` chi gui signal token.
-- Runtime co watcher:
-  - `WR`: watcher bat.
-  - `WX`: watcher tat.
-- Neu watcher tat/khong kha dung, dung `RL` de reload tay.
+- `reload` chỉ gửi signal token.
+- Runtime có watcher:
+  - `WR`: watcher bật.
+  - `WX`: watcher tắt.
+- Nếu watcher tắt/không khả dụng, dùng `RL` để reload tay.
 
 ## Mandatory CDP Verify
 
@@ -109,8 +109,8 @@ Start-Process -FilePath $zaloShortcut
 powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo'
 ```
 
-Neu CDP cho thay `source=local+embedded` va `hasRequire=false`, runtime co the khong doc external pack ngay. Khi do can inject hotfix qua CDP cho tab dang chay.
+Nếu CDP cho thấy `source=local+embedded` và `hasRequire=false`, runtime có thể không đọc external pack ngay. Khi đó cần inject hotfix qua CDP cho tab đang chạy.
 
 ## EXE mode
 
-Co the thay `node .\tools\zalous-cli.js` bang `.\tools\zalous.exe`.
+Có thể thay `node .\tools\zalous-cli.js` bằng `.\tools\zalous.exe`.

@@ -1,19 +1,19 @@
-# UI Mod Guide
+﻿# UI Mod Guide
 
-## 1) Selector rules
+## 1) Quy tắc selector
 
-Uu tien selector theo thu tu:
+Ưu tiên selector theo thứ tự:
 1. `id`
 2. `data-*`, `aria-*`
 3. `role`
-4. `class*="..."` khi khong con lua chon tot hon
+4. `class*="..."` khi không còn lựa chọn tốt hơn
 
-## 2) Pack types
+## 2) Loại pack
 
 ### `theme`
 - CSS only.
 
-Manifest toi thieu:
+Manifest tối thiểu:
 
 ```json
 {
@@ -24,9 +24,9 @@ Manifest toi thieu:
 ```
 
 ### `theme-pack`
-- Ho tro CSS + JS + HTML.
+- Hỗ trợ CSS + JS + HTML.
 
-Manifest mau:
+Manifest mẫu:
 
 ```json
 {
@@ -41,26 +41,26 @@ Manifest mau:
 ```
 
 Runtime behavior:
-- CSS inject vao style host.
-- HTML mount vao `#zalous-theme-pack-html`.
-- JS co the return `cleanup()`.
+- CSS inject vào style host.
+- HTML mount vào `#zalous-theme-pack-html`.
+- JS có thể return `cleanup()`.
 
-## 3) Daily edit flow (khuyen dung)
+## 3) Daily edit flow (khuyến nghị)
 
 ```powershell
 node .\tools\zalous-cli.js patch --type theme-pack --id themepack.console-minimal --dir .\zalous\market\packs\themepack-console-minimal --reload
 node .\tools\zalous-cli.js reload --type theme-pack --name themepack.console-minimal
 ```
 
-Ghi chu:
-- `reload` chi gui token signal.
-- Watcher bat (`WR`) thi auto reload.
-- Watcher tat (`WX`) thi bam `RL` de reload tay.
-- Flow nay khong can kill Zalo.
+Ghi chú:
+- `reload` chỉ gửi token signal.
+- Watcher bật (`WR`) thì auto reload.
+- Watcher tắt (`WX`) thì bấm `RL` để reload tay.
+- Flow này không cần kill Zalo.
 
-## 4) Runtime/ASAR update flow (chi khi can)
+## 4) Runtime/ASAR update flow (chỉ khi cần)
 
-Dung khi can cap nhat runtime payload trong `app.asar`.
+Dùng khi cần cập nhật runtime payload trong `app.asar`.
 
 ```powershell
 $zaloShortcut = 'C:\Users\Lien\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Zalo.lnk'
@@ -75,7 +75,7 @@ node .\tools\zalous-cli.js apply
 Start-Process -FilePath $zaloShortcut
 ```
 
-## 5) CDP verify (mandatory)
+## 5) CDP verify (bắt buộc)
 
 Baseline:
 
@@ -89,21 +89,21 @@ Assert active pack:
 powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -ExpectedActiveTheme 'pack:themepack.console-minimal' -ExpectedThemePackAttr 'console-minimal'
 ```
 
-Chi coi la xong khi report `pass=true`.
+Chỉ coi là xong khi report `pass=true`.
 
 ## 6) Runtime caveat: local+embedded + hasRequire=false
 
-Trieu chung:
-- Patch CLI ghi file thanh cong trong `%APPDATA%\Zalous`.
-- UI tab dang mo chua doi.
+Triệu chứng:
+- Patch CLI ghi file thành công trong `%APPDATA%\Zalous`.
+- UI tab đang mở chưa đổi.
 
-Nguyen nhan:
-- Runtime khong doc external pack ngay trong mode hien tai.
+Nguyên nhân:
+- Runtime không đọc external pack ngay trong mode hiện tại.
 
-Xu ly:
-1. Van luu code moi trong repo.
-2. Patch direct workspace nhu binh thuong.
-3. Inject CSS/JS hotfix qua CDP de doi UI ngay.
+Xử lý:
+1. Vẫn lưu code mới trong repo.
+2. Patch direct workspace như bình thường.
+3. Inject CSS/JS hotfix qua CDP để đổi UI ngay.
 
 ## 7) Debug nhanh
 

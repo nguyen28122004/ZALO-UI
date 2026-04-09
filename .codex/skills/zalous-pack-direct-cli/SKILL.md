@@ -1,4 +1,4 @@
----
+﻿---
 name: zalous-pack-direct-cli
 description: Manage Zalous theme, theme-pack, and extension packs through direct workspace CLI commands (`add`, `patch`, `reload`) with CDP-first checks. Default to runtime-only patch flow and use `apply` only when the user explicitly requests an asar patch.
 ---
@@ -6,22 +6,22 @@ description: Manage Zalous theme, theme-pack, and extension packs through direct
 # Zalous Pack Direct CLI
 
 ## Core Goal
-Deliver pack changes through `%APPDATA%\Zalous` assets by default. Use asar `apply` only when user explicitly requests it.
+Triển khai thay đổi pack qua `%APPDATA%\Zalous` theo mặc định. Chỉ dùng asar `apply` khi user yêu cầu rõ.
 
 ## Workflow Decision
-1. Run CDP baseline check first:
+1. Chạy CDP baseline trước:
    - `powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo'`
-2. Use `add` for new asset.
-3. Use `patch` for existing asset.
-4. Use `reload` to bump `config.hotReload.token`.
-5. Verify via CDP after each change.
-6. Run `apply` only when user explicitly asks to patch asar.
+2. Dùng `add` cho asset mới.
+3. Dùng `patch` cho asset đã có.
+4. Dùng `reload` để bump `config.hotReload.token`.
+5. Verify CDP sau mỗi thay đổi.
+6. Chỉ chạy `apply` khi user yêu cầu patch asar.
 
 Rule:
-- Theme/theme-pack/extension runtime flow (`add`/`patch`/`reload`) does not require killing Zalo.
+- Flow runtime (`add`/`patch`/`reload`) cho theme/theme-pack/extension không cần kill Zalo.
 
 ## Command Playbook
-Use from repo root (`node .\tools\zalous-cli.js ...`).
+Dùng từ repo root (`node .\tools\zalous-cli.js ...`).
 
 - Add theme:
   - `add --type theme --file <path.css> [--name custom.css] [--activate] [--reload]`
@@ -44,25 +44,25 @@ Use from repo root (`node .\tools\zalous-cli.js ...`).
 
 ## Hot Reload Watcher
 
-- `reload` chi gui signal token.
+- `reload` chỉ gửi signal token.
 - Runtime watcher control:
-  - `WR`: watcher bat.
-  - `WX`: watcher tat.
-- Neu watcher tat/khong available, dung `RL` de reload tay.
+  - `WR`: watcher bật.
+  - `WX`: watcher tắt.
+- Nếu watcher tắt/không available, dùng `RL` để reload tay.
 
 ## Runtime Source Caveat
 
-Neu runtime bao `source=local+embedded` va `hasRequire=false`:
-- `add/patch` van ghi file thanh cong.
-- UI co the chua doi ngay.
+Nếu runtime báo `source=local+embedded` và `hasRequire=false`:
+- `add/patch` vẫn ghi file thành công.
+- UI có thể chưa đổi ngay.
 
-Xu ly bat buoc:
+Xử lý bắt buộc:
 1. Verify state qua CDP.
-2. Inject CSS/JS hotfix qua CDP vao tab dang chay.
-3. Van luu source da sua trong repo va workspace `%APPDATA%\Zalous`.
-4. Khong kill Zalo, khong patch asar neu user chua yeu cau.
+2. Inject CSS/JS hotfix qua CDP vào tab đang chạy.
+3. Vẫn lưu source đã sửa trong repo và workspace `%APPDATA%\Zalous`.
+4. Không kill Zalo, không patch asar nếu user chưa yêu cầu.
 
-## Asar Apply Flow (chi khi user yeu cau)
+## Asar Apply Flow (chỉ khi user yêu cầu)
 
 ```powershell
 $zaloShortcut = 'C:\Users\Lien\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Zalo.lnk'
@@ -78,7 +78,7 @@ Start-Process -FilePath $zaloShortcut
 ```
 
 ## Validation
-1. Baseline CDP check truoc khi sua.
+1. Baseline CDP check trước khi sửa.
 2. Patch direct runtime assets.
-3. Verify lai CDP den khi `pass=true`.
-4. Neu user yeu cau asar patch, moi chay safe `apply` va verify lai.
+3. Verify lại CDP đến khi `pass=true`.
+4. Nếu user yêu cầu asar patch, mới chạy safe `apply` và verify lại.

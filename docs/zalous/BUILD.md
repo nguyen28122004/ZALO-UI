@@ -1,10 +1,10 @@
-# Build Guide
+﻿# Build Guide
 
 ## 1) Prerequisites
 
 - Node.js >= 18
-- Da chay `npm install`
-- Neu `npm` khong co trong `PATH`, dung duong dan day du toi `npm.cmd` hoac bo sung `PATH` truoc khi build.
+- Đã chạy `npm install`
+- Nếu `npm` không có trong `PATH`, dùng đường dẫn đầy đủ tới `npm.cmd` hoặc bổ sung `PATH` trước khi build.
 
 ## 2) Build exe
 
@@ -12,48 +12,48 @@
 npm run build:exe
 ```
 
-Script hien tai:
+Script hiện tại:
 
 ```json
 "build:exe": "pkg . --targets node18-win-x64 --output dist/zalous.exe"
 ```
 
-## 3) Copy exe vao tools
+## 3) Copy exe vào tools
 
 ```powershell
 Copy-Item .\dist\zalous.exe .\tools\zalous.exe -Force
 ```
 
-## 4) Kiem tra exe
+## 4) Kiểm tra exe
 
 ```powershell
 .\tools\zalous.exe help
 .\tools\zalous.exe doctor
 ```
 
-## 5) Asset bundling (quan trong)
+## 5) Asset bundling (quan trọng)
 
-`pkg.assets` trong `package.json` phai co:
+`pkg.assets` trong `package.json` phải có:
 
 - `zalous/runtime/**/*.js`
 - `zalous/market/**/*.json`
 - `zalous/market/packs/**/*`
 
-Muc tieu: exe phai kem runtime + catalog + packs.
+Mục tiêu: exe phải kèm runtime + catalog + packs.
 
 ## 6) Release checklist
 
-1. Chay `init` test local.
-2. Verify theme/runtime flow bang CDP (`pass=true`).
+1. Chạy `init` test local.
+2. Verify theme/runtime flow bằng CDP (`pass=true`).
 3. Build exe.
-4. Copy exe vao `tools`.
-5. Kiem tra `help`/`doctor`.
-6. `git add` docs + runtime + packs + exe (neu doi).
+4. Copy exe vào `tools`.
+5. Kiểm tra `help`/`doctor`.
+6. `git add` docs + runtime + packs + exe (nếu đổi).
 7. Commit.
 8. Push `master`.
-9. Tag release va push tag.
+9. Tag release và push tag.
 
-## 7) Luu y van hanh
+## 7) Lưu ý vận hành
 
-- Theme/theme-pack/extension update hang ngay dung direct flow (`add`/`patch`/`reload`), khong can repack asar.
-- `apply` chi dung khi can patch `app.asar` that su (va da duoc user yeu cau).
+- Theme/theme-pack/extension update hằng ngày dùng direct flow (`add`/`patch`/`reload`), không cần repack asar.
+- `apply` chỉ dùng khi cần patch `app.asar` thật sự (và đã được user yêu cầu).
