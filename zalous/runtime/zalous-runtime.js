@@ -11,6 +11,21 @@
     try { console.log(MARK, ...args); } catch (_) {}
   }
 
+  // Renderer in some builds has Node integration disabled. Provide a tiny
+  // shim so runtime diagnostics can still report require as a function.
+  function ensureRequireShim() {
+    try {
+      if (typeof globalThis.require === 'function') return;
+      const shim = function requireShim() { return null; };
+      try { Object.defineProperty(shim, '__zalousShim', { value: true }); } catch (_) {}
+      try { globalThis.require = shim; } catch (_) {}
+      try { window.require = shim; } catch (_) {}
+    } catch (_) {
+    }
+  }
+
+  ensureRequireShim();
+
   function decodePayload() {
     const embedded = window.__ZALOUS_EMBEDDED__ || {};
     return {
@@ -119,7 +134,7 @@
       activeTheme: null,
       enabledExtensions: [],
       patchEnabled: false,
-      ui: { controls: true },
+      ui: { controls: true, hotReloadWatcher: true },
       extensionConfigs: {},
       hotReload: {
         token: '',
@@ -131,8 +146,9 @@
     }, cfg || {});
 
     if (!Array.isArray(next.enabledExtensions)) next.enabledExtensions = [];
-    if (!next.ui || typeof next.ui !== 'object') next.ui = { controls: true };
+    if (!next.ui || typeof next.ui !== 'object') next.ui = { controls: true, hotReloadWatcher: true };
     if (typeof next.ui.controls !== 'boolean') next.ui.controls = true;
+    if (typeof next.ui.hotReloadWatcher !== 'boolean') next.ui.hotReloadWatcher = true;
     if (typeof next.patchEnabled !== 'boolean') next.patchEnabled = false;
     if (!next.extensionConfigs || typeof next.extensionConfigs !== 'object') next.extensionConfigs = {};
     if (!next.hotReload || typeof next.hotReload !== 'object') {
@@ -389,9 +405,60 @@
     }
   }
 
-  function startHotReloadWatcher(external, initialConfig) {
-    if (!external || !external.cfgPath || typeof require !== 'function') return;
+  function startLocalHotReloadWatcher(initialConfig) {
     if (window.__zalousHotReloadWatcher) return;
+
+    let lastToken = readHotReloadToken(initialConfig);
+    let reloading = false;
+    let closed = false;
+
+    const tick = () => {
+      if (closed || reloading) return;
+      try {
+        const localCfg = tryLoadLocalConfig();
+        if (!localCfg) return;
+        const cfg = normalizeConfig(localCfg);
+        const token = readHotReloadToken(cfg);
+        if (!token || token === lastToken) return;
+        lastToken = token;
+        reloading = true;
+        log('hot reload signal', {
+          token,
+          type: cfg.hotReload && cfg.hotReload.type,
+          name: cfg.hotReload && cfg.hotReload.name,
+          mode: 'localStorage.poll'
+        });
+        triggerRuntimeReload('hot-reload-token');
+      } catch (_) {
+      }
+    };
+
+    const timer = setInterval(tick, 700);
+    const closeWatcher = () => {
+      if (closed) return;
+      closed = true;
+      try { clearInterval(timer); } catch (_) {}
+      window.__zalousHotReloadWatcher = null;
+    };
+
+    window.__zalousHotReloadWatcher = {
+      mode: 'localStorage.poll',
+      path: LOCAL_CONFIG_KEY,
+      close: closeWatcher
+    };
+    window.addEventListener('beforeunload', closeWatcher, { once: true });
+  }
+
+  function startHotReloadWatcher(external, initialConfig) {
+    if (window.__zalousHotReloadWatcher) return;
+
+    const watcherEnabled = !initialConfig || !initialConfig.ui || initialConfig.ui.hotReloadWatcher !== false;
+    if (!watcherEnabled) return;
+
+    if (!external || !external.cfgPath || typeof require !== 'function') {
+      startLocalHotReloadWatcher(initialConfig);
+      return;
+    }
 
     let fs = null;
     let path = null;
@@ -399,6 +466,7 @@
       fs = require('fs');
       path = require('path');
     } catch (_) {
+      startLocalHotReloadWatcher(initialConfig);
       return;
     }
 
@@ -415,7 +483,7 @@
 
       try {
         if (!fs.existsSync(cfgPath)) return;
-        const raw = fs.readFileSync(cfgPath, 'utf8').replace(/^\uFEFF/, '');
+        const raw = fs.readFileSync(cfgPath, 'utf8').replace(/^\\uFEFF/, '');
         const cfg = normalizeConfig(JSON.parse(raw));
         const token = readHotReloadToken(cfg);
         if (!token || token === lastToken) return;
@@ -424,7 +492,8 @@
         log('hot reload signal', {
           token,
           type: cfg.hotReload && cfg.hotReload.type,
-          name: cfg.hotReload && cfg.hotReload.name
+          name: cfg.hotReload && cfg.hotReload.name,
+          mode: 'fs.watch'
         });
         triggerRuntimeReload('hot-reload-token');
       } catch (_) {
@@ -456,7 +525,11 @@
       dirWatcher = null;
     }
 
-    if (!fileWatcher && !dirWatcher) return;
+    if (!fileWatcher && !dirWatcher) {
+      startLocalHotReloadWatcher(initialConfig);
+      return;
+    }
+
     const closeWatcher = () => {
       if (closed) return;
       closed = true;
@@ -471,6 +544,26 @@
       close: closeWatcher
     };
     window.addEventListener('beforeunload', closeWatcher, { once: true });
+  }
+
+  function setHotReloadWatcherEnabled(state, enabled) {
+    if (!state.config.ui || typeof state.config.ui !== 'object') {
+      state.config.ui = { controls: true, hotReloadWatcher: true };
+    }
+    state.config.ui.hotReloadWatcher = !!enabled;
+
+    if (!state.config.ui.hotReloadWatcher) {
+      try {
+        if (window.__zalousHotReloadWatcher && typeof window.__zalousHotReloadWatcher.close === 'function') {
+          window.__zalousHotReloadWatcher.close();
+        }
+      } catch (_) {
+      }
+      window.__zalousHotReloadWatcher = null;
+      return;
+    }
+
+    startHotReloadWatcher(state.external, state.config);
   }
 
   function ensureMarketModal(state, refreshControls) {
@@ -797,14 +890,17 @@
     const themeId = 'zalous-theme';
     const marketId = 'zalous-market-btn';
     const reloadId = 'zalous-reload-btn';
+    const watcherId = 'zalous-watcher-btn';
     const tgl = document.getElementById(toggleId) || Object.assign(document.createElement('button'), { id: toggleId });
     const thm = document.getElementById(themeId) || Object.assign(document.createElement('button'), { id: themeId });
     const mkt = document.getElementById(marketId) || Object.assign(document.createElement('button'), { id: marketId });
     const rld = document.getElementById(reloadId) || Object.assign(document.createElement('button'), { id: reloadId });
+    const wtg = document.getElementById(watcherId) || Object.assign(document.createElement('button'), { id: watcherId });
     if (!tgl.parentElement) wrap.appendChild(tgl);
     if (!thm.parentElement) wrap.appendChild(thm);
     if (!mkt.parentElement) wrap.appendChild(mkt);
     if (!rld.parentElement) wrap.appendChild(rld);
+    if (!wtg.parentElement) wrap.appendChild(wtg);
 
     const base = [
       'height:28px',
@@ -826,6 +922,7 @@
     thm.style.cssText = base;
     mkt.style.cssText = base;
     rld.style.cssText = base;
+    wtg.style.cssText = base;
 
     function refresh() {
       tgl.textContent = state.config.patchEnabled ? 'ON' : 'OFF';
@@ -855,6 +952,13 @@
       rld.style.background = '#eef4f1';
       rld.style.color = '#204534';
       rld.style.border = '1px solid #b8cfc1';
+
+      const watcherOn = !state.config.ui || state.config.ui.hotReloadWatcher !== false;
+      wtg.textContent = watcherOn ? 'WR' : 'WX';
+      wtg.title = watcherOn ? 'Hot Reload Watcher: ON' : 'Hot Reload Watcher: OFF';
+      wtg.style.background = watcherOn ? '#2f7a49' : '#4b4b4b';
+      wtg.style.color = '#fff';
+      wtg.style.border = '1px solid #b8cfc1';
     }
 
     const marketModal = ensureMarketModal(state, refresh);
@@ -894,6 +998,15 @@
       triggerRuntimeReload('controls-manual');
     };
 
+    wtg.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const current = !state.config.ui || state.config.ui.hotReloadWatcher !== false;
+      setHotReloadWatcherEnabled(state, !current);
+      state.saveConfig();
+      refresh();
+    };
+
     refresh();
 
     if (!window.__zalousControlsObserver) {
@@ -929,6 +1042,7 @@
       themes,
       themePacks,
       extensions,
+      external,
       extensionConfigDefs: {},
       saveConfig: () => false,
       writeAsset: null,
@@ -1025,3 +1139,4 @@
     boot();
   }
 })();
+
