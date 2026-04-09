@@ -104,3 +104,11 @@ Use these commands from repo root (`node .\\tools\\zalous-cli.js ...`):
 - Use `references/direct-cli-cheatsheet.md` for compact examples.
 - Use `docs/zalous/CLI.md` for full command syntax.
 - Use `docs/zalous/FLOW.md` for asar flow vs direct flow boundaries.
+## Runtime Source Caveat
+- Neu CDP/runtime bao source: local+embedded va hasRequire=false, runtime se khong doc external assets tu %APPDATA%\Zalous.
+- Khi do, dd/patch CLI van ghi file thanh cong nhung giao dien co the chua doi ngay tren tab dang mo.
+- Cach xu ly bat buoc:
+  1. Xac nhan state bang CDP (window.zalous.source, hasRequire).
+  2. Neu dang local+embedded + hasRequire=false, inject CSS/JS hotfix truc tiep qua CDP vao tab Zalo dang chay de thay doi UI ngay.
+  3. Van phai luu source da sua trong repo va patch workspace runtime (%APPDATA%\Zalous) de dong bo.
+  4. Khong kill Zalo, khong patch sar neu user chua yeu cau.

@@ -8,7 +8,8 @@ description: Mandatory CDP-first UI verification for any Zalous theme/theme-pack
 ## Core Goal
 Use CDP as first diagnostic step and final verification gate for every theme/pack change.
 
-## Mandatory Rules
+
+7. Neu runtime hien source: local+embedded va hasRequire=false, danh dau la case khong nap external pack tu %APPDATA%\\Zalous; can fallback inject hotfix qua CDP neu UI chua doi ngay.
 1. Before any edit, run a baseline CDP verification to capture current runtime UI state and decide what must be fixed.
 2. After every theme/theme-pack/extension update, patch runtime assets directly (`add`/`patch`/`reload`) and verify again by CDP.
 3. Do not treat `asar` patch as default flow for UI tweaks; only run `apply` when user explicitly asks for `asar` patch.
@@ -51,3 +52,10 @@ Implementation note:
    - `0`: pass
    - `2`: assertion failed
    - `1`: CDP/tooling error
+## Runtime Source Caveat
+- Trieu chung: CLI patch thanh cong, nhung CDP MustIncludeCss voi noi dung moi van fail, giao dien khong doi.
+- Nguyen nhan: runtime dang o local+embedded va khong co Node bridge (hasRequire=false), nen khong doc external filesystem pack.
+- Fallback workflow:
+  1. Kiem tra window.zalous.source + hasRequire qua CDP.
+  2. Inject style/script hotfix truc tiep vao tab Zalo qua CDP de thay doi UI ngay.
+  3. Bao cao ro da inject runtime hotfix (tam thoi) va source code da duoc luu/chinh trong repo.

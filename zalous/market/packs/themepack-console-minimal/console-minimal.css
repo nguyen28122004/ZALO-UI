@@ -28,7 +28,10 @@
   --console-border-strong: rgba(255, 255, 255, 0.3);
   --console-divider: rgba(255, 255, 255, 0.16);
   --console-divider-subtle: rgba(255, 255, 255, 0.07);
-
+  --title-bar: var(--console-bg-3);
+  --NG15: var(--console-bg-3);
+  --bg-message-info: hsl(0deg 0% 21% / 85%);
+  --reaction-background: #b3b1b1;
   --bg-default: var(--console-bg-0);
   --surface-background: var(--console-bg-2);
   --surface-background-subtle: var(--console-bg-3);
@@ -410,6 +413,13 @@
   background: var(--surface-background-subtle) !important;
   border-color: var(--border) !important;
   color: var(--text-primary) !important;
+  border-radius: 5px !important;
+  overflow: hidden !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] [class*="preview"]::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
 }
 
 :root[data-zalous-theme-pack="console-minimal"] [class*="drawer"] {
@@ -460,6 +470,20 @@
   border-color: var(--border-hover) !important;
 }
 
+:root[data-zalous-theme-pack="console-minimal"] .chat-item.chat-item-audit.chat-item-spacing.me .message-reaction-container.message-reaction-container-v2.has-send-time.show-react-btn {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 400ms ease, visibility 0s linear 400ms !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] .chat-item.chat-item-audit.chat-item-spacing.me:hover .message-reaction-container.message-reaction-container-v2.has-send-time.show-react-btn {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transition: opacity 400ms ease !important;
+}
+
 :root[data-zalous-theme-pack="console-minimal"] img,
 :root[data-zalous-theme-pack="console-minimal"] video,
 :root[data-zalous-theme-pack="console-minimal"] canvas {
@@ -470,3 +494,4 @@
   outline: 1px solid var(--border-focused) !important;
   outline-offset: 1px !important;
 }
+
