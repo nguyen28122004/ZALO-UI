@@ -1,5 +1,7 @@
-﻿(() => {
+(() => {
   const STYLE_ID = 'zalous-common-theme-mod';
+  const HIDE_ATTR = 'data-zalous-hide-unlock';
+  const UNLOCK_TRANSLATE_SELECTOR = '[data-translate-inner="STR_APP_UNLOCK"]';
 
   function loadCss() {
     try {
@@ -22,9 +24,26 @@
     }
   }
 
+  function hideUnlockByTranslate(scope) {
+    const root = scope && typeof scope.querySelectorAll === 'function' ? scope : document;
+    const nodes = root.querySelectorAll(UNLOCK_TRANSLATE_SELECTOR);
+    nodes.forEach((node) => {
+      const target = node.closest('button,[role="button"],input[type="button"],input[type="submit"]') || node;
+      if (!target || target.getAttribute(HIDE_ATTR) === '1') return;
+      target.setAttribute(HIDE_ATTR, '1');
+      target.style.setProperty('display', 'none', 'important');
+      target.style.setProperty('visibility', 'hidden', 'important');
+      target.style.setProperty('opacity', '0', 'important');
+      target.style.setProperty('pointer-events', 'none', 'important');
+    });
+  }
+
   const css = loadCss();
-  if (!css) return;
-  const forceHideCss = '\n.app-lock__main__input.disableBtn{display:none !important;visibility:hidden !important;opacity:0 !important;pointer-events:none !important;}';
+  const forceHideCss = [
+    '.app-lock__main__input.disableBtn{display:none !important;visibility:hidden !important;opacity:0 !important;pointer-events:none !important;}',
+    '[data-translate-inner="STR_APP_UNLOCK"]{display:none !important;visibility:hidden !important;opacity:0 !important;pointer-events:none !important;}',
+    '[data-zalous-hide-unlock="1"]{display:none !important;visibility:hidden !important;opacity:0 !important;pointer-events:none !important;}'
+  ].join('');
 
   let tag = document.getElementById(STYLE_ID);
   if (!tag) {
@@ -32,5 +51,29 @@
     tag.id = STYLE_ID;
     document.head.appendChild(tag);
   }
-  tag.textContent = css + forceHideCss;
+  tag.textContent = (css || '') + forceHideCss;
+
+  hideUnlockByTranslate(document);
+  if (!window.__zalousCommonUnlockObserver) {
+    const observer = new MutationObserver((records) => {
+      for (const rec of records) {
+        if (rec.type === 'childList') {
+          rec.addedNodes.forEach((node) => {
+            if (node && node.nodeType === 1) hideUnlockByTranslate(node);
+          });
+        }
+        if (rec.type === 'attributes' && rec.target && rec.target.nodeType === 1) {
+          hideUnlockByTranslate(rec.target);
+        }
+      }
+      hideUnlockByTranslate(document);
+    });
+    observer.observe(document.documentElement || document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-translate-inner']
+    });
+    window.__zalousCommonUnlockObserver = observer;
+  }
 })();

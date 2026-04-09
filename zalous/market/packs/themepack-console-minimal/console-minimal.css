@@ -619,3 +619,42 @@
 :root[data-zalous-theme-pack="console-minimal"] #zalous-ext-config-modal input[type="checkbox"] {
   accent-color: var(--console-accent) !important;
 }
+
+/* CONSOLE_MINIMAL_LOCK_SCREEN */
+:root[data-zalous-theme-pack="console-minimal"] .app-lock__main__input,
+:root[data-zalous-theme-pack="console-minimal"] input#passcode,
+:root[data-zalous-theme-pack="console-minimal"] .app-lock__container input[type="password"] {
+  background: none !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] .zalous-pin-host {
+  background: none !important;
+  background-color: transparent !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] .app-lock__container > .app-lock__logo {
+  position: relative;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] .app-lock__container > .app-lock__logo img,
+:root[data-zalous-theme-pack="console-minimal"] .app-lock__container > .app-lock__logo svg {
+  display: none !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] .app-lock__container > .app-lock__logo::before {
+  content: "__________      .__\A\\____    /____  |  |   ____\A   /     /\\__  \\ |  |  /  _ \\\A  /     /_ / __ \\|  |_(  <_> )\A/_______ (____  /____/\\____/\A        \\/    \\/";
+  white-space: pre;
+  font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", "Courier New", monospace !important;
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.4px;
+  color: var(--console-accent-soft-2) !important;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.14);
+}

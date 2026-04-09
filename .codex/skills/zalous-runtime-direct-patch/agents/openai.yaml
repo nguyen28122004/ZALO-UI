@@ -1,0 +1,3 @@
+interface:
+  display_name: "Zalous Runtime Patch"
+  short_description: "Patch theme/theme-pack/extension via runtime, no asar apply"
