@@ -1,26 +1,29 @@
 ---
 name: zalous-pack-direct-cli
-description: Manage Zalous theme, theme-pack, and extension packs through direct workspace CLI commands (`add`, `patch`, `reload`) and safe `apply` when runtime payload changes. Use when editing packs in this repo, syncing assets to `%APPDATA%\\Zalous`, verifying UI changes via CDP (`localhost:9222`), and handling runtime reload behavior reliably.
+description: Manage Zalous theme, theme-pack, and extension packs through direct workspace CLI commands (`add`, `patch`, `reload`) with CDP-first checks. Default to runtime-only patch flow and use `apply` only when the user explicitly requests an asar patch.
 ---
 
 # Zalous Pack Direct CLI
 
 ## Core Goal
-Use this skill to deliver pack changes through `%APPDATA%\\Zalous` assets and only use `apply` when runtime payload changed.
+Use this skill to deliver pack changes through `%APPDATA%\\Zalous` assets with runtime-only patch flow as default; use `apply` only when user explicitly requests asar patch.
 
 ## Workflow Decision
-1. Run `apply` only when runtime payload changed or this machine has not been patched yet.
-   - Mandatory safe flow: kill Zalo -> wait -> verify stopped -> `apply` -> open Zalo shortcut.
-   - If PowerShell cannot open `.lnk`, fallback to JS launcher:
-     - `node .\.codex\skills\zalous-pack-direct-cli\scripts\start-zalo.mjs`
+1. Run CDP baseline check first to understand current UI state before editing:
+   - `powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo'`
 2. Run `add` when a new theme, theme-pack, or extension must be copied into workspace assets.
 3. Run `patch` when an existing workspace asset must be replaced in place.
 4. Run `reload` to update `config.hotReload.token` and request runtime refresh.
    - Auto reload only works when runtime has external watcher (`window.__zalousHotReloadWatcher` truthy).
    - If watcher is unavailable, use manual reload button (`RL`) or market reload button.
+   - Runtime flow (`add`/`patch`/`reload`) does not require killing Zalo.
 5. For every theme/theme-pack/pack-related change, run CDP UI verification:
    - `.\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1`
    - Auto-discover target from `http://127.0.0.1:9222/json/list` (no hardcoded ws URL).
+6. Run `apply` only when the user explicitly asks to patch `asar`.
+   - Mandatory safe flow: kill Zalo -> wait -> verify stopped -> `apply` -> open Zalo shortcut.
+   - If PowerShell cannot open `.lnk`, fallback to JS launcher:
+     - `node .\.codex\skills\zalous-pack-direct-cli\scripts\start-zalo.mjs`
 
 ## Command Playbook
 Use these commands from repo root (`node .\\tools\\zalous-cli.js ...`):
@@ -78,6 +81,10 @@ Use these commands from repo root (`node .\\tools\\zalous-cli.js ...`):
 - Reload runtime state:
   - `reload --type <all|theme|theme-pack|extension> [--name <asset>] [--enable|--disable]`
 
+- Runtime direct patch note:
+  - For `add`/`patch`/`reload` on theme/theme-pack/extension, keep Zalo running and validate via CDP.
+  - Do not stop processes unless doing explicit `apply` asar patch flow.
+
 ## Pack-Specific Rules
 - Keep `theme-pack` manifests valid (`type: theme-pack`) before add/patch.
 - Treat active theme-pack key as `pack:<id>`.
@@ -85,12 +92,13 @@ Use these commands from repo root (`node .\\tools\\zalous-cli.js ...`):
 - Prefer `--reload` after add/patch during interactive UI work, then always verify by CDP.
 
 ## Validation
-1. Run `status` after major changes.
-2. Run `list-themes` and `list-extensions` to confirm assets are present.
-3. Verify `hotReload.token` changes after `reload`.
-4. Run CDP verify script and ensure `pass=true`.
-5. If runtime behavior is old, do manual reload (RL button/market reload), then re-check.
-6. If still old, run safe `apply` and re-check.
+1. Run baseline CDP check before editing.
+2. Run `status` after major changes.
+3. Run `list-themes` and `list-extensions` to confirm assets are present.
+4. Verify `hotReload.token` changes after `reload`.
+5. Run CDP verify script and ensure `pass=true`.
+6. If runtime behavior is old, do manual reload (RL button/market reload), then re-check.
+7. Only if user asks for asar patch: run safe `apply` and re-check.
 
 ## References
 - Use `references/direct-cli-cheatsheet.md` for compact examples.

@@ -1,18 +1,20 @@
 ---
 name: zalous-pack-cdp-check
-description: Mandatory CDP UI verification for any Zalous theme/theme-pack/pack-related task. Use whenever creating, editing, patching, applying, or reloading themes or packs. Automatically discover the active Zalo DevTools WebSocket target from http://127.0.0.1:9222/json/list, run Runtime.evaluate checks, and report pass/fail evidence before completion.
+description: Mandatory CDP-first UI verification for any Zalous theme/theme-pack/pack-related task. Always run a baseline CDP check before editing, then verify again after runtime patch/reload. Auto-discover the active Zalo DevTools WebSocket target from http://127.0.0.1:9222/json/list and report pass/fail evidence.
 ---
 
 # Zalous Pack CDP Check
 
 ## Core Goal
-Verify real runtime UI state via CDP for every theme/pack change before claiming completion.
+Use CDP as first diagnostic step and final verification gate for every theme/pack change.
 
 ## Mandatory Rules
-1. Run CDP verification after every `add`, `patch`, `reload`, or `apply` related to themes/packs.
-2. Auto-discover the WebSocket target from `http://127.0.0.1:9222/json/list`; do not hardcode a stale `ws://...` URL.
-3. Treat missing CDP endpoint or failed checks as blocked work, not success.
-4. Include verification evidence in the final response:
+1. Before any edit, run a baseline CDP verification to capture current runtime UI state and decide what must be fixed.
+2. After every theme/theme-pack/extension update, patch runtime assets directly (`add`/`patch`/`reload`) and verify again by CDP.
+3. Do not treat `asar` patch as default flow for UI tweaks; only run `apply` when user explicitly asks for `asar` patch.
+4. Auto-discover the WebSocket target from `http://127.0.0.1:9222/json/list`; do not hardcode a stale `ws://...` URL.
+5. Treat missing CDP endpoint or failed checks as blocked work, not success.
+6. Include verification evidence in the final response:
    - target title/url
    - active theme
    - theme-pack attribute
@@ -21,7 +23,10 @@ Verify real runtime UI state via CDP for every theme/pack change before claiming
 ## Command Playbook
 Run from repo root.
 
-- Baseline check (discover target automatically):
+- Baseline check (mandatory before any other step):
+  - `powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo'`
+
+- Post-change check (mandatory after runtime patch/reload):
   - `powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1`
 
 - Check expected active theme-pack and selector:
@@ -41,7 +46,7 @@ Implementation note:
 1. If CDP endpoint is down, stop and report that `http://127.0.0.1:9222` is unavailable.
 2. If no valid page target is found, report the available targets and stop.
 3. If assertions fail, include failed fields and current runtime values.
-4. After fixes, rerun verification until it passes.
+4. After fixes, patch runtime assets (`add`/`patch`/`reload`) and rerun verification until it passes.
 5. Treat exit code:
    - `0`: pass
    - `2`: assertion failed
