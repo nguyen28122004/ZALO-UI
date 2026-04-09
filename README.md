@@ -1,20 +1,20 @@
 # ZALO-UI / hara-zalous
 
-`hara-zalous` la bo patch giao dien Zalo Desktop theo mo hinh pack (`theme`, `theme-pack`, `extension`).
+`hara-zalous` la bo patch UI cho Zalo Desktop theo mo hinh pack (`theme`, `theme-pack`, `extension`).
 
 ## Muc tieu
 
-- Patch `app.asar` bang runtime Zalous.
-- Quan ly theme/extension tap trung.
-- Luong patch on dinh: restore clean base -> inject runtime -> repack -> sync unpacked.
+- Patch runtime vao `app.asar` theo clean-base strategy.
+- Update UI hang ngay qua `%APPDATA%\Zalous` ma khong can repack asar.
+- Verify UI bang CDP truoc/sau moi thay doi.
 
 ## Cau truc repo
 
 - `tools/zalous-cli.js`: CLI chinh.
-- `tools/zalous.exe`: ban dong goi (build tu `pkg`).
+- `tools/zalous.exe`: ban dong goi tu `pkg`.
 - `zalous/runtime/zalous-runtime.js`: runtime inject vao renderer.
 - `zalous/market/catalog.local.json`: catalog local.
-- `zalous/market/packs/*`: cac pack.
+- `zalous/market/packs/*`: pack templates.
 - `docs/zalous/*`: tai lieu ky thuat.
 
 ## Du lieu tren may
@@ -31,7 +31,6 @@
 ## Quick Start (Node)
 
 ```powershell
-npm install
 node .\tools\zalous-cli.js init
 node .\tools\zalous-cli.js detect
 node .\tools\zalous-cli.js apply
@@ -45,30 +44,42 @@ node .\tools\zalous-cli.js apply
 .\tools\zalous.exe apply
 ```
 
-## Direct Pack Update (khong repack asar)
+## Daily Flow (khong repack asar)
 
-Sau khi da `apply` runtime 1 lan, update hang ngay co the dung:
+Sau khi da `apply` runtime it nhat 1 lan:
 
 ```powershell
-node .\tools\zalous-cli.js add --type theme-pack --dir .\zalous\market\packs\themepack-hello-kitty
-node .\tools\zalous-cli.js patch --type theme --name zalo-green.css --file .\zalous\market\packs\zalo-green\zalo-green.css
-node .\tools\zalous-cli.js reload --type all
+node .\tools\zalous-cli.js patch --type theme-pack --id themepack.console-minimal --dir .\zalous\market\packs\themepack-console-minimal --reload
+node .\tools\zalous-cli.js reload --type theme-pack --name themepack.console-minimal
 ```
 
-## Patch an toan
+- Flow `add`/`patch`/`reload` khong can kill Zalo.
+- Auto reload phu thuoc watcher (`WR`/`WX` trong controls).
 
-1. Dong toan bo process Zalo.
-2. Dam bao `resources\app.asar.unpacked` day du.
-3. Chay `apply`.
-4. Mo lai Zalo de kiem tra.
+## Runtime Controls
+
+- `RL`: reload trang thu cong.
+- `WR`: hot reload watcher dang bat.
+- `WX`: hot reload watcher dang tat.
+
+## CDP First Rule
+
+Truoc va sau moi thay doi theme/theme-pack/extension, phai verify CDP:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo'
+```
+
+Neu runtime dang `source=local+embedded` va `hasRequire=false`, UI co the chua doc external pack ngay. Khi do patch qua CLI van ghi file, nhung can inject hotfix qua CDP de thay doi UI hien tai.
 
 ## Build va Release
 
-- Xem chi tiet trong [Build Guide](./docs/zalous/BUILD.md).
+Xem chi tiet trong [Build Guide](./docs/zalous/BUILD.md).
 
-## Agent Skill
+## Skills
 
-- `.codex/skills/zalous-pack-direct-cli/SKILL.md`: skill cho agent de thao tac pack bang CLI direct mode (`add`, `patch`, `reload`).
+- `.codex/skills/zalous-pack-cdp-check/SKILL.md`
+- `.codex/skills/zalous-pack-direct-cli/SKILL.md`
 
 ## Tai lieu
 

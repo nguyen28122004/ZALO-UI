@@ -8,14 +8,13 @@ description: Mandatory CDP-first UI verification for any Zalous theme/theme-pack
 ## Core Goal
 Use CDP as first diagnostic step and final verification gate for every theme/pack change.
 
-
-7. Neu runtime hien source: local+embedded va hasRequire=false, danh dau la case khong nap external pack tu %APPDATA%\\Zalous; can fallback inject hotfix qua CDP neu UI chua doi ngay.
-1. Before any edit, run a baseline CDP verification to capture current runtime UI state and decide what must be fixed.
-2. After every theme/theme-pack/extension update, patch runtime assets directly (`add`/`patch`/`reload`) and verify again by CDP.
-3. Do not treat `asar` patch as default flow for UI tweaks; only run `apply` when user explicitly asks for `asar` patch.
-4. Auto-discover the WebSocket target from `http://127.0.0.1:9222/json/list`; do not hardcode a stale `ws://...` URL.
-5. Treat missing CDP endpoint or failed checks as blocked work, not success.
-6. Include verification evidence in the final response:
+1. Before any edit, run baseline CDP verification to capture current runtime UI state.
+2. After every theme/theme-pack/extension update, verify again via CDP.
+3. Default to runtime direct patch flow (`add`/`patch`/`reload`), not asar patch.
+4. Only run `apply` when user explicitly asks to patch asar.
+5. Auto-discover target from `http://127.0.0.1:9222/json/list`; do not hardcode ws URL.
+6. Missing CDP endpoint or failed checks = blocked, not success.
+7. Include evidence in report:
    - target title/url
    - active theme
    - theme-pack attribute
@@ -24,38 +23,43 @@ Use CDP as first diagnostic step and final verification gate for every theme/pac
 ## Command Playbook
 Run from repo root.
 
-- Baseline check (mandatory before any other step):
+- Baseline check:
   - `powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo'`
 
-- Post-change check (mandatory after runtime patch/reload):
+- Post-change check:
   - `powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1`
 
 - Check expected active theme-pack and selector:
   - `powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -ExpectedActiveTheme 'pack:themepack.console-minimal' -ExpectedThemePackAttr 'console-minimal' -Selector '[class*="avatar"], .avatar'`
 
-- Assert CSS includes/excludes specific text:
-  - `powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -MustIncludeCss 'filter: grayscale(0.2) contrast(1.05);' -MustExcludeCss 'border: 1px solid var(--border-subtle) !important;'`
-
-- Target fallback match override:
-  - `powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo' -Port 9222`
+- Assert CSS includes/excludes text:
+  - `powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -MustIncludeCss 'border-radius: 5px;' -MustExcludeCss 'border-radius: 8px;'`
 
 Implementation note:
 - `verify-zalo-cdp.ps1` la wrapper.
-- Backend verify thuc te chay trong `scripts/verify-zalo-cdp.mjs` (WebSocket + Runtime.evaluate).
+- Backend verify chay trong `scripts/verify-zalo-cdp.mjs` (WebSocket + Runtime.evaluate).
+
+## Runtime Source Caveat
+
+Trieu chung:
+- CLI patch bao thanh cong nhung UI chua doi ngay.
+
+Nguyen nhan:
+- Runtime dang `source=local+embedded` va `hasRequire=false`, nen khong doc external pack ngay.
+
+Fallback workflow:
+1. Kiem tra `window.zalous.source` + `hasRequire` qua CDP.
+2. Inject CSS/JS hotfix truc tiep qua CDP vao tab Zalo dang chay.
+3. Bao cao ro:
+   - da inject hotfix runtime tam thoi
+   - source code da duoc luu trong repo/workspace
 
 ## Failure Handling
-1. If CDP endpoint is down, stop and report that `http://127.0.0.1:9222` is unavailable.
-2. If no valid page target is found, report the available targets and stop.
-3. If assertions fail, include failed fields and current runtime values.
-4. After fixes, patch runtime assets (`add`/`patch`/`reload`) and rerun verification until it passes.
-5. Treat exit code:
+1. Neu CDP endpoint down, report `http://127.0.0.1:9222` unavailable va stop.
+2. Neu khong tim thay target page hop le, report list targets va stop.
+3. Neu assertion fail, report field fail + value hien tai.
+4. Sau khi fix, patch runtime va verify lai den khi `pass=true`.
+5. Exit code:
    - `0`: pass
    - `2`: assertion failed
    - `1`: CDP/tooling error
-## Runtime Source Caveat
-- Trieu chung: CLI patch thanh cong, nhung CDP MustIncludeCss voi noi dung moi van fail, giao dien khong doi.
-- Nguyen nhan: runtime dang o local+embedded va khong co Node bridge (hasRequire=false), nen khong doc external filesystem pack.
-- Fallback workflow:
-  1. Kiem tra window.zalous.source + hasRequire qua CDP.
-  2. Inject style/script hotfix truc tiep vao tab Zalo qua CDP de thay doi UI ngay.
-  3. Bao cao ro da inject runtime hotfix (tam thoi) va source code da duoc luu/chinh trong repo.

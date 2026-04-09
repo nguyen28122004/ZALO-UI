@@ -1,6 +1,6 @@
 # Architecture
 
-## Core parts
+## Core Parts
 
 ### CLI (`tools/zalous-cli.js`)
 
@@ -11,32 +11,24 @@
 - Backup/restore.
 - Ho tro direct mode:
   - `add`/`patch` cho `theme`, `theme-pack`, `extension` tren external workspace.
-  - `reload` bang hot-reload signal (`config.hotReload.token`), khong can repack asar.
-  - Token hot-reload tao moi moi lan goi.
+  - `reload` bang hot-reload signal (`config.hotReload.token`).
 
 ### Runtime (`zalous/runtime/zalous-runtime.js`)
 
 - Chay trong renderer sau khi inject.
-- Doc embedded payload + merge voi external config/assets khi co the.
+- Doc embedded payload + merge external config/assets neu truy cap duoc.
 - Apply `theme`/`theme-pack`.
-- Chay extension + quan ly extension config.
-- Co reload tay:
-  - Nut `RL` trong controls.
-  - Nut `Reload Trang` trong market.
-  - API `window.zalous.reloadPage(...)`.
-
-### Hot-reload watcher
-
-- Runtime external mode theo doi `config.json` bang `fs.watch` (event-driven).
-- Khi `hotReload.token` doi, runtime goi `window.location.reload()`.
-- Khong dung poll `setInterval` lien tuc nua.
+- Chay extension + config extension.
+- Co controls:
+  - `RL`: reload tay.
+  - `WR`/`WX`: bat tat hot reload watcher.
 
 ### Market (`zalous/market/*`)
 
 - `catalog.local.json`: danh sach pack local.
 - `packs/*`: moi pack co `manifest.json` + assets.
 
-## Data priority
+## Runtime Load Priority
 
 Config boot order:
 1. `%APPDATA%\Zalous\config.json` (neu runtime doc duoc external)
@@ -44,54 +36,62 @@ Config boot order:
 3. Embedded payload trong `app.asar`
 
 Assets priority:
-- External assets uu tien hon embedded assets neu doc duoc.
+- External assets uu tien hon embedded assets neu runtime co the doc external.
 
-## Hot reload signal
+## Hot Reload Watcher
 
-Duoc ghi boi CLI vao `%APPDATA%\Zalous\config.json`:
-- `hotReload.token`
-- `hotReload.type`
-- `hotReload.name`
-- `hotReload.source`
-- `hotReload.at`
+Signal do CLI ghi vao `config.hotReload`:
+- `token`
+- `type`
+- `name`
+- `source`
+- `at`
 
-Luu y:
-- `reload` chi ghi signal.
-- Auto reload chi xay ra khi runtime co external watcher.
-- Neu runtime khong co watcher (`hasWatcher=false`), can reload tay tren UI.
+Runtime behavior:
+- Watcher bat (`WR`): theo doi token va reload khi token doi.
+- Watcher tat (`WX`): khong auto reload, can bam `RL`.
 
-## Patch strategy
+## Runtime Source Caveat
 
-### Clean backup theo version
+Case:
+- `source=local+embedded`
+- `hasRequire=false`
 
-- Clean backup luu tai: `%APPDATA%\Zalous\backups\app.asar.clean.<version>.bak`.
-- Khi `apply`, CLI restore clean backup vao `resources\app.asar` truoc khi inject.
+Tac dong:
+- Runtime co the khong doc external filesystem pack ngay.
+- `add/patch/reload` van ghi file thanh cong, nhung UI tren tab hien tai co the chua doi.
+
+Fallback:
+1. Verify bang CDP.
+2. Inject CSS/JS hotfix qua CDP vao tab dang chay.
+3. Van luu source fix trong repo va external workspace.
+
+## Patch Strategy
+
+### Clean Backup theo version
+
+- Clean backup: `%APPDATA%\Zalous\backups\app.asar.clean.<version>.bak`.
+- Moi lan `apply`, CLI restore clean base truoc khi inject.
 
 ### Payload mode
 
-- Mac dinh la `full payload`.
-- Dung `--lite-payload` neu can chi embed config.
+- Mac dinh full payload.
+- Co the dung `--lite-payload` neu can.
 
 ### Unpacked dependency
 
-- `@electron/asar` can du native files trong `resources\app.asar.unpacked`.
-- Neu thieu file unpacked thi `apply` se fail (`ENOENT`/missing native libs).
+- `@electron/asar` can native files trong `resources\app.asar.unpacked`.
+- Neu thieu unpacked files thi `apply` se fail.
 - Sau repack, CLI sync lai `.unpacked` ve app target.
 
-## Operational rule
+## Operational Rule
 
-Sau moi thay doi theme/theme-pack/extension, bat buoc verify UI bang CDP:
+- Theme/theme-pack/extension: mac dinh direct runtime patch (`add`/`patch`/`reload`), khong kill Zalo.
+- Patch `asar` chi khi user yeu cau.
+- CDP verify la gate bat buoc truoc/sau moi thay doi UI.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1
-```
-
-Khong hardcode websocket URL; luon lay target tu `http://127.0.0.1:9222/json/list`.
-
-## Restore strategy
+## Restore Strategy
 
 `restore` uu tien:
 1. `app.asar.<timestamp>.bak`
 2. `app.asar.pre_restore.<timestamp>.bak`
-
-Khong restore tu clean backup theo mac dinh.
