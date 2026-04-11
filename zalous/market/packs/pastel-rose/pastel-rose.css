@@ -920,7 +920,14 @@ body:not(.dark) [class*="main-tab"] [class*="indicator"] {
 }
 /* ZALOUS EMAIL PALETTE */
 :root {
-  --zmail-accent: #db2777;
-  --zmail-accent-soft: rgba(219,39,119,.18);
+  --zmail-accent: var(--button-primary-normal, #ec4899);
+  --zmail-accent-soft: var(--button-primary-tonal-normal, rgba(236,72,153,.18));
+  --zmail-bg-a: var(--layer-background, #fff7fb);
+  --zmail-bg-b: var(--layer-background-subtle, #ffedf5);
+  --zmail-surface: var(--surface-background, var(--layer-background, #fff7fb));
+  --zmail-surface-2: var(--surface-background-subtle, var(--layer-background-subtle, #ffedf5));
+  --zmail-text: var(--text-primary, #5e2041);
+  --zmail-text-muted: var(--text-secondary, #945776);
+  --zmail-border: var(--border, rgba(236,72,153,.24));
+  --zmail-shadow: rgba(236,72,153,.15);
 }
-
