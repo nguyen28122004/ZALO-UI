@@ -842,7 +842,7 @@
     return `
       <div class="mail-card">
         <div class="mail-head"><div><div class="mail-detail-subject">${esc(detail.subject || '(No subject)')}</div><div class="mail-muted">Read-only IMAP detail view</div></div>
-          <div class="mail-tools"><button class="mail-btn ghost" data-act="toggle-star">${currentStar ? 'Unstar' : 'Star'}</button>${chip}</div>
+          <div class="mail-tools"><button class="mail-btn ghost" data-act="toggle-star">${currentStar ? 'Unstar' : 'Star'}</button><button class="mail-btn ghost" data-act="copy-message-id">Copy Message-ID</button>${chip}</div>
         </div>
         <div class="mail-body"><div class="mail-grid"><div>From</div><div>${esc(detail.from || '--')}</div><div>To</div><div>${esc(detail.to || '--')}</div><div>CC</div><div>${esc(detail.cc || '--')}</div><div>Date</div><div>${esc(dateText(detail.date))}</div><div>Size</div><div>${esc(bytesText(detail.size))}</div><div>Message-ID</div><div>${esc(detail.messageId || '--')}</div></div><div class="mail-text">${esc(detail.body || '(Empty body preview)')}</div></div>
       </div>`;
@@ -1033,6 +1033,34 @@
   }
 
   function bind() {
+    const copyMessageId = async () => {
+      const detail = state.selectedMessage;
+      const id = detail && detail.messageId ? String(detail.messageId) : '';
+      if (!id || id === '--') {
+        state.notice = 'No Message-ID to copy.';
+        render(false);
+        return;
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(id);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = id;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+        }
+        state.notice = 'Message-ID copied.';
+      } catch (_) {
+        state.notice = `Message-ID: ${id}`;
+      }
+      render(false);
+    };
+
     const onClick = (e) => {
       const t = e.target;
       if (!(t instanceof Element)) return;
@@ -1065,6 +1093,7 @@
             render(false);
           }
         }
+        if (a === 'copy-message-id') copyMessageId();
         return;
       }
 
@@ -1104,6 +1133,12 @@
           state.notice = isStarred(state.currentFolder, uid) ? `Starred UID ${uid}.` : `Unstarred UID ${uid}.`;
           render(false);
         }
+        return;
+      }
+
+      if (e.key.toLowerCase() === 'c' && e.altKey) {
+        e.preventDefault();
+        copyMessageId();
         return;
       }
 

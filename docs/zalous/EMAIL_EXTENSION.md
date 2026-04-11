@@ -21,6 +21,7 @@ Pack: `zalous/market/packs/email-prototype`
   - `Ctrl+R`: refresh mailbox
   - `J/K`: chọn mail kế tiếp/trước
   - `S`: star/unstar mail đang chọn
+  - `Alt+C`: copy `Message-ID` của mail đang chọn
 
 ## Local Config
 
