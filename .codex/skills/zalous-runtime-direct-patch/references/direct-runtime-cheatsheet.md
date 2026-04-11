@@ -1,10 +1,16 @@
-# Direct Runtime Cheatsheet
+﻿# Direct Runtime Cheatsheet
 
 ## Baseline
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo'
 ```
+
+## Default Assumption
+
+- Runtime is usually `source=local+embedded`.
+- `add/patch/reload` persists files/config, but UI may not reflect immediately.
+- Always verify selector/style and inject CDP hotfix when missing.
 
 ## Patch Theme-Pack (directory)
 
@@ -27,10 +33,22 @@ node .\tools\zalous-cli.js patch --type extension --name theme-common-mod.js --f
 node .\tools\zalous-cli.js reload --type extension --name theme-common-mod.js --enable
 ```
 
+## Verify Selector
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo' -Selector '<expected-selector>'
+```
+
+## CDP Hotfix From Local JS File
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-runtime-direct-patch\scripts\cdp-eval-file.ps1 -TargetMatch 'Zalo' -FilePath .\zalous\market\packs\email-prototype\email-prototype.js
+```
+
 ## Post-check
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1
+powershell -ExecutionPolicy Bypass -File .\.codex\skills\zalous-pack-cdp-check\scripts\verify-zalo-cdp.ps1 -TargetMatch 'Zalo' -Selector '<expected-selector>'
 ```
 
 ## Rule

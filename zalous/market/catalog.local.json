@@ -141,6 +141,13 @@
                       "type":  "extension",
                       "description":  "Configurable blur for chat-list elements",
                       "path":  "packs/blur-elements"
+                  },
+                  {
+                      "id":  "extension.email-prototype",
+                      "name":  "Email Prototype",
+                      "type":  "extension",
+                      "description":  "Insert pinned email item and replace main panel on click",
+                      "path":  "packs/email-prototype"
                   }
               ]
 }

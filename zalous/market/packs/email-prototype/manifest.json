@@ -1,0 +1,8 @@
+{
+  "id": "extension.email-prototype",
+  "name": "Email Prototype",
+  "type": "extension",
+  "entry": "email-prototype.js",
+  "description": "Insert a pinned mail item and replace main panel on click",
+  "version": "1.0.0"
+}

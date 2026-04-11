@@ -562,8 +562,101 @@ function listMissingUnpackedFiles(asarPath, maxItems = 12) {
   }
 
   walk({ files: header.files }, '');
-  if (missing.length <= maxItems) return missing;
+  if (!Number.isFinite(maxItems) || maxItems <= 0 || missing.length <= maxItems) return missing;
   return missing.slice(0, maxItems).concat(`... (${missing.length - maxItems} more)`);
+}
+
+async function repairUnpackedFromCandidates(asarPath, missingList) {
+  const targetUnpacked = `${asarPath}.unpacked`;
+  const backupRoot = path.join(ZALOUS_ROOT, 'backups');
+  const targetReal = (() => {
+    try { return fs.realpathSync.native ? fs.realpathSync.native(targetUnpacked) : fs.realpathSync(targetUnpacked); } catch (_) { return path.resolve(targetUnpacked); }
+  })();
+
+  const candidates = [];
+  const seen = new Set();
+
+  function pushCandidate(src, reason) {
+    if (!src) return;
+    const abs = path.resolve(src);
+    if (!fs.existsSync(abs)) return;
+    let st;
+    try { st = fs.statSync(abs); } catch (_) { return; }
+    if (!st.isDirectory()) return;
+
+    let real;
+    try { real = fs.realpathSync.native ? fs.realpathSync.native(abs) : fs.realpathSync(abs); } catch (_) { real = abs; }
+    if (real === targetReal) return;
+    if (seen.has(real)) return;
+    seen.add(real);
+    candidates.push({ src: abs, reason, mtimeMs: st.mtimeMs || 0 });
+  }
+
+  if (fs.existsSync(backupRoot)) {
+    const entries = await fsp.readdir(backupRoot, { withFileTypes: true });
+    for (const ent of entries) {
+      if (!ent.isDirectory()) continue;
+      if (!ent.name.startsWith('app.asar.unpacked')) continue;
+      pushCandidate(path.join(backupRoot, ent.name), `backup:${ent.name}`);
+    }
+  }
+
+  const brokenBase = `${path.basename(targetUnpacked)}.broken.`;
+  const parentDir = path.dirname(targetUnpacked);
+  if (fs.existsSync(parentDir)) {
+    const entries = await fsp.readdir(parentDir, { withFileTypes: true });
+    for (const ent of entries) {
+      if (!ent.isDirectory()) continue;
+      if (!ent.name.startsWith(brokenBase)) continue;
+      pushCandidate(path.join(parentDir, ent.name), `broken:${ent.name}`);
+    }
+  }
+
+  const zaloRoot = path.join(LOCALAPPDATA, 'Programs', 'Zalo');
+  const currVersionDir = path.dirname(path.dirname(asarPath));
+  if (fs.existsSync(zaloRoot)) {
+    const versions = await fsp.readdir(zaloRoot, { withFileTypes: true });
+    for (const ent of versions) {
+      if (!ent.isDirectory()) continue;
+      const vdir = path.join(zaloRoot, ent.name);
+      if (path.resolve(vdir) === path.resolve(currVersionDir)) continue;
+      if (!/^Zalo-/i.test(ent.name)) continue;
+      pushCandidate(path.join(vdir, 'resources', 'app.asar.unpacked'), `version:${ent.name}`);
+    }
+  }
+
+  candidates.sort((a, b) => b.mtimeMs - a.mtimeMs);
+
+  let missing = Array.isArray(missingList) ? [...missingList] : listMissingUnpackedFiles(asarPath, 0);
+  if (!missing.length) return { repaired: true, source: '', copied: 0, remaining: [] };
+
+  let copiedTotal = 0;
+  let chosenSource = '';
+
+  for (const cand of candidates) {
+    let copied = 0;
+    for (const rel of missing) {
+      const srcFile = path.join(cand.src, rel);
+      const dstFile = path.join(targetUnpacked, rel);
+      if (fs.existsSync(dstFile)) continue;
+      if (!fs.existsSync(srcFile)) continue;
+      await fsp.mkdir(path.dirname(dstFile), { recursive: true });
+      await fsp.copyFile(srcFile, dstFile);
+      copied += 1;
+    }
+
+    if (copied > 0) {
+      copiedTotal += copied;
+      if (!chosenSource) chosenSource = cand.src;
+      console.log(`[zalous] repaired unpacked +${copied} files from ${cand.reason}`);
+      missing = listMissingUnpackedFiles(asarPath, 0);
+      if (!missing.length) {
+        return { repaired: true, source: chosenSource || cand.src, copied: copiedTotal, remaining: [] };
+      }
+    }
+  }
+
+  return { repaired: false, source: chosenSource, copied: copiedTotal, remaining: missing };
 }
 
 async function applyPatch({ asarPath, noBackup, fullPayload = true, keepControls = false }) {
@@ -612,10 +705,18 @@ async function applyPatch({ asarPath, noBackup, fullPayload = true, keepControls
   try {
     await fsp.mkdir(extractDir, { recursive: true });
 
-    const missingUnpacked = listMissingUnpackedFiles(asarPath);
+    let missingUnpacked = listMissingUnpackedFiles(asarPath, 0);
     if (missingUnpacked.length) {
-      const preview = missingUnpacked.join('\n- ');
-      throw new Error(`Thieu file trong ${asarPath}.unpacked:\n- ${preview}\nHay khoi phuc app.asar.unpacked day du roi apply lai.`);
+      const repair = await repairUnpackedFromCandidates(asarPath, missingUnpacked);
+      missingUnpacked = repair.remaining || listMissingUnpackedFiles(asarPath, 0);
+      if (!missingUnpacked.length && repair.repaired) {
+        console.log(`[zalous] unpacked repaired from ${repair.source || 'candidates'} (copied ${repair.copied})`);
+      }
+    }
+    if (missingUnpacked.length) {
+      const preview = missingUnpacked.slice(0, 12).join('\n- ');
+      const tail = missingUnpacked.length > 12 ? '\n- ... (' + (missingUnpacked.length - 12) + ' more)' : '';
+      throw new Error(`Thieu file trong ${asarPath}.unpacked:\n- ${preview}${tail}\nDa thu auto-repair tu backup/version khac nhung chua du file native. Hay khoi phuc app.asar.unpacked day du roi apply lai.`);
     }
 
     console.log(`[zalous] extract ${asarPath}`);
