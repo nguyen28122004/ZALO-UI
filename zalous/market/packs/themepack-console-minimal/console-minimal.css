@@ -1,4 +1,4 @@
-:root[data-zalous-theme-pack="console-minimal"],
+﻿:root[data-zalous-theme-pack="console-minimal"],
 :root[data-zalous-theme-pack="console-minimal"] .light {
   --console-bg-0: #000000;
   --console-bg-1: #050505;
@@ -658,3 +658,9 @@
   color: var(--console-accent-soft-2) !important;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.14);
 }
+/* ZALOUS EMAIL PALETTE */
+:root {
+  --zmail-accent: #2563eb;
+  --zmail-accent-soft: rgba(37,99,235,.18);
+}
+

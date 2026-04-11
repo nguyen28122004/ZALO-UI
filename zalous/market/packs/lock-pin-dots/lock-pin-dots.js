@@ -78,7 +78,13 @@
     ];
     const set = new Set();
     selectors.forEach((s) => document.querySelectorAll(s).forEach((el) => set.add(el)));
-    return [...set].filter((el) => el instanceof HTMLInputElement);
+    return [...set].filter((el) => {
+      if (!(el instanceof HTMLInputElement)) return false;
+      if (el.getAttribute('data-zalous-skip-pin') === '1') return false;
+      if (el.closest('.zalous-email-prototype-main')) return false;
+      const lockScope = el.closest('.app-lock__main, .app-lock, [class*="app-lock"], [class*="lock-screen"]');
+      return !!lockScope;
+    });
   }
 
   function enhance(input) {

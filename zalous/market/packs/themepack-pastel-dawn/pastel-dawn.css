@@ -1,4 +1,4 @@
-:root, :root .light {
+﻿:root, :root .light {
   --layer-background-leftmenu: #9cbce5;
   --layer-background-leftmenu-hover: #86aad8;
   --layer-background-leftmenu-selected: #7399ca;
@@ -28,3 +28,9 @@
   background: radial-gradient(circle at 10% 0%, rgba(255, 232, 214, 0.16), transparent 38%),
     radial-gradient(circle at 100% 12%, rgba(192, 233, 245, 0.18), transparent 40%);
 }
+/* ZALOUS EMAIL PALETTE */
+:root {
+  --zmail-accent: #2563eb;
+  --zmail-accent-soft: rgba(37,99,235,.18);
+}
+

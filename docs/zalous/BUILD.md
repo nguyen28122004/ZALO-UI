@@ -18,6 +18,18 @@ Script hiện tại:
 "build:exe": "pkg . --targets node18-win-x64 --output dist/zalous.exe"
 ```
 
+## 2.1) Build email extension bundle
+
+```powershell
+npm run build:email-prototype
+```
+
+Script:
+
+```json
+"build:email-prototype": "node tools/build-email-prototype.js"
+```
+
 ## 3) Copy exe vào tools
 
 ```powershell
@@ -45,13 +57,13 @@ Mục tiêu: exe phải kèm runtime + catalog + packs.
 
 1. Chạy `init` test local.
 2. Verify theme/runtime flow bằng CDP (`pass=true`).
-3. Build exe.
-4. Copy exe vào `tools`.
-5. Kiểm tra `help`/`doctor`.
-6. `git add` docs + runtime + packs + exe (nếu đổi).
-7. Commit.
-8. Push `master`.
-9. Tag release và push tag.
+3. Build email extension bundle.
+4. Build exe.
+5. Copy exe vào `tools`.
+6. Kiểm tra `help`/`doctor`.
+7. `git add` docs + runtime + packs + exe (nếu đổi).
+8. Commit.
+9. Push branch chính + tag release.
 
 ## 7) Lưu ý vận hành
 

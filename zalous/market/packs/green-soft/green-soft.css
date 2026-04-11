@@ -1,4 +1,4 @@
-body:not(.dark) {
+﻿body:not(.dark) {
   transition: background-color 1s, border-color .8s, color .8s, filter .5s;
 
   /* Core green pastel scale */
@@ -837,5 +837,10 @@ body:not(.dark) {
   --button-secondary-neutral-text: #244638;
   --button-tertiary-neutral-normal: #e4efe8;
   --button-tertiary-neutral-text: #244638;
+}
+/* ZALOUS EMAIL PALETTE */
+:root {
+  --zmail-accent: #16a34a;
+  --zmail-accent-soft: rgba(22,163,74,.18);
 }
 

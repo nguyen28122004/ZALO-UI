@@ -1,4 +1,4 @@
-:root[data-zalous-theme-pack="hello-kitty"],
+﻿:root[data-zalous-theme-pack="hello-kitty"],
 :root[data-zalous-theme-pack="hello-kitty"] .light {
   --bg-default: #ffe6f4;
   --surface-background: #ffeef8;
@@ -158,3 +158,9 @@
   letter-spacing: 2px;
   color: rgba(126, 114, 123, 0.6);
 }
+/* ZALOUS EMAIL PALETTE */
+:root {
+  --zmail-accent: #db2777;
+  --zmail-accent-soft: rgba(219,39,119,.18);
+}
+

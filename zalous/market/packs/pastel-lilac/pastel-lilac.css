@@ -918,3 +918,9 @@ body:not(.dark) [class*="main-tab"] [class*="tab-indicator"],
 body:not(.dark) [class*="main-tab"] [class*="indicator"] {
   background: var(--accent-blue-border) !important;
 }
+/* ZALOUS EMAIL PALETTE */
+:root {
+  --zmail-accent: #7c3aed;
+  --zmail-accent-soft: rgba(124,58,237,.18);
+}
+
