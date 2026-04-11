@@ -65,12 +65,32 @@
   }
 
   function mainEl() {
-    return (
+    const direct = (
       document.querySelector('main')
       || document.querySelector('[role="main"]')
       || document.querySelector('.chat-box')
       || document.querySelector('[id*="main-content"]')
+      || document.getElementById('chatDetail')
+      || document.getElementById('chatOnboard')
+      || document.querySelector('[id*="chat-detail"]')
+      || document.querySelector('[id*="chatOnboard"]')
+      || document.querySelector('.chat-onboard')
+      || document.querySelector('[class*="chat-onboard"]')
+      || document.querySelector('[class*="chat-board"]')
     );
+    if (direct) return direct;
+    const candidates = Array.from(document.querySelectorAll('div'))
+      .filter((el) => {
+        if (!(el instanceof HTMLElement)) return false;
+        const rect = el.getBoundingClientRect();
+        if (rect.width < 420 || rect.height < 320) return false;
+        const cls = String(el.className || '').toLowerCase();
+        const id = String(el.id || '').toLowerCase();
+        if (id.includes('main-tab') || cls.includes('leftmenu') || cls.includes('sidebar')) return false;
+        return true;
+      })
+      .sort((a, b) => (b.getBoundingClientRect().width * b.getBoundingClientRect().height) - (a.getBoundingClientRect().width * a.getBoundingClientRect().height));
+    return candidates[0] || null;
   }
 
   function captureMain(main) {
@@ -331,8 +351,23 @@
         state.main = null;
         state.mainSnapshotNodes = [];
       }
+      applyThemePalette();
     });
     state.observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
+
+    if (!state.themeObserver) {
+      state.themeObserver = new MutationObserver(() => {
+        applyThemePalette();
+      });
+      [document.documentElement, document.body].filter(Boolean).forEach((root) => {
+        try {
+          state.themeObserver.observe(root, {
+            attributes: true,
+            attributeFilter: ['class', 'style', 'data-theme', 'data-theme-name']
+          });
+        } catch (_) {}
+      });
+    }
   }
 
   function cleanup() {
@@ -343,6 +378,10 @@
     if (state.observer) {
       try { state.observer.disconnect(); } catch (_) {}
       state.observer = null;
+    }
+    if (state.themeObserver) {
+      try { state.themeObserver.disconnect(); } catch (_) {}
+      state.themeObserver = null;
     }
 
     if (state.imap) {

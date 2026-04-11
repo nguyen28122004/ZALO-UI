@@ -153,6 +153,132 @@
     }
   }
 
+  function hasImapBridge() {
+    return !!(
+      tls && typeof tls.connect === 'function' &&
+      net && typeof net.connect === 'function'
+    );
+  }
+
+  function demoSeed() {
+    const now = Date.now();
+    return {
+      INBOX: [
+        {
+          uid: '9003',
+          from: 'Bui Nguyen <buinguyen@example.com>',
+          to: 'you@example.com',
+          cc: '',
+          subject: 'Welcome to Zalous Mail workspace',
+          date: new Date(now - 3600 * 1000).toISOString(),
+          size: 14200,
+          flags: [],
+          messageId: '<demo-9003@zalous.local>',
+          body: 'Runtime does not expose Node IMAP sockets in this build. Demo mailbox is enabled so UI remains usable.'
+        },
+        {
+          uid: '9002',
+          from: 'Build Bot <noreply@zalous.dev>',
+          to: 'you@example.com',
+          cc: '',
+          subject: 'Theme sync check completed',
+          date: new Date(now - 5 * 3600 * 1000).toISOString(),
+          size: 9624,
+          flags: ['\\Seen'],
+          messageId: '<demo-9002@zalous.local>',
+          body: 'Market and email surfaces are synced with active theme variables.'
+        }
+      ],
+      Updates: [
+        {
+          uid: '9101',
+          from: 'Zalous Release <release@zalous.dev>',
+          to: 'you@example.com',
+          cc: '',
+          subject: 'Release checklist reminder',
+          date: new Date(now - 24 * 3600 * 1000).toISOString(),
+          size: 10311,
+          flags: ['\\Seen'],
+          messageId: '<demo-9101@zalous.local>',
+          body: 'After validating UI through CDP, run commit + tag + publish.'
+        }
+      ],
+      Starred: []
+    };
+  }
+
+  class DemoImapClient {
+    constructor() {
+      this.connected = false;
+      this.currentFolder = 'INBOX';
+      this.db = demoSeed();
+    }
+
+    async connect() {
+      this.connected = true;
+    }
+
+    async list() {
+      return Object.keys(this.db).map((name) => ({
+        name,
+        delimiter: '/',
+        label: name
+      }));
+    }
+
+    async status(name) {
+      const rows = this.db[name] || [];
+      const unseen = rows.filter((m) => !m.flags.includes('\\Seen')).length;
+      return { name, messages: rows.length, unseen, recent: 0 };
+    }
+
+    async select(name) {
+      this.currentFolder = this.db[name] ? name : 'INBOX';
+    }
+
+    async search() {
+      const rows = this.db[this.currentFolder] || [];
+      return rows.map((m) => Number(m.uid)).filter(Number.isFinite).sort((a, b) => b - a);
+    }
+
+    async page(uids) {
+      const map = new Map((this.db[this.currentFolder] || []).map((m) => [String(m.uid), m]));
+      return uids
+        .map((uid) => map.get(String(uid)))
+        .filter(Boolean)
+        .map((m) => ({
+          uid: String(m.uid),
+          flags: Array.isArray(m.flags) ? m.flags.slice() : [],
+          size: Number(m.size) || 0,
+          date: m.date || '',
+          from: m.from || '--',
+          to: m.to || '--',
+          subject: m.subject || '(No subject)'
+        }));
+    }
+
+    async message(uid) {
+      const row = (this.db[this.currentFolder] || []).find((m) => String(m.uid) === String(uid));
+      if (!row) throw new Error(`Demo mail UID ${uid} not found.`);
+      return {
+        uid: String(row.uid),
+        flags: Array.isArray(row.flags) ? row.flags.slice() : [],
+        size: Number(row.size) || 0,
+        date: row.date || '',
+        from: row.from || '--',
+        to: row.to || '--',
+        cc: row.cc || '--',
+        subject: row.subject || '(No subject)',
+        messageId: row.messageId || '',
+        body: row.body || ''
+      };
+    }
+
+    async close() {
+      this.connected = false;
+    }
+  }
+
   function parseList(raw) {
     const out = [];
     let m;

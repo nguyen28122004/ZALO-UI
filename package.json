@@ -1,6 +1,6 @@
 {
   "name": "hara-zalous",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Spicetify-like patch CLI for Zalo Desktop",
   "main": "tools/zalous-cli.js",
   "bin": {

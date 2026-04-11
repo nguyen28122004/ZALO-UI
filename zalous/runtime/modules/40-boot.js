@@ -97,8 +97,16 @@
       reloadExtensions: () => state.reloadExtensions(),
       reloadPage: (reason) => triggerRuntimeReload(reason || 'api'),
       openMarket: () => {
+        if (typeof window.__zalousOpenMarket === 'function') {
+          window.__zalousOpenMarket();
+          return;
+        }
         const modal = document.getElementById(MARKET_MODAL_ID);
-        if (modal) modal.style.display = 'flex';
+        if (modal) {
+          modal.style.display = 'flex';
+          modal.classList.add('is-open');
+          modal.setAttribute('aria-hidden', 'false');
+        }
       }
     };
 

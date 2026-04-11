@@ -62,12 +62,16 @@
     selectedUid: '',
     selectedMessage: null,
     connected: false,
+    imapMode: 'imap',
     imap: null,
     observer: null,
+    themeObserver: null,
     removeFns: [],
     view: 'mail',
     onlyUnread: false,
     themeKey: '',
+    themeShell: null,
+    themePaletteSig: '',
     starredByFolder: {}
   };
 

@@ -11,7 +11,8 @@
     state.onlyUnread = conf.onlyUnread;
     state.starredByFolder = (conf.starredByFolder && typeof conf.starredByFolder === 'object') ? conf.starredByFolder : {};
 
-    if (!conf.imapHost || !conf.username || !conf.password) {
+    const bridgeReady = hasImapBridge();
+    if (bridgeReady && (!conf.imapHost || !conf.username || !conf.password)) {
       throw new Error('Missing IMAP host / username / password. Open Config to fill mailbox credentials.');
     }
 
@@ -22,9 +23,14 @@
     }
     if (state.imap && state.connected) return state.imap;
 
-    state.imap = new ImapClient(conf);
+    state.imapMode = bridgeReady ? 'imap' : 'demo';
+    state.imap = bridgeReady ? new ImapClient(conf) : new DemoImapClient();
     await state.imap.connect();
     state.connected = true;
+    if (!bridgeReady) {
+      state.notice = 'Demo mailbox active (Node IMAP bridge unavailable in this runtime).';
+      state.error = '';
+    }
     return state.imap;
   }
 
@@ -134,6 +140,8 @@
 
     const chip = state.error
       ? `<span class="mail-chip err">${esc(state.error)}</span>`
+      : state.imapMode === 'demo'
+        ? '<span class="mail-chip">Demo mailbox</span>'
       : state.connected
         ? '<span class="mail-chip ok">IMAP connected</span>'
         : '<span class="mail-chip">Disconnected</span>';
