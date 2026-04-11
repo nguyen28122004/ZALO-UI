@@ -738,6 +738,12 @@
             const key = String(field.key || '').trim();
             if (!key) return '';
 
+            const label = field.label || key;
+            const hint = field.placeholder ? ` placeholder="${escapeAttr(field.placeholder)}"` : '';
+            const description = field.description
+              ? `<div style="font-size:11px;color:#5c766a;margin:-4px 0 8px">${field.description}</div>`
+              : '';
+
             if (field.type === 'checkbox') {
               const checked = Object.prototype.hasOwnProperty.call(existing, key)
                 ? !!existing[key]
@@ -745,8 +751,9 @@
               return `
                 <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#234536;margin-bottom:8px">
                   <input data-cfg-key="${escapeAttr(key)}" data-cfg-type="checkbox" type="checkbox" ${checked ? 'checked' : ''} />
-                  <span>${field.label || key}</span>
+                  <span>${label}</span>
                 </label>
+                ${description}
               `;
             }
 
@@ -758,12 +765,35 @@
                 .map((op) => `<option value="${escapeAttr(op.value)}" ${String(op.value) === String(current) ? 'selected' : ''}>${op.label}</option>`)
                 .join('');
               return `
-                <label style="display:block;font-size:12px;color:#234536;margin-bottom:6px">${field.label || key}</label>
+                <label style="display:block;font-size:12px;color:#234536;margin-bottom:6px">${label}</label>
                 <select data-cfg-key="${escapeAttr(key)}" data-cfg-type="select" style="width:100%;height:32px;border:1px solid #b8cfc1;border-radius:8px;padding:0 8px;background:#fff;margin-bottom:8px">${optionsHtml}</select>
+                ${description}
               `;
             }
 
-            return '';
+            if (field.type === 'textarea') {
+              const current = Object.prototype.hasOwnProperty.call(existing, key)
+                ? existing[key]
+                : (field.default || '');
+              return `
+                <label style="display:block;font-size:12px;color:#234536;margin-bottom:6px">${label}</label>
+                <textarea data-cfg-key="${escapeAttr(key)}" data-cfg-type="textarea" rows="${Number(field.rows) > 0 ? Number(field.rows) : 4}" style="width:100%;min-height:88px;border:1px solid #b8cfc1;border-radius:8px;padding:8px;background:#fff;margin-bottom:8px;box-sizing:border-box;resize:vertical"${hint}>${escapeAttr(current)}</textarea>
+                ${description}
+              `;
+            }
+
+            const current = Object.prototype.hasOwnProperty.call(existing, key)
+              ? existing[key]
+              : (field.default ?? '');
+            const inputType = field.type === 'password' ? 'password' : (field.type === 'number' ? 'number' : 'text');
+            const stepAttr = field.type === 'number' && field.step ? ` step="${escapeAttr(field.step)}"` : '';
+            const minAttr = field.type === 'number' && field.min !== undefined ? ` min="${escapeAttr(field.min)}"` : '';
+            const maxAttr = field.type === 'number' && field.max !== undefined ? ` max="${escapeAttr(field.max)}"` : '';
+            return `
+              <label style="display:block;font-size:12px;color:#234536;margin-bottom:6px">${label}</label>
+              <input data-cfg-key="${escapeAttr(key)}" data-cfg-type="${escapeAttr(field.type || 'text')}" type="${inputType}" value="${escapeAttr(current)}" style="width:100%;height:32px;border:1px solid #b8cfc1;border-radius:8px;padding:0 8px;background:#fff;margin-bottom:8px;box-sizing:border-box"${hint}${stepAttr}${minAttr}${maxAttr} />
+              ${description}
+            `;
           }).join('');
           if (!rowHtml.trim()) return;
 
@@ -796,6 +826,9 @@
               if (!key) return;
               if (type === 'checkbox') {
                 state.config.extensionConfigs[name][key] = !!node.checked;
+              } else if (type === 'number') {
+                const num = Number(node.value);
+                state.config.extensionConfigs[name][key] = Number.isFinite(num) ? num : node.value;
               } else {
                 state.config.extensionConfigs[name][key] = node.value;
               }
