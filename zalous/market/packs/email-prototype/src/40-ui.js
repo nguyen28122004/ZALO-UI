@@ -198,6 +198,131 @@
     }
   }
 
+  function promptTagInput(currentTags) {
+    const base = Array.isArray(currentTags) ? currentTags.join(', ') : '';
+    const input = window.prompt('Nhap tag (tach bang dau phay):', base);
+    if (input == null) return null;
+    return input.split(',').map((x) => x.trim()).filter(Boolean);
+  }
+
+  function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+    const words = String(text || '').split(/\s+/).filter(Boolean);
+    const lines = [];
+    let cur = '';
+    words.forEach((w) => {
+      const next = cur ? `${cur} ${w}` : w;
+      if (ctx.measureText(next).width <= maxWidth || !cur) {
+        cur = next;
+      } else {
+        lines.push(cur);
+        cur = w;
+      }
+    });
+    if (cur) lines.push(cur);
+    const out = (typeof maxLines === 'number' && maxLines > 0) ? lines.slice(0, maxLines) : lines;
+    out.forEach((line, idx) => ctx.fillText(line, x, y + idx * lineHeight));
+    return out.length;
+  }
+
+  async function makeMailSnapshotBlob(detail) {
+    if (!detail) throw new Error('No selected mail.');
+    const w = 1120;
+    const h = 700;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Cannot create canvas context.');
+    const accent = getComputedStyle(state.shell || document.documentElement).getPropertyValue('--zmail-accent').trim() || '#2563eb';
+    const bg = getComputedStyle(state.shell || document.documentElement).getPropertyValue('--zmail-bg-a').trim() || '#f8fbff';
+    const surface = getComputedStyle(state.shell || document.documentElement).getPropertyValue('--zmail-surface').trim() || '#ffffff';
+    const text = getComputedStyle(state.shell || document.documentElement).getPropertyValue('--zmail-text').trim() || '#0f172a';
+    const muted = getComputedStyle(state.shell || document.documentElement).getPropertyValue('--zmail-text-muted').trim() || '#64748b';
+    const tags = mailTags(state.currentFolder, detail.uid);
+
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = surface;
+    ctx.fillRect(36, 36, w - 72, h - 72);
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(36, 36, w - 72, h - 72);
+
+    ctx.fillStyle = accent;
+    ctx.font = '700 28px Segoe UI';
+    ctx.fillText('Mail Snapshot', 64, 86);
+    ctx.font = '600 15px Segoe UI';
+    ctx.fillText(`Share target: Nguyen Bui / Bui Nguyen | ${dateText(new Date().toISOString())}`, 64, 114);
+
+    ctx.fillStyle = text;
+    ctx.font = '700 28px Segoe UI';
+    drawWrappedText(ctx, detail.subject || '(No subject)', 64, 168, w - 128, 34, 2);
+
+    ctx.fillStyle = muted;
+    ctx.font = '600 15px Segoe UI';
+    ctx.fillText(`From: ${detail.from || '--'}`, 64, 240);
+    ctx.fillText(`To: ${detail.to || '--'}`, 64, 268);
+    ctx.fillText(`Date: ${dateText(detail.date)}`, 64, 296);
+
+    let tagX = 64;
+    const tagY = 326;
+    tags.forEach((tag) => {
+      const label = `#${tag}`;
+      ctx.font = '700 13px Segoe UI';
+      const tw = Math.ceil(ctx.measureText(label).width) + 20;
+      ctx.fillStyle = accent;
+      ctx.fillRect(tagX, tagY, tw, 26);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(label, tagX + 10, tagY + 18);
+      tagX += tw + 8;
+    });
+
+    ctx.fillStyle = text;
+    ctx.font = '500 16px Segoe UI';
+    const body = String(detail.text || detail.body || '').replace(/\s+/g, ' ').trim();
+    drawWrappedText(ctx, body || '(Empty body preview)', 64, 388, w - 128, 26, 10);
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) reject(new Error('Failed to encode snapshot image.'));
+        else resolve(blob);
+      }, 'image/png');
+    });
+  }
+
+  function findShareConversation() {
+    const names = ['nguyen bui', 'bui nguyen'];
+    const candidates = Array.from(document.querySelectorAll('.msg-item,[class*=\"conversation\"],[class*=\"chat-item\"]'));
+    return candidates.find((el) => {
+      const text = String(el.textContent || '').toLowerCase();
+      return names.some((n) => text.includes(n));
+    }) || null;
+  }
+
+  async function shareSelectedMailAsImage() {
+    const detail = state.selectedMessage;
+    if (!detail) {
+      state.notice = 'No selected mail to share.';
+      render(false);
+      return;
+    }
+    const blob = await makeMailSnapshotBlob(detail);
+    if (navigator.clipboard && typeof window.ClipboardItem === 'function') {
+      await navigator.clipboard.write([new window.ClipboardItem({ 'image/png': blob })]);
+    } else {
+      throw new Error('Clipboard image API is unavailable.');
+    }
+
+    const conv = findShareConversation();
+    if (conv) {
+      try { conv.dispatchEvent(new MouseEvent('click', { bubbles: true })); } catch (_) {}
+      state.notice = 'Image copied. Chat \"Nguyen Bui/Bui Nguyen\" selected; paste to send.';
+    } else {
+      state.notice = 'Image copied. Khong tim thay chat Nguyen Bui/Bui Nguyen de auto-focus.';
+    }
+    render(false);
+  }
+
   function bind() {
     const copyMessageId = async () => {
       const detail = state.selectedMessage;
@@ -260,6 +385,23 @@
           }
         }
         if (a === 'copy-message-id') copyMessageId();
+        if (a === 'tag-mail') {
+          const uid = state.selectedUid || (state.selectedMessage && state.selectedMessage.uid) || '';
+          if (uid) {
+            const nextTags = promptTagInput(mailTags(state.currentFolder, uid));
+            if (nextTags) {
+              setMailTags(state.currentFolder, uid, nextTags);
+              state.notice = nextTags.length ? `Updated ${nextTags.length} tag(s).` : 'Cleared tags.';
+              render(false);
+            }
+          }
+        }
+        if (a === 'share-mail-image') {
+          shareSelectedMailAsImage().catch((err) => {
+            state.notice = err && err.message ? err.message : 'Cannot share mail image.';
+            render(false);
+          });
+        }
         return;
       }
 

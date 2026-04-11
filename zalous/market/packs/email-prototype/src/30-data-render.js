@@ -10,6 +10,7 @@
     state.pageSize = conf.pageSize;
     state.onlyUnread = conf.onlyUnread;
     state.starredByFolder = (conf.starredByFolder && typeof conf.starredByFolder === 'object') ? conf.starredByFolder : {};
+    state.tagsByMail = (conf.tagsByMail && typeof conf.tagsByMail === 'object') ? conf.tagsByMail : {};
 
     const bridgeReady = hasImapBridge();
     const fileCacheMode = /^file:\/\//i.test(String(conf.bridgeUrl || '').trim());
@@ -188,7 +189,11 @@
 
     const rows = filteredRows();
     const rowsHtml = rows.length
-      ? rows.map((m) => `<button class="mail-row ${m.uid === state.selectedUid ? 'active' : ''}" data-uid="${esc(m.uid)}"><div class="mail-row-top"><div class="mail-row-from">${isStarred(state.currentFolder, m.uid) ? '★ ' : ''}${esc(m.from || '--')}</div><div class="mail-row-date">${esc(dateText(m.date))}</div></div><div class="mail-subject">${esc(m.subject || '(No subject)')}</div><div class="mail-preview">To: ${esc(m.to || '--')}</div><div class="mail-row-meta">${m.flags.includes('\\Seen') ? 'Seen' : 'Unread'} | ${esc(bytesText(m.size))} | UID ${esc(m.uid)}</div></button>`).join('')
+      ? rows.map((m) => {
+        const tags = mailTags(state.currentFolder, m.uid);
+        const tagHtml = tags.length ? `<div class="mail-row-tags">${tags.map((t) => `<span>${esc(t)}</span>`).join('')}</div>` : '';
+        return `<button class="mail-row ${m.uid === state.selectedUid ? 'active' : ''}" data-uid="${esc(m.uid)}"><div class="mail-row-top"><div class="mail-row-from">${isStarred(state.currentFolder, m.uid) ? '★ ' : ''}${esc(m.from || '--')}</div><div class="mail-row-date">${esc(dateText(m.date))}</div></div><div class="mail-subject">${esc(m.subject || '(No subject)')}</div><div class="mail-preview">To: ${esc(m.to || '--')}</div>${tagHtml}<div class="mail-row-meta">${m.flags.includes('\\Seen') ? 'Seen' : 'Unread'} | ${esc(bytesText(m.size))} | UID ${esc(m.uid)}</div></button>`;
+      }).join('')
       : '<div class="mail-empty">No mail in current page/filter.</div>';
 
     state.shell.innerHTML = `
@@ -275,6 +280,7 @@
     next.pageSize = Math.max(5, Math.min(100, Number(next.pageSize) || defaults.pageSize));
     next.previewBytes = Math.max(4096, Math.min(262144, Number(next.previewBytes) || defaults.previewBytes));
     next.starredByFolder = state.starredByFolder;
+    next.tagsByMail = state.tagsByMail;
 
     zalous.setConfig(next);
     state.pageSize = next.pageSize;

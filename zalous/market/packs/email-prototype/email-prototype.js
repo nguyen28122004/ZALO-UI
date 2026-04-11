@@ -46,7 +46,8 @@
     allowSelfSigned: false,
     onlyUnread: false,
     bridgeUrl: 'http://127.0.0.1:3921',
-    starredByFolder: {}
+    starredByFolder: {},
+    tagsByMail: {}
   };
 
   const state = {
@@ -79,7 +80,8 @@
     themeKey: '',
     themeShell: null,
     themePaletteSig: '',
-    starredByFolder: {}
+    starredByFolder: {},
+    tagsByMail: {}
   };
 
   zalous.registerConfig({
@@ -138,6 +140,7 @@
     next.onlyUnread = !!next.onlyUnread;
     next.bridgeUrl = String(next.bridgeUrl || defaults.bridgeUrl).trim() || defaults.bridgeUrl;
     next.starredByFolder = (next.starredByFolder && typeof next.starredByFolder === 'object') ? next.starredByFolder : {};
+    next.tagsByMail = (next.tagsByMail && typeof next.tagsByMail === 'object') ? next.tagsByMail : {};
     return next;
   }
 
@@ -212,6 +215,7 @@
   function persistStarred() {
     const next = cfg();
     next.starredByFolder = state.starredByFolder;
+    next.tagsByMail = state.tagsByMail;
     zalous.setConfig(next);
   }
 
@@ -222,6 +226,26 @@
     if (set.has(String(uid))) set.delete(String(uid));
     else set.add(String(uid));
     state.starredByFolder[key] = [...set];
+    persistStarred();
+  }
+
+  function mailTagKey(folder, uid) {
+    return `${getFolderKey(folder)}::${String(uid || '')}`;
+  }
+
+  function mailTags(folder, uid) {
+    const key = mailTagKey(folder, uid);
+    const list = state.tagsByMail[key];
+    return Array.isArray(list)
+      ? list.map((x) => String(x).trim()).filter(Boolean)
+      : [];
+  }
+
+  function setMailTags(folder, uid, nextTags) {
+    const key = mailTagKey(folder, uid);
+    const clean = Array.from(new Set((Array.isArray(nextTags) ? nextTags : []).map((x) => String(x).trim()).filter(Boolean))).slice(0, 8);
+    if (clean.length) state.tagsByMail[key] = clean;
+    else delete state.tagsByMail[key];
     persistStarred();
   }
 
@@ -250,6 +274,7 @@
       `.${MAIN_MARKER} .mail-folder.active,.${MAIN_MARKER} .mail-row.active{background:linear-gradient(135deg,var(--zmail-accent-soft,rgba(37,99,235,.12)),rgba(14,165,233,.08));border-color:var(--zmail-accent-soft,rgba(37,99,235,.34));} .${MAIN_MARKER} .mail-folder{display:flex;justify-content:space-between;gap:8px;align-items:center;} .${MAIN_MARKER} .mail-badge{min-width:26px;height:26px;border-radius:999px;background:var(--zmail-accent-soft,rgba(37,99,235,.12));color:var(--zmail-accent,#1d4ed8);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:0 0 auto;}`,
       `.${MAIN_MARKER} .mail-folder-path{font-size:11px;color:var(--zmail-text-muted,#94a3b8);margin-top:2px;word-break:break-word;} .${MAIN_MARKER} .mail-search{width:100%;height:38px;border:1px solid var(--zmail-border,rgba(148,163,184,.3));border-radius:12px;padding:0 12px;background:var(--zmail-surface,var(--layer-background,#fff));margin-bottom:10px;min-width:0;}`,
       `.${MAIN_MARKER} .mail-row-top{display:flex;justify-content:space-between;gap:10px;min-width:0;} .${MAIN_MARKER} .mail-row-from{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} .${MAIN_MARKER} .mail-row-date,.${MAIN_MARKER} .mail-row-meta{font-size:11px;color:var(--zmail-text-muted,#64748b);flex:0 0 auto;}`,
+      `.${MAIN_MARKER} .mail-row-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;} .${MAIN_MARKER} .mail-row-tags span,.${MAIN_MARKER} .mail-tag-chip{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;background:var(--zmail-accent-soft,rgba(37,99,235,.14));color:var(--zmail-accent,#1d4ed8);font-size:11px;font-weight:700;}`,
       `.${MAIN_MARKER} .mail-subject{font-size:13px;font-weight:700;margin-top:4px;word-break:break-word;} .${MAIN_MARKER} .mail-preview{font-size:12px;color:var(--zmail-text-muted,#64748b);margin-top:4px;line-height:1.4;word-break:break-word;} .${MAIN_MARKER} .mail-pager{padding:12px 16px;border-top:1px solid var(--zmail-border,rgba(148,163,184,.18));display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--zmail-text-muted,#475569);flex-wrap:wrap;}`,
       `.${MAIN_MARKER} .mail-detail-subject{font-size:24px;font-weight:700;line-height:1.2;margin-bottom:12px;word-break:break-word;} .${MAIN_MARKER} .mail-grid{display:grid;grid-template-columns:minmax(92px,110px) minmax(0,1fr);gap:8px 12px;font-size:12px;margin-bottom:16px;} .${MAIN_MARKER} .mail-grid div:nth-child(odd){color:var(--zmail-text-muted,#64748b);}`,
       `.${MAIN_MARKER} .mail-text{white-space:pre-wrap;line-height:1.6;font-size:13px;color:var(--zmail-text,#1e293b);padding:18px;border-radius:16px;background:var(--zmail-surface,var(--layer-background,#fff));border:1px solid var(--zmail-border,rgba(148,163,184,.16));word-break:break-word;overflow-wrap:anywhere;} .${MAIN_MARKER} .mail-html{line-height:1.55;font-size:13px;color:var(--zmail-text,#1e293b);padding:18px;border-radius:16px;background:var(--zmail-surface,var(--layer-background,#fff));border:1px solid var(--zmail-border,rgba(148,163,184,.16));overflow:auto;} .${MAIN_MARKER} .mail-html img{max-width:100%;height:auto;} .${MAIN_MARKER} .mail-empty{padding:32px 18px;color:var(--zmail-text-muted,#64748b);text-align:center;} .${MAIN_MARKER} .mail-outlook-head{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;padding:12px 14px;border-radius:14px;background:var(--zmail-surface-2,#f8fafc);border:1px solid var(--zmail-border,rgba(148,163,184,.16));} .${MAIN_MARKER} .mail-outlook-line{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px;align-items:flex-start;font-size:12px;} .${MAIN_MARKER} .mail-outlook-line span{color:var(--zmail-text-muted,#64748b);} .${MAIN_MARKER} .mail-outlook-line strong{font-weight:600;overflow-wrap:anywhere;} .${MAIN_MARKER} .mail-attach-wrap{margin-bottom:14px;padding:12px 14px;border-radius:14px;background:var(--zmail-surface-2,#f8fafc);border:1px solid var(--zmail-border,rgba(148,163,184,.16));} .${MAIN_MARKER} .mail-attach-title{font-size:12px;font-weight:700;margin-bottom:8px;} .${MAIN_MARKER} .mail-attach-list{display:flex;flex-direction:column;gap:6px;} .${MAIN_MARKER} .mail-attach-item{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;padding:8px 10px;border-radius:10px;background:var(--zmail-surface,var(--layer-background,#fff));border:1px solid var(--zmail-border,rgba(148,163,184,.16));} .${MAIN_MARKER} .mail-attach-item strong{font-weight:600;overflow-wrap:anywhere;} .${MAIN_MARKER} .mail-attach-item span{color:var(--zmail-text-muted,#64748b);font-size:11px;white-space:nowrap;} .${MAIN_MARKER} .mail-attach-empty{font-size:12px;color:var(--zmail-text-muted,#64748b);} .${MAIN_MARKER} .mail-preview-pane{padding:4px 0;}`,
@@ -1143,6 +1168,7 @@
     state.pageSize = conf.pageSize;
     state.onlyUnread = conf.onlyUnread;
     state.starredByFolder = (conf.starredByFolder && typeof conf.starredByFolder === 'object') ? conf.starredByFolder : {};
+    state.tagsByMail = (conf.tagsByMail && typeof conf.tagsByMail === 'object') ? conf.tagsByMail : {};
 
     const bridgeReady = hasImapBridge();
     const fileCacheMode = /^file:\/\//i.test(String(conf.bridgeUrl || '').trim());
@@ -1321,7 +1347,11 @@
 
     const rows = filteredRows();
     const rowsHtml = rows.length
-      ? rows.map((m) => `<button class="mail-row ${m.uid === state.selectedUid ? 'active' : ''}" data-uid="${esc(m.uid)}"><div class="mail-row-top"><div class="mail-row-from">${isStarred(state.currentFolder, m.uid) ? '★ ' : ''}${esc(m.from || '--')}</div><div class="mail-row-date">${esc(dateText(m.date))}</div></div><div class="mail-subject">${esc(m.subject || '(No subject)')}</div><div class="mail-preview">To: ${esc(m.to || '--')}</div><div class="mail-row-meta">${m.flags.includes('\\Seen') ? 'Seen' : 'Unread'} | ${esc(bytesText(m.size))} | UID ${esc(m.uid)}</div></button>`).join('')
+      ? rows.map((m) => {
+        const tags = mailTags(state.currentFolder, m.uid);
+        const tagHtml = tags.length ? `<div class="mail-row-tags">${tags.map((t) => `<span>${esc(t)}</span>`).join('')}</div>` : '';
+        return `<button class="mail-row ${m.uid === state.selectedUid ? 'active' : ''}" data-uid="${esc(m.uid)}"><div class="mail-row-top"><div class="mail-row-from">${isStarred(state.currentFolder, m.uid) ? '★ ' : ''}${esc(m.from || '--')}</div><div class="mail-row-date">${esc(dateText(m.date))}</div></div><div class="mail-subject">${esc(m.subject || '(No subject)')}</div><div class="mail-preview">To: ${esc(m.to || '--')}</div>${tagHtml}<div class="mail-row-meta">${m.flags.includes('\\Seen') ? 'Seen' : 'Unread'} | ${esc(bytesText(m.size))} | UID ${esc(m.uid)}</div></button>`;
+      }).join('')
       : '<div class="mail-empty">No mail in current page/filter.</div>';
 
     state.shell.innerHTML = `
@@ -1408,6 +1438,7 @@
     next.pageSize = Math.max(5, Math.min(100, Number(next.pageSize) || defaults.pageSize));
     next.previewBytes = Math.max(4096, Math.min(262144, Number(next.previewBytes) || defaults.previewBytes));
     next.starredByFolder = state.starredByFolder;
+    next.tagsByMail = state.tagsByMail;
 
     zalous.setConfig(next);
     state.pageSize = next.pageSize;
@@ -1536,11 +1567,15 @@
       ? `<div class="mail-html">${safeHtml}</div>`
       : `<div class="mail-text">${esc(textBody)}</div>`;
     const attachmentCount = Array.isArray(detail.attachments) ? detail.attachments.length : 0;
+    const tags = mailTags(state.currentFolder, detail.uid);
+    const tagHtml = tags.length
+      ? `<div class="mail-row-tags">${tags.map((t) => `<span class="mail-tag-chip">${esc(t)}</span>`).join('')}</div>`
+      : '<div class="mail-attach-empty">No tag</div>';
 
     return `
       <div class="mail-card">
         <div class="mail-head"><div><div class="mail-detail-subject">${esc(detail.subject || '(No subject)')}</div><div class="mail-muted">Read-only IMAP detail view</div></div>
-          <div class="mail-tools"><button class="mail-btn ghost" data-act="toggle-star">${currentStar ? 'Unstar' : 'Star'}</button><button class="mail-btn ghost" data-act="copy-message-id">Copy Message-ID</button>${chip}</div>
+          <div class="mail-tools"><button class="mail-btn ghost" data-act="toggle-star">${currentStar ? 'Unstar' : 'Star'}</button><button class="mail-btn ghost" data-act="copy-message-id">Copy Message-ID</button><button class="mail-btn ghost" data-act="tag-mail">Tag</button><button class="mail-btn pri" data-act="share-mail-image">Share as image</button>${chip}</div>
         </div>
         <div class="mail-body">
           <div class="mail-outlook-head">
@@ -1550,6 +1585,7 @@
             <div class="mail-outlook-line"><span>Date</span><strong>${esc(dateText(detail.date))}</strong></div>
           </div>
           <div class="mail-grid"><div>Size</div><div>${esc(bytesText(detail.size))}</div><div>Message-ID</div><div>${esc(detail.messageId || '--')}</div><div>Attachment</div><div>${attachmentCount}</div></div>
+          <div class="mail-attach-wrap"><div class="mail-attach-title">Tags</div>${tagHtml}</div>
           <div class="mail-attach-wrap"><div class="mail-attach-title">Attachments</div>${renderAttachments(detail)}</div>
           <div class="mail-preview-pane">${bodyPane}</div>
         </div>
@@ -1757,6 +1793,131 @@
     }
   }
 
+  function promptTagInput(currentTags) {
+    const base = Array.isArray(currentTags) ? currentTags.join(', ') : '';
+    const input = window.prompt('Nhap tag (tach bang dau phay):', base);
+    if (input == null) return null;
+    return input.split(',').map((x) => x.trim()).filter(Boolean);
+  }
+
+  function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+    const words = String(text || '').split(/\s+/).filter(Boolean);
+    const lines = [];
+    let cur = '';
+    words.forEach((w) => {
+      const next = cur ? `${cur} ${w}` : w;
+      if (ctx.measureText(next).width <= maxWidth || !cur) {
+        cur = next;
+      } else {
+        lines.push(cur);
+        cur = w;
+      }
+    });
+    if (cur) lines.push(cur);
+    const out = (typeof maxLines === 'number' && maxLines > 0) ? lines.slice(0, maxLines) : lines;
+    out.forEach((line, idx) => ctx.fillText(line, x, y + idx * lineHeight));
+    return out.length;
+  }
+
+  async function makeMailSnapshotBlob(detail) {
+    if (!detail) throw new Error('No selected mail.');
+    const w = 1120;
+    const h = 700;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Cannot create canvas context.');
+    const accent = getComputedStyle(state.shell || document.documentElement).getPropertyValue('--zmail-accent').trim() || '#2563eb';
+    const bg = getComputedStyle(state.shell || document.documentElement).getPropertyValue('--zmail-bg-a').trim() || '#f8fbff';
+    const surface = getComputedStyle(state.shell || document.documentElement).getPropertyValue('--zmail-surface').trim() || '#ffffff';
+    const text = getComputedStyle(state.shell || document.documentElement).getPropertyValue('--zmail-text').trim() || '#0f172a';
+    const muted = getComputedStyle(state.shell || document.documentElement).getPropertyValue('--zmail-text-muted').trim() || '#64748b';
+    const tags = mailTags(state.currentFolder, detail.uid);
+
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = surface;
+    ctx.fillRect(36, 36, w - 72, h - 72);
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(36, 36, w - 72, h - 72);
+
+    ctx.fillStyle = accent;
+    ctx.font = '700 28px Segoe UI';
+    ctx.fillText('Mail Snapshot', 64, 86);
+    ctx.font = '600 15px Segoe UI';
+    ctx.fillText(`Share target: Nguyen Bui / Bui Nguyen | ${dateText(new Date().toISOString())}`, 64, 114);
+
+    ctx.fillStyle = text;
+    ctx.font = '700 28px Segoe UI';
+    drawWrappedText(ctx, detail.subject || '(No subject)', 64, 168, w - 128, 34, 2);
+
+    ctx.fillStyle = muted;
+    ctx.font = '600 15px Segoe UI';
+    ctx.fillText(`From: ${detail.from || '--'}`, 64, 240);
+    ctx.fillText(`To: ${detail.to || '--'}`, 64, 268);
+    ctx.fillText(`Date: ${dateText(detail.date)}`, 64, 296);
+
+    let tagX = 64;
+    const tagY = 326;
+    tags.forEach((tag) => {
+      const label = `#${tag}`;
+      ctx.font = '700 13px Segoe UI';
+      const tw = Math.ceil(ctx.measureText(label).width) + 20;
+      ctx.fillStyle = accent;
+      ctx.fillRect(tagX, tagY, tw, 26);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(label, tagX + 10, tagY + 18);
+      tagX += tw + 8;
+    });
+
+    ctx.fillStyle = text;
+    ctx.font = '500 16px Segoe UI';
+    const body = String(detail.text || detail.body || '').replace(/\s+/g, ' ').trim();
+    drawWrappedText(ctx, body || '(Empty body preview)', 64, 388, w - 128, 26, 10);
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) reject(new Error('Failed to encode snapshot image.'));
+        else resolve(blob);
+      }, 'image/png');
+    });
+  }
+
+  function findShareConversation() {
+    const names = ['nguyen bui', 'bui nguyen'];
+    const candidates = Array.from(document.querySelectorAll('.msg-item,[class*=\"conversation\"],[class*=\"chat-item\"]'));
+    return candidates.find((el) => {
+      const text = String(el.textContent || '').toLowerCase();
+      return names.some((n) => text.includes(n));
+    }) || null;
+  }
+
+  async function shareSelectedMailAsImage() {
+    const detail = state.selectedMessage;
+    if (!detail) {
+      state.notice = 'No selected mail to share.';
+      render(false);
+      return;
+    }
+    const blob = await makeMailSnapshotBlob(detail);
+    if (navigator.clipboard && typeof window.ClipboardItem === 'function') {
+      await navigator.clipboard.write([new window.ClipboardItem({ 'image/png': blob })]);
+    } else {
+      throw new Error('Clipboard image API is unavailable.');
+    }
+
+    const conv = findShareConversation();
+    if (conv) {
+      try { conv.dispatchEvent(new MouseEvent('click', { bubbles: true })); } catch (_) {}
+      state.notice = 'Image copied. Chat \"Nguyen Bui/Bui Nguyen\" selected; paste to send.';
+    } else {
+      state.notice = 'Image copied. Khong tim thay chat Nguyen Bui/Bui Nguyen de auto-focus.';
+    }
+    render(false);
+  }
+
   function bind() {
     const copyMessageId = async () => {
       const detail = state.selectedMessage;
@@ -1819,6 +1980,23 @@
           }
         }
         if (a === 'copy-message-id') copyMessageId();
+        if (a === 'tag-mail') {
+          const uid = state.selectedUid || (state.selectedMessage && state.selectedMessage.uid) || '';
+          if (uid) {
+            const nextTags = promptTagInput(mailTags(state.currentFolder, uid));
+            if (nextTags) {
+              setMailTags(state.currentFolder, uid, nextTags);
+              state.notice = nextTags.length ? `Updated ${nextTags.length} tag(s).` : 'Cleared tags.';
+              render(false);
+            }
+          }
+        }
+        if (a === 'share-mail-image') {
+          shareSelectedMailAsImage().catch((err) => {
+            state.notice = err && err.message ? err.message : 'Cannot share mail image.';
+            render(false);
+          });
+        }
         return;
       }
 

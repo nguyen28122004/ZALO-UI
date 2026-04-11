@@ -73,11 +73,15 @@
       ? `<div class="mail-html">${safeHtml}</div>`
       : `<div class="mail-text">${esc(textBody)}</div>`;
     const attachmentCount = Array.isArray(detail.attachments) ? detail.attachments.length : 0;
+    const tags = mailTags(state.currentFolder, detail.uid);
+    const tagHtml = tags.length
+      ? `<div class="mail-row-tags">${tags.map((t) => `<span class="mail-tag-chip">${esc(t)}</span>`).join('')}</div>`
+      : '<div class="mail-attach-empty">No tag</div>';
 
     return `
       <div class="mail-card">
         <div class="mail-head"><div><div class="mail-detail-subject">${esc(detail.subject || '(No subject)')}</div><div class="mail-muted">Read-only IMAP detail view</div></div>
-          <div class="mail-tools"><button class="mail-btn ghost" data-act="toggle-star">${currentStar ? 'Unstar' : 'Star'}</button><button class="mail-btn ghost" data-act="copy-message-id">Copy Message-ID</button>${chip}</div>
+          <div class="mail-tools"><button class="mail-btn ghost" data-act="toggle-star">${currentStar ? 'Unstar' : 'Star'}</button><button class="mail-btn ghost" data-act="copy-message-id">Copy Message-ID</button><button class="mail-btn ghost" data-act="tag-mail">Tag</button><button class="mail-btn pri" data-act="share-mail-image">Share as image</button>${chip}</div>
         </div>
         <div class="mail-body">
           <div class="mail-outlook-head">
@@ -87,6 +91,7 @@
             <div class="mail-outlook-line"><span>Date</span><strong>${esc(dateText(detail.date))}</strong></div>
           </div>
           <div class="mail-grid"><div>Size</div><div>${esc(bytesText(detail.size))}</div><div>Message-ID</div><div>${esc(detail.messageId || '--')}</div><div>Attachment</div><div>${attachmentCount}</div></div>
+          <div class="mail-attach-wrap"><div class="mail-attach-title">Tags</div>${tagHtml}</div>
           <div class="mail-attach-wrap"><div class="mail-attach-title">Attachments</div>${renderAttachments(detail)}</div>
           <div class="mail-preview-pane">${bodyPane}</div>
         </div>

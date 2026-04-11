@@ -42,7 +42,8 @@
     allowSelfSigned: false,
     onlyUnread: false,
     bridgeUrl: 'http://127.0.0.1:3921',
-    starredByFolder: {}
+    starredByFolder: {},
+    tagsByMail: {}
   };
 
   const state = {
@@ -75,7 +76,8 @@
     themeKey: '',
     themeShell: null,
     themePaletteSig: '',
-    starredByFolder: {}
+    starredByFolder: {},
+    tagsByMail: {}
   };
 
   zalous.registerConfig({
@@ -134,6 +136,7 @@
     next.onlyUnread = !!next.onlyUnread;
     next.bridgeUrl = String(next.bridgeUrl || defaults.bridgeUrl).trim() || defaults.bridgeUrl;
     next.starredByFolder = (next.starredByFolder && typeof next.starredByFolder === 'object') ? next.starredByFolder : {};
+    next.tagsByMail = (next.tagsByMail && typeof next.tagsByMail === 'object') ? next.tagsByMail : {};
     return next;
   }
 
@@ -208,6 +211,7 @@
   function persistStarred() {
     const next = cfg();
     next.starredByFolder = state.starredByFolder;
+    next.tagsByMail = state.tagsByMail;
     zalous.setConfig(next);
   }
 
@@ -218,5 +222,25 @@
     if (set.has(String(uid))) set.delete(String(uid));
     else set.add(String(uid));
     state.starredByFolder[key] = [...set];
+    persistStarred();
+  }
+
+  function mailTagKey(folder, uid) {
+    return `${getFolderKey(folder)}::${String(uid || '')}`;
+  }
+
+  function mailTags(folder, uid) {
+    const key = mailTagKey(folder, uid);
+    const list = state.tagsByMail[key];
+    return Array.isArray(list)
+      ? list.map((x) => String(x).trim()).filter(Boolean)
+      : [];
+  }
+
+  function setMailTags(folder, uid, nextTags) {
+    const key = mailTagKey(folder, uid);
+    const clean = Array.from(new Set((Array.isArray(nextTags) ? nextTags : []).map((x) => String(x).trim()).filter(Boolean))).slice(0, 8);
+    if (clean.length) state.tagsByMail[key] = clean;
+    else delete state.tagsByMail[key];
     persistStarred();
   }
