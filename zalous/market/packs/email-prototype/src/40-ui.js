@@ -1,7 +1,8 @@
-﻿  function createItem() {
+  function createItem() {
     const item = document.createElement('div');
     item.id = ITEM_ID;
     item.className = 'msg-item pinned';
+    item.setAttribute('data-zalous-email-item', '1');
     item.setAttribute('role', 'button');
     item.setAttribute('tabindex', '0');
     item.innerHTML = '<div class="mail-pin"><div class="mail-pin-k">Workspace Mail</div><div class="mail-pin-t">Email (IMAP)</div><div class="mail-pin-p">Folder + pagination + read-only message viewer</div></div>';
@@ -18,29 +19,17 @@
   }
 
   function shift(container) {
-    const h = px(container.style.height || '');
-    if (h != null) {
-      const prevBase = Number(container.getAttribute(BASE_HEIGHT_ATTR) || '');
-      const base = Number.isFinite(prevBase) ? prevBase : h;
-      container.setAttribute(BASE_HEIGHT_ATTR, String(base));
-      container.style.height = `${base + PINNED_HEIGHT}px`;
-    }
-
-    Array.from(container.children).forEach((el) => {
-      if (!(el instanceof HTMLElement) || el.id === ITEM_ID || !el.classList.contains('msg-item')) return;
-      const top = px(el.style.top || '');
-      if (top == null) return;
-      const prevBase = Number(el.getAttribute(BASE_TOP_ATTR) || '');
-      const base = Number.isFinite(prevBase) ? prevBase : top;
-      el.setAttribute(BASE_TOP_ATTR, String(base));
-      el.style.top = `${base + PINNED_HEIGHT}px`;
-    });
+    if (!container) return;
   }
 
   function ensureItem() {
     const container = listContainer();
     if (!container) return;
     let item = document.getElementById(ITEM_ID);
+    if (item && item.getAttribute('data-zalous-email-item') !== '1') {
+      try { item.remove(); } catch (_) {}
+      item = null;
+    }
     if (!item) item = createItem();
     if (item.parentElement !== container) container.prepend(item);
     if (container.firstElementChild !== item) container.prepend(item);
@@ -51,15 +40,6 @@
   function restoreListLayout() {
     const container = listContainer();
     if (!container) return;
-    const baseHeight = Number(container.getAttribute(BASE_HEIGHT_ATTR) || '');
-    if (Number.isFinite(baseHeight)) container.style.height = `${baseHeight}px`;
-    container.removeAttribute(BASE_HEIGHT_ATTR);
-    Array.from(container.children).forEach((el) => {
-      if (!(el instanceof HTMLElement) || !el.classList.contains('msg-item')) return;
-      const baseTop = Number(el.getAttribute(BASE_TOP_ATTR) || '');
-      if (Number.isFinite(baseTop)) el.style.top = `${baseTop}px`;
-      el.removeAttribute(BASE_TOP_ATTR);
-    });
     const item = document.getElementById(ITEM_ID);
     if (item && item.parentElement) item.remove();
   }
@@ -106,32 +86,10 @@
   }
 
   function hideSiblingPanels(main) {
-    if (!main || !main.parentElement || state.mainSiblingsHidden.length) return;
-    const siblings = Array.from(main.parentElement.children).filter((el) => el !== main);
-    siblings.forEach((el) => {
-      if (!(el instanceof HTMLElement)) return;
-      state.mainSiblingsHidden.push({
-        el,
-        display: el.style.display,
-        width: el.style.width,
-        flex: el.style.flex
-      });
-      el.style.display = 'none';
-      el.style.width = '0';
-      el.style.flex = '0 0 0';
-    });
-    main.style.width = '100%';
-    main.style.flex = '1 1 auto';
+    if (!main) return;
   }
 
   function restoreSiblingPanels() {
-    state.mainSiblingsHidden.forEach((entry) => {
-      const el = entry.el;
-      if (!(el instanceof HTMLElement)) return;
-      el.style.display = entry.display || '';
-      el.style.width = entry.width || '';
-      el.style.flex = entry.flex || '';
-    });
     state.mainSiblingsHidden = [];
     if (state.main) {
       state.main.style.width = '';
@@ -355,6 +313,12 @@
     });
     state.observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
 
+    if (!state.pinTimer) {
+      state.pinTimer = setInterval(() => {
+        try { ensureItem(); } catch (_) {}
+      }, 1500);
+    }
+
     if (!state.themeObserver) {
       state.themeObserver = new MutationObserver(() => {
         applyThemePalette();
@@ -379,6 +343,10 @@
       try { state.observer.disconnect(); } catch (_) {}
       state.observer = null;
     }
+    if (state.pinTimer) {
+      try { clearInterval(state.pinTimer); } catch (_) {}
+      state.pinTimer = null;
+    }
     if (state.themeObserver) {
       try { state.themeObserver.disconnect(); } catch (_) {}
       state.themeObserver = null;
@@ -392,3 +360,4 @@
     restoreSiblingPanels();
     state.connected = false;
   }
+

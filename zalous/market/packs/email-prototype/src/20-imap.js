@@ -279,6 +279,222 @@
     }
   }
 
+  class HttpImapBridgeClient {
+    constructor(conf) {
+      this.conf = conf || {};
+      this.connected = false;
+      this.currentFolder = 'INBOX';
+      this.bridgeUrl = String(this.conf.bridgeUrl || 'http://127.0.0.1:3921').replace(/\/+$/, '');
+      this.auth = {
+        host: String(this.conf.imapHost || ''),
+        port: Number(this.conf.imapPort) || 993,
+        ssl: this.conf.imapSsl !== false,
+        username: String(this.conf.username || ''),
+        password: String(this.conf.password || '')
+      };
+      this._lastFolders = [];
+      this._lastPageRows = [];
+    }
+
+    async req(pathname, payload) {
+      const resp = await fetch(`${this.bridgeUrl}${pathname}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auth: this.auth, ...(payload || {}) })
+      });
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        throw new Error(`Bridge ${pathname} failed: ${resp.status} ${txt}`.trim());
+      }
+      const data = await resp.json();
+      if (!data || data.ok !== true) throw new Error((data && data.error) || `Bridge ${pathname} error.`);
+      return data;
+    }
+
+    async connect() {
+      await this.req('/imap/ping', {});
+      this.connected = true;
+    }
+
+    async list() {
+      const data = await this.req('/imap/folders', {});
+      this._lastFolders = Array.isArray(data.folders) ? data.folders : [];
+      return this._lastFolders.map((f) => ({
+        name: f.name,
+        delimiter: f.delimiter || '/',
+        label: f.label || f.name
+      }));
+    }
+
+    async status(name) {
+      const hit = (this._lastFolders || []).find((f) => String(f.name) === String(name));
+      if (hit) {
+        return {
+          name: hit.name,
+          messages: Number(hit.messages) || 0,
+          unseen: Number(hit.unseen) || 0,
+          recent: Number(hit.recent) || 0
+        };
+      }
+      return { name, messages: 0, unseen: 0, recent: 0 };
+    }
+
+    async select(name) {
+      this.currentFolder = String(name || 'INBOX');
+    }
+
+    async search() {
+      const data = await this.req('/imap/search', { folder: this.currentFolder });
+      return Array.isArray(data.uids) ? data.uids.map(Number).filter(Number.isFinite).sort((a, b) => b - a) : [];
+    }
+
+    async page(uids) {
+      const data = await this.req('/imap/page', { folder: this.currentFolder, uids: Array.isArray(uids) ? uids : [] });
+      this._lastPageRows = Array.isArray(data.rows) ? data.rows : [];
+      return this._lastPageRows.map((m) => ({
+        uid: String(m.uid),
+        flags: Array.isArray(m.flags) ? m.flags : [],
+        size: Number(m.size) || 0,
+        date: m.date || '',
+        from: m.from || '--',
+        to: m.to || '--',
+        subject: m.subject || '(No subject)'
+      }));
+    }
+
+    async message(uid, bytes) {
+      const data = await this.req('/imap/message', { folder: this.currentFolder, uid: String(uid || ''), previewBytes: Number(bytes) || 65536 });
+      const m = data.message || {};
+      return {
+        uid: String(m.uid || uid || ''),
+        flags: Array.isArray(m.flags) ? m.flags : [],
+        size: Number(m.size) || 0,
+        date: m.date || '',
+        from: m.from || '--',
+        to: m.to || '--',
+        cc: m.cc || '--',
+        subject: m.subject || '(No subject)',
+        messageId: m.messageId || '',
+        body: String(m.body || '')
+      };
+    }
+
+    async close() {
+      this.connected = false;
+    }
+  }
+
+  class FileImapCacheClient {
+    constructor(conf) {
+      this.conf = conf || {};
+      this.connected = false;
+      this.currentFolder = 'INBOX';
+      this.cacheUrl = String(this.conf.bridgeUrl || '').trim();
+      this.cache = null;
+      this.cacheAt = 0;
+      this.maxAgeMs = 15000;
+    }
+
+    async loadCache(force) {
+      const now = Date.now();
+      if (!force && this.cache && (now - this.cacheAt) < this.maxAgeMs) return this.cache;
+      if (!this.cacheUrl || !/^file:\/\//i.test(this.cacheUrl)) {
+        throw new Error('bridgeUrl must be a file:// URL for file cache mode.');
+      }
+      const url = `${this.cacheUrl}${this.cacheUrl.includes('?') ? '&' : '?'}t=${now}`;
+      const resp = await fetch(url, { cache: 'no-store' });
+      if (!resp.ok) throw new Error(`Cannot read IMAP cache file: HTTP ${resp.status}`);
+      const data = await resp.json();
+      if (!data || data.ok !== true) throw new Error((data && data.error) || 'Invalid IMAP cache content.');
+      this.cache = data;
+      this.cacheAt = now;
+      return data;
+    }
+
+    folderData(name) {
+      const key = String(name || this.currentFolder || 'INBOX');
+      const all = (this.cache && this.cache.byFolder) || {};
+      return all[key] || { uids: [], rows: {}, messages: {} };
+    }
+
+    async connect() {
+      await this.loadCache(true);
+      this.connected = true;
+    }
+
+    async list() {
+      const data = await this.loadCache(false);
+      const folders = Array.isArray(data.folders) ? data.folders : [];
+      return folders.map((f) => ({
+        name: f.name,
+        delimiter: f.delimiter || '/',
+        label: f.label || f.name
+      }));
+    }
+
+    async status(name) {
+      const data = await this.loadCache(false);
+      const hit = (Array.isArray(data.folders) ? data.folders : []).find((f) => String(f.name) === String(name));
+      if (!hit) return { name, messages: 0, unseen: 0, recent: 0 };
+      return {
+        name: hit.name,
+        messages: Number(hit.messages) || 0,
+        unseen: Number(hit.unseen) || 0,
+        recent: Number(hit.recent) || 0
+      };
+    }
+
+    async select(name) {
+      this.currentFolder = String(name || 'INBOX');
+      await this.loadCache(false);
+    }
+
+    async search() {
+      await this.loadCache(false);
+      return (this.folderData(this.currentFolder).uids || []).map(Number).filter(Number.isFinite).sort((a, b) => b - a);
+    }
+
+    async page(uids) {
+      await this.loadCache(false);
+      const rows = this.folderData(this.currentFolder).rows || {};
+      return (Array.isArray(uids) ? uids : [])
+        .map((uid) => rows[String(uid)])
+        .filter(Boolean)
+        .map((m) => ({
+          uid: String(m.uid),
+          flags: Array.isArray(m.flags) ? m.flags : [],
+          size: Number(m.size) || 0,
+          date: m.date || '',
+          from: m.from || '--',
+          to: m.to || '--',
+          subject: m.subject || '(No subject)'
+        }));
+    }
+
+    async message(uid) {
+      await this.loadCache(false);
+      const f = this.folderData(this.currentFolder);
+      const m = (f.messages || {})[String(uid)];
+      if (!m) throw new Error(`Mail UID ${uid} is not in local cache yet. Wait for bridge sync.`);
+      return {
+        uid: String(m.uid || uid || ''),
+        flags: Array.isArray(m.flags) ? m.flags : [],
+        size: Number(m.size) || 0,
+        date: m.date || '',
+        from: m.from || '--',
+        to: m.to || '--',
+        cc: m.cc || '--',
+        subject: m.subject || '(No subject)',
+        messageId: m.messageId || '',
+        body: String(m.body || '')
+      };
+    }
+
+    async close() {
+      this.connected = false;
+    }
+  }
+
   function parseList(raw) {
     const out = [];
     let m;

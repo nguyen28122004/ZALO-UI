@@ -10,6 +10,7 @@
   const BASE_TOP_ATTR = 'data-zalous-email-base-top';
   const BASE_HEIGHT_ATTR = 'data-zalous-email-base-height';
   const ACTIVE_ATTR = 'data-zalous-email-active';
+  const EXT_NAME = 'email-prototype.js';
 
   function safeRequire(mod) {
     try {
@@ -40,6 +41,7 @@
     previewBytes: 65536,
     allowSelfSigned: false,
     onlyUnread: false,
+    bridgeUrl: 'http://127.0.0.1:3921',
     starredByFolder: {}
   };
 
@@ -65,6 +67,7 @@
     imapMode: 'imap',
     imap: null,
     observer: null,
+    pinTimer: null,
     themeObserver: null,
     removeFns: [],
     view: 'mail',
@@ -90,12 +93,36 @@
       { key: 'pageSize', label: 'Emails per page', type: 'number', min: 5, max: 100, default: 20 },
       { key: 'previewBytes', label: 'Body preview bytes', type: 'number', min: 4096, max: 262144, step: 1024, default: 65536 },
       { key: 'allowSelfSigned', label: 'Allow self-signed certificate', type: 'checkbox', default: false },
-      { key: 'onlyUnread', label: 'Only unread by default', type: 'checkbox', default: false }
+      { key: 'onlyUnread', label: 'Only unread by default', type: 'checkbox', default: false },
+      { key: 'bridgeUrl', label: 'Bridge URL (HTTP IMAP fallback)', type: 'text', placeholder: 'http://127.0.0.1:3921' }
     ]
   });
 
+  function localCfgFallback() {
+    try {
+      const raw = localStorage.getItem('zalous.config.v1');
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      const ext = parsed && parsed.extensionConfigs ? parsed.extensionConfigs[EXT_NAME] : null;
+      return ext && typeof ext === 'object' ? ext : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
   function cfg() {
-    const raw = zalous.getConfig(defaults) || {};
+    const fromApi = zalous.getConfig(defaults) || {};
+    const fromLocal = localCfgFallback();
+    const raw = Object.assign({}, fromLocal, fromApi);
+    const localHost = String(fromLocal.imapHost || '').trim();
+    const localUser = String(fromLocal.username || '').trim();
+    const localPass = String(fromLocal.password || '').trim();
+    if (localHost) raw.imapHost = localHost;
+    if (localUser) raw.username = localUser;
+    if (localPass) raw.password = localPass;
+    raw.bridgeUrl = String(fromApi.bridgeUrl || '').trim()
+      || String(fromLocal.bridgeUrl || '').trim()
+      || defaults.bridgeUrl;
     const next = Object.assign({}, defaults, raw);
     next.imapPort = Number(next.imapPort) || defaults.imapPort;
     next.smtpPort = Number(next.smtpPort) || defaults.smtpPort;
@@ -105,6 +132,7 @@
     next.smtpSsl = next.smtpSsl !== false;
     next.allowSelfSigned = !!next.allowSelfSigned;
     next.onlyUnread = !!next.onlyUnread;
+    next.bridgeUrl = String(next.bridgeUrl || defaults.bridgeUrl).trim() || defaults.bridgeUrl;
     next.starredByFolder = (next.starredByFolder && typeof next.starredByFolder === 'object') ? next.starredByFolder : {};
     return next;
   }
@@ -144,6 +172,10 @@
   }
 
   function listContainer() {
+    const byConversationList = document.querySelector('#conversationList .ReactVirtualized__Grid__innerScrollContainer');
+    if (byConversationList) return byConversationList;
+    const byVirtualized = document.querySelector('.virtualized-scroll .ReactVirtualized__Grid__innerScrollContainer');
+    if (byVirtualized) return byVirtualized;
     const first = document.querySelector('.msg-item');
     return first && first.parentElement ? first.parentElement : null;
   }

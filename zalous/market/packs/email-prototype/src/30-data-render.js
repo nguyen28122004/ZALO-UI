@@ -12,7 +12,8 @@
     state.starredByFolder = (conf.starredByFolder && typeof conf.starredByFolder === 'object') ? conf.starredByFolder : {};
 
     const bridgeReady = hasImapBridge();
-    if (bridgeReady && (!conf.imapHost || !conf.username || !conf.password)) {
+    const fileCacheMode = /^file:\/\//i.test(String(conf.bridgeUrl || '').trim());
+    if (!conf.imapHost || !conf.username || !conf.password) {
       throw new Error('Missing IMAP host / username / password. Open Config to fill mailbox credentials.');
     }
 
@@ -23,13 +24,39 @@
     }
     if (state.imap && state.connected) return state.imap;
 
-    state.imapMode = bridgeReady ? 'imap' : 'demo';
-    state.imap = bridgeReady ? new ImapClient(conf) : new DemoImapClient();
-    await state.imap.connect();
-    state.connected = true;
-    if (!bridgeReady) {
-      state.notice = 'Demo mailbox active (Node IMAP bridge unavailable in this runtime).';
-      state.error = '';
+    if (bridgeReady) {
+      state.imapMode = 'imap';
+      state.imap = new ImapClient(conf);
+      await state.imap.connect();
+      state.connected = true;
+    } else if (fileCacheMode) {
+      state.imapMode = 'cache-file';
+      state.imap = new FileImapCacheClient(conf);
+      try {
+        await state.imap.connect();
+        state.connected = true;
+      } catch (err) {
+        state.imapMode = 'demo';
+        state.imap = new DemoImapClient();
+        await state.imap.connect();
+        state.connected = true;
+        state.notice = `IMAP cache unavailable, switched to demo mailbox. ${err && err.message ? err.message : ''}`.trim();
+        state.error = '';
+      }
+    } else {
+      state.imapMode = 'bridge-http';
+      state.imap = new HttpImapBridgeClient(conf);
+      try {
+        await state.imap.connect();
+        state.connected = true;
+      } catch (err) {
+        state.imapMode = 'demo';
+        state.imap = new DemoImapClient();
+        await state.imap.connect();
+        state.connected = true;
+        state.notice = `Bridge unavailable, switched to demo mailbox. ${err && err.message ? err.message : ''}`.trim();
+        state.error = '';
+      }
     }
     return state.imap;
   }
@@ -140,6 +167,10 @@
 
     const chip = state.error
       ? `<span class="mail-chip err">${esc(state.error)}</span>`
+      : state.imapMode === 'cache-file'
+        ? '<span class="mail-chip ok">IMAP cache sync</span>'
+      : state.imapMode === 'bridge-http'
+        ? '<span class="mail-chip ok">IMAP via bridge</span>'
       : state.imapMode === 'demo'
         ? '<span class="mail-chip">Demo mailbox</span>'
       : state.connected

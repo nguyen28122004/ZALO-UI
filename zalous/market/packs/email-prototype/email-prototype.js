@@ -14,6 +14,7 @@
   const BASE_TOP_ATTR = 'data-zalous-email-base-top';
   const BASE_HEIGHT_ATTR = 'data-zalous-email-base-height';
   const ACTIVE_ATTR = 'data-zalous-email-active';
+  const EXT_NAME = 'email-prototype.js';
 
   function safeRequire(mod) {
     try {
@@ -44,6 +45,7 @@
     previewBytes: 65536,
     allowSelfSigned: false,
     onlyUnread: false,
+    bridgeUrl: 'http://127.0.0.1:3921',
     starredByFolder: {}
   };
 
@@ -69,6 +71,7 @@
     imapMode: 'imap',
     imap: null,
     observer: null,
+    pinTimer: null,
     themeObserver: null,
     removeFns: [],
     view: 'mail',
@@ -94,12 +97,36 @@
       { key: 'pageSize', label: 'Emails per page', type: 'number', min: 5, max: 100, default: 20 },
       { key: 'previewBytes', label: 'Body preview bytes', type: 'number', min: 4096, max: 262144, step: 1024, default: 65536 },
       { key: 'allowSelfSigned', label: 'Allow self-signed certificate', type: 'checkbox', default: false },
-      { key: 'onlyUnread', label: 'Only unread by default', type: 'checkbox', default: false }
+      { key: 'onlyUnread', label: 'Only unread by default', type: 'checkbox', default: false },
+      { key: 'bridgeUrl', label: 'Bridge URL (HTTP IMAP fallback)', type: 'text', placeholder: 'http://127.0.0.1:3921' }
     ]
   });
 
+  function localCfgFallback() {
+    try {
+      const raw = localStorage.getItem('zalous.config.v1');
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      const ext = parsed && parsed.extensionConfigs ? parsed.extensionConfigs[EXT_NAME] : null;
+      return ext && typeof ext === 'object' ? ext : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
   function cfg() {
-    const raw = zalous.getConfig(defaults) || {};
+    const fromApi = zalous.getConfig(defaults) || {};
+    const fromLocal = localCfgFallback();
+    const raw = Object.assign({}, fromLocal, fromApi);
+    const localHost = String(fromLocal.imapHost || '').trim();
+    const localUser = String(fromLocal.username || '').trim();
+    const localPass = String(fromLocal.password || '').trim();
+    if (localHost) raw.imapHost = localHost;
+    if (localUser) raw.username = localUser;
+    if (localPass) raw.password = localPass;
+    raw.bridgeUrl = String(fromApi.bridgeUrl || '').trim()
+      || String(fromLocal.bridgeUrl || '').trim()
+      || defaults.bridgeUrl;
     const next = Object.assign({}, defaults, raw);
     next.imapPort = Number(next.imapPort) || defaults.imapPort;
     next.smtpPort = Number(next.smtpPort) || defaults.smtpPort;
@@ -109,6 +136,7 @@
     next.smtpSsl = next.smtpSsl !== false;
     next.allowSelfSigned = !!next.allowSelfSigned;
     next.onlyUnread = !!next.onlyUnread;
+    next.bridgeUrl = String(next.bridgeUrl || defaults.bridgeUrl).trim() || defaults.bridgeUrl;
     next.starredByFolder = (next.starredByFolder && typeof next.starredByFolder === 'object') ? next.starredByFolder : {};
     return next;
   }
@@ -148,6 +176,10 @@
   }
 
   function listContainer() {
+    const byConversationList = document.querySelector('#conversationList .ReactVirtualized__Grid__innerScrollContainer');
+    if (byConversationList) return byConversationList;
+    const byVirtualized = document.querySelector('.virtualized-scroll .ReactVirtualized__Grid__innerScrollContainer');
+    if (byVirtualized) return byVirtualized;
     const first = document.querySelector('.msg-item');
     return first && first.parentElement ? first.parentElement : null;
   }
@@ -202,7 +234,7 @@
       document.head.appendChild(tag);
     }
     tag.textContent = [
-      `#${ITEM_ID}{cursor:pointer;position:absolute;left:0;top:0;width:100%;height:${PINNED_HEIGHT}px;z-index:3;box-sizing:border-box;padding:10px 14px 10px 20px;}`,
+      `#${ITEM_ID}{cursor:pointer;position:relative;left:0;top:0;width:100%;height:${PINNED_HEIGHT}px;z-index:3;box-sizing:border-box;padding:10px 14px 10px 20px;}`,
       `#${ITEM_ID} .mail-pin{height:100%;padding:10px 14px 10px 18px;border-radius:16px;border:1px solid var(--zmail-accent-soft,rgba(37,99,235,.18));background:linear-gradient(135deg,var(--zmail-accent-soft,rgba(37,99,235,.14)),rgba(14,165,233,.08));display:flex;flex-direction:column;justify-content:center;gap:3px;}`,
       `#${ITEM_ID}[data-active="1"] .mail-pin{background:linear-gradient(135deg,var(--zmail-accent-soft,rgba(37,99,235,.24)),rgba(14,165,233,.16));border-color:var(--zmail-accent-soft,rgba(37,99,235,.34));}`,
       `#${ITEM_ID} .mail-pin-k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;opacity:.7;}#${ITEM_ID} .mail-pin-t{font-size:14px;font-weight:700;}#${ITEM_ID} .mail-pin-p{font-size:12px;opacity:.78;}`,
@@ -664,6 +696,222 @@
     }
   }
 
+  class HttpImapBridgeClient {
+    constructor(conf) {
+      this.conf = conf || {};
+      this.connected = false;
+      this.currentFolder = 'INBOX';
+      this.bridgeUrl = String(this.conf.bridgeUrl || 'http://127.0.0.1:3921').replace(/\/+$/, '');
+      this.auth = {
+        host: String(this.conf.imapHost || ''),
+        port: Number(this.conf.imapPort) || 993,
+        ssl: this.conf.imapSsl !== false,
+        username: String(this.conf.username || ''),
+        password: String(this.conf.password || '')
+      };
+      this._lastFolders = [];
+      this._lastPageRows = [];
+    }
+
+    async req(pathname, payload) {
+      const resp = await fetch(`${this.bridgeUrl}${pathname}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auth: this.auth, ...(payload || {}) })
+      });
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        throw new Error(`Bridge ${pathname} failed: ${resp.status} ${txt}`.trim());
+      }
+      const data = await resp.json();
+      if (!data || data.ok !== true) throw new Error((data && data.error) || `Bridge ${pathname} error.`);
+      return data;
+    }
+
+    async connect() {
+      await this.req('/imap/ping', {});
+      this.connected = true;
+    }
+
+    async list() {
+      const data = await this.req('/imap/folders', {});
+      this._lastFolders = Array.isArray(data.folders) ? data.folders : [];
+      return this._lastFolders.map((f) => ({
+        name: f.name,
+        delimiter: f.delimiter || '/',
+        label: f.label || f.name
+      }));
+    }
+
+    async status(name) {
+      const hit = (this._lastFolders || []).find((f) => String(f.name) === String(name));
+      if (hit) {
+        return {
+          name: hit.name,
+          messages: Number(hit.messages) || 0,
+          unseen: Number(hit.unseen) || 0,
+          recent: Number(hit.recent) || 0
+        };
+      }
+      return { name, messages: 0, unseen: 0, recent: 0 };
+    }
+
+    async select(name) {
+      this.currentFolder = String(name || 'INBOX');
+    }
+
+    async search() {
+      const data = await this.req('/imap/search', { folder: this.currentFolder });
+      return Array.isArray(data.uids) ? data.uids.map(Number).filter(Number.isFinite).sort((a, b) => b - a) : [];
+    }
+
+    async page(uids) {
+      const data = await this.req('/imap/page', { folder: this.currentFolder, uids: Array.isArray(uids) ? uids : [] });
+      this._lastPageRows = Array.isArray(data.rows) ? data.rows : [];
+      return this._lastPageRows.map((m) => ({
+        uid: String(m.uid),
+        flags: Array.isArray(m.flags) ? m.flags : [],
+        size: Number(m.size) || 0,
+        date: m.date || '',
+        from: m.from || '--',
+        to: m.to || '--',
+        subject: m.subject || '(No subject)'
+      }));
+    }
+
+    async message(uid, bytes) {
+      const data = await this.req('/imap/message', { folder: this.currentFolder, uid: String(uid || ''), previewBytes: Number(bytes) || 65536 });
+      const m = data.message || {};
+      return {
+        uid: String(m.uid || uid || ''),
+        flags: Array.isArray(m.flags) ? m.flags : [],
+        size: Number(m.size) || 0,
+        date: m.date || '',
+        from: m.from || '--',
+        to: m.to || '--',
+        cc: m.cc || '--',
+        subject: m.subject || '(No subject)',
+        messageId: m.messageId || '',
+        body: String(m.body || '')
+      };
+    }
+
+    async close() {
+      this.connected = false;
+    }
+  }
+
+  class FileImapCacheClient {
+    constructor(conf) {
+      this.conf = conf || {};
+      this.connected = false;
+      this.currentFolder = 'INBOX';
+      this.cacheUrl = String(this.conf.bridgeUrl || '').trim();
+      this.cache = null;
+      this.cacheAt = 0;
+      this.maxAgeMs = 15000;
+    }
+
+    async loadCache(force) {
+      const now = Date.now();
+      if (!force && this.cache && (now - this.cacheAt) < this.maxAgeMs) return this.cache;
+      if (!this.cacheUrl || !/^file:\/\//i.test(this.cacheUrl)) {
+        throw new Error('bridgeUrl must be a file:// URL for file cache mode.');
+      }
+      const url = `${this.cacheUrl}${this.cacheUrl.includes('?') ? '&' : '?'}t=${now}`;
+      const resp = await fetch(url, { cache: 'no-store' });
+      if (!resp.ok) throw new Error(`Cannot read IMAP cache file: HTTP ${resp.status}`);
+      const data = await resp.json();
+      if (!data || data.ok !== true) throw new Error((data && data.error) || 'Invalid IMAP cache content.');
+      this.cache = data;
+      this.cacheAt = now;
+      return data;
+    }
+
+    folderData(name) {
+      const key = String(name || this.currentFolder || 'INBOX');
+      const all = (this.cache && this.cache.byFolder) || {};
+      return all[key] || { uids: [], rows: {}, messages: {} };
+    }
+
+    async connect() {
+      await this.loadCache(true);
+      this.connected = true;
+    }
+
+    async list() {
+      const data = await this.loadCache(false);
+      const folders = Array.isArray(data.folders) ? data.folders : [];
+      return folders.map((f) => ({
+        name: f.name,
+        delimiter: f.delimiter || '/',
+        label: f.label || f.name
+      }));
+    }
+
+    async status(name) {
+      const data = await this.loadCache(false);
+      const hit = (Array.isArray(data.folders) ? data.folders : []).find((f) => String(f.name) === String(name));
+      if (!hit) return { name, messages: 0, unseen: 0, recent: 0 };
+      return {
+        name: hit.name,
+        messages: Number(hit.messages) || 0,
+        unseen: Number(hit.unseen) || 0,
+        recent: Number(hit.recent) || 0
+      };
+    }
+
+    async select(name) {
+      this.currentFolder = String(name || 'INBOX');
+      await this.loadCache(false);
+    }
+
+    async search() {
+      await this.loadCache(false);
+      return (this.folderData(this.currentFolder).uids || []).map(Number).filter(Number.isFinite).sort((a, b) => b - a);
+    }
+
+    async page(uids) {
+      await this.loadCache(false);
+      const rows = this.folderData(this.currentFolder).rows || {};
+      return (Array.isArray(uids) ? uids : [])
+        .map((uid) => rows[String(uid)])
+        .filter(Boolean)
+        .map((m) => ({
+          uid: String(m.uid),
+          flags: Array.isArray(m.flags) ? m.flags : [],
+          size: Number(m.size) || 0,
+          date: m.date || '',
+          from: m.from || '--',
+          to: m.to || '--',
+          subject: m.subject || '(No subject)'
+        }));
+    }
+
+    async message(uid) {
+      await this.loadCache(false);
+      const f = this.folderData(this.currentFolder);
+      const m = (f.messages || {})[String(uid)];
+      if (!m) throw new Error(`Mail UID ${uid} is not in local cache yet. Wait for bridge sync.`);
+      return {
+        uid: String(m.uid || uid || ''),
+        flags: Array.isArray(m.flags) ? m.flags : [],
+        size: Number(m.size) || 0,
+        date: m.date || '',
+        from: m.from || '--',
+        to: m.to || '--',
+        cc: m.cc || '--',
+        subject: m.subject || '(No subject)',
+        messageId: m.messageId || '',
+        body: String(m.body || '')
+      };
+    }
+
+    async close() {
+      this.connected = false;
+    }
+  }
+
   function parseList(raw) {
     const out = [];
     let m;
@@ -779,7 +1027,8 @@
     state.starredByFolder = (conf.starredByFolder && typeof conf.starredByFolder === 'object') ? conf.starredByFolder : {};
 
     const bridgeReady = hasImapBridge();
-    if (bridgeReady && (!conf.imapHost || !conf.username || !conf.password)) {
+    const fileCacheMode = /^file:\/\//i.test(String(conf.bridgeUrl || '').trim());
+    if (!conf.imapHost || !conf.username || !conf.password) {
       throw new Error('Missing IMAP host / username / password. Open Config to fill mailbox credentials.');
     }
 
@@ -790,13 +1039,39 @@
     }
     if (state.imap && state.connected) return state.imap;
 
-    state.imapMode = bridgeReady ? 'imap' : 'demo';
-    state.imap = bridgeReady ? new ImapClient(conf) : new DemoImapClient();
-    await state.imap.connect();
-    state.connected = true;
-    if (!bridgeReady) {
-      state.notice = 'Demo mailbox active (Node IMAP bridge unavailable in this runtime).';
-      state.error = '';
+    if (bridgeReady) {
+      state.imapMode = 'imap';
+      state.imap = new ImapClient(conf);
+      await state.imap.connect();
+      state.connected = true;
+    } else if (fileCacheMode) {
+      state.imapMode = 'cache-file';
+      state.imap = new FileImapCacheClient(conf);
+      try {
+        await state.imap.connect();
+        state.connected = true;
+      } catch (err) {
+        state.imapMode = 'demo';
+        state.imap = new DemoImapClient();
+        await state.imap.connect();
+        state.connected = true;
+        state.notice = `IMAP cache unavailable, switched to demo mailbox. ${err && err.message ? err.message : ''}`.trim();
+        state.error = '';
+      }
+    } else {
+      state.imapMode = 'bridge-http';
+      state.imap = new HttpImapBridgeClient(conf);
+      try {
+        await state.imap.connect();
+        state.connected = true;
+      } catch (err) {
+        state.imapMode = 'demo';
+        state.imap = new DemoImapClient();
+        await state.imap.connect();
+        state.connected = true;
+        state.notice = `Bridge unavailable, switched to demo mailbox. ${err && err.message ? err.message : ''}`.trim();
+        state.error = '';
+      }
     }
     return state.imap;
   }
@@ -907,6 +1182,10 @@
 
     const chip = state.error
       ? `<span class="mail-chip err">${esc(state.error)}</span>`
+      : state.imapMode === 'cache-file'
+        ? '<span class="mail-chip ok">IMAP cache sync</span>'
+      : state.imapMode === 'bridge-http'
+        ? '<span class="mail-chip ok">IMAP via bridge</span>'
       : state.imapMode === 'demo'
         ? '<span class="mail-chip">Demo mailbox</span>'
       : state.connected
@@ -1107,6 +1386,7 @@
     const item = document.createElement('div');
     item.id = ITEM_ID;
     item.className = 'msg-item pinned';
+    item.setAttribute('data-zalous-email-item', '1');
     item.setAttribute('role', 'button');
     item.setAttribute('tabindex', '0');
     item.innerHTML = '<div class="mail-pin"><div class="mail-pin-k">Workspace Mail</div><div class="mail-pin-t">Email (IMAP)</div><div class="mail-pin-p">Folder + pagination + read-only message viewer</div></div>';
@@ -1123,29 +1403,17 @@
   }
 
   function shift(container) {
-    const h = px(container.style.height || '');
-    if (h != null) {
-      const prevBase = Number(container.getAttribute(BASE_HEIGHT_ATTR) || '');
-      const base = Number.isFinite(prevBase) ? prevBase : h;
-      container.setAttribute(BASE_HEIGHT_ATTR, String(base));
-      container.style.height = `${base + PINNED_HEIGHT}px`;
-    }
-
-    Array.from(container.children).forEach((el) => {
-      if (!(el instanceof HTMLElement) || el.id === ITEM_ID || !el.classList.contains('msg-item')) return;
-      const top = px(el.style.top || '');
-      if (top == null) return;
-      const prevBase = Number(el.getAttribute(BASE_TOP_ATTR) || '');
-      const base = Number.isFinite(prevBase) ? prevBase : top;
-      el.setAttribute(BASE_TOP_ATTR, String(base));
-      el.style.top = `${base + PINNED_HEIGHT}px`;
-    });
+    if (!container) return;
   }
 
   function ensureItem() {
     const container = listContainer();
     if (!container) return;
     let item = document.getElementById(ITEM_ID);
+    if (item && item.getAttribute('data-zalous-email-item') !== '1') {
+      try { item.remove(); } catch (_) {}
+      item = null;
+    }
     if (!item) item = createItem();
     if (item.parentElement !== container) container.prepend(item);
     if (container.firstElementChild !== item) container.prepend(item);
@@ -1156,15 +1424,6 @@
   function restoreListLayout() {
     const container = listContainer();
     if (!container) return;
-    const baseHeight = Number(container.getAttribute(BASE_HEIGHT_ATTR) || '');
-    if (Number.isFinite(baseHeight)) container.style.height = `${baseHeight}px`;
-    container.removeAttribute(BASE_HEIGHT_ATTR);
-    Array.from(container.children).forEach((el) => {
-      if (!(el instanceof HTMLElement) || !el.classList.contains('msg-item')) return;
-      const baseTop = Number(el.getAttribute(BASE_TOP_ATTR) || '');
-      if (Number.isFinite(baseTop)) el.style.top = `${baseTop}px`;
-      el.removeAttribute(BASE_TOP_ATTR);
-    });
     const item = document.getElementById(ITEM_ID);
     if (item && item.parentElement) item.remove();
   }
@@ -1211,32 +1470,10 @@
   }
 
   function hideSiblingPanels(main) {
-    if (!main || !main.parentElement || state.mainSiblingsHidden.length) return;
-    const siblings = Array.from(main.parentElement.children).filter((el) => el !== main);
-    siblings.forEach((el) => {
-      if (!(el instanceof HTMLElement)) return;
-      state.mainSiblingsHidden.push({
-        el,
-        display: el.style.display,
-        width: el.style.width,
-        flex: el.style.flex
-      });
-      el.style.display = 'none';
-      el.style.width = '0';
-      el.style.flex = '0 0 0';
-    });
-    main.style.width = '100%';
-    main.style.flex = '1 1 auto';
+    if (!main) return;
   }
 
   function restoreSiblingPanels() {
-    state.mainSiblingsHidden.forEach((entry) => {
-      const el = entry.el;
-      if (!(el instanceof HTMLElement)) return;
-      el.style.display = entry.display || '';
-      el.style.width = entry.width || '';
-      el.style.flex = entry.flex || '';
-    });
     state.mainSiblingsHidden = [];
     if (state.main) {
       state.main.style.width = '';
@@ -1460,6 +1697,12 @@
     });
     state.observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
 
+    if (!state.pinTimer) {
+      state.pinTimer = setInterval(() => {
+        try { ensureItem(); } catch (_) {}
+      }, 1500);
+    }
+
     if (!state.themeObserver) {
       state.themeObserver = new MutationObserver(() => {
         applyThemePalette();
@@ -1483,6 +1726,10 @@
     if (state.observer) {
       try { state.observer.disconnect(); } catch (_) {}
       state.observer = null;
+    }
+    if (state.pinTimer) {
+      try { clearInterval(state.pinTimer); } catch (_) {}
+      state.pinTimer = null;
     }
     if (state.themeObserver) {
       try { state.themeObserver.disconnect(); } catch (_) {}
