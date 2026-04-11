@@ -49,6 +49,9 @@
     const targets = [state.shell, document.documentElement, document.body].filter(Boolean);
     const accent = firstCssVar(targets, [
       '--zmail-accent',
+      '--button-primary-normal',
+      '--button-primary-hover',
+      '--button-secondary-neutral-text',
       '--accent-blue-bg',
       '--accent-green-bg',
       '--accent-orange-bg',
@@ -61,6 +64,8 @@
     ]);
     const accentSoft = firstCssVar(targets, [
       '--zmail-accent-soft',
+      '--button-primary-tonal-normal',
+      '--button-primary-tonal-hover',
       '--accent-blue-bg-subtle',
       '--accent-green-bg-subtle',
       '--accent-orange-bg-subtle',
@@ -73,6 +78,7 @@
     ]);
     const bgA = firstCssVar(targets, [
       '--zmail-bg-a',
+      '--surface-background',
       '--layer-background',
       '--layer-background-subtle',
       '--layer-background-CSC',
@@ -81,15 +87,16 @@
     ]);
     const bgB = firstCssVar(targets, [
       '--zmail-bg-b',
+      '--surface-background-subtle',
       '--layer-background-subtle',
       '--layer-background-pinned',
       '--layer-background-CSC',
       '--background-subtle',
       '--background-alt'
     ]);
-    const text = firstCssVar(targets, ['--text-primary', '--text-main', '--zalo-text-main']);
-    const textMuted = firstCssVar(targets, ['--text-secondary', '--text-sub', '--zalo-text-sub']);
-    const border = firstCssVar(targets, ['--layer-border', '--border-color', '--layer-background-selected']);
+    const text = firstCssVar(targets, ['--zmail-text', '--text-primary', '--text-main', '--zalo-text-main', '--button-secondary-neutral-text']);
+    const textMuted = firstCssVar(targets, ['--zmail-text-muted', '--text-secondary', '--text-sub', '--zalo-text-sub']);
+    const border = firstCssVar(targets, ['--zmail-border', '--border', '--layer-border', '--border-color', '--layer-background-selected']);
     const shadow = firstCssVar(targets, ['--shadow-color', '--layer-shadow']);
     const sig = [accent, accentSoft, bgA, bgB, text, textMuted, border, shadow].join('|');
     return { accent, accentSoft, bgA, bgB, text, textMuted, border, shadow, sig };
@@ -97,14 +104,44 @@
 
   function resolveThemePalette(themeKey) {
     const key = String(themeKey || '').toLowerCase();
-    if (key.includes('hello-kitty')) {
-      return { accent: '#ec4899', accentSoft: 'rgba(236,72,153,.18)', bgA: '#fff8fc', bgB: '#ffeef8' };
-    }
     if (key.includes('console-minimal')) {
-      return { accent: '#22c55e', accentSoft: 'rgba(34,197,94,.18)', bgA: '#f4fbf7', bgB: '#ebf8f0' };
+      return { accent: '#d8d8d8', accentSoft: 'rgba(216,216,216,.18)', bgA: '#0a0a0a', bgB: '#141414' };
+    }
+    if (key.includes('hello-kitty')) {
+      return { accent: '#d977ac', accentSoft: 'rgba(217,119,172,.18)', bgA: '#fff2fa', bgB: '#ffe8f5' };
+    }
+    if (key.includes('pastel-butter')) {
+      return { accent: '#d1a000', accentSoft: 'rgba(209,160,0,.2)', bgA: '#fffdf4', bgB: '#fff9e6' };
+    }
+    if (key.includes('pastel-lilac')) {
+      return { accent: '#8b5cf6', accentSoft: 'rgba(139,92,246,.18)', bgA: '#fbf8ff', bgB: '#f4eeff' };
+    }
+    if (key.includes('pastel-mint')) {
+      return { accent: '#10b981', accentSoft: 'rgba(16,185,129,.18)', bgA: '#f3fdf8', bgB: '#e8fbf2' };
+    }
+    if (key.includes('pastel-peach')) {
+      return { accent: '#f97316', accentSoft: 'rgba(249,115,22,.18)', bgA: '#fff8f3', bgB: '#fff1e7' };
+    }
+    if (key.includes('pastel-rose')) {
+      return { accent: '#ec4899', accentSoft: 'rgba(236,72,153,.18)', bgA: '#fff7fb', bgB: '#ffedf5' };
+    }
+    if (key.includes('pastel-sage')) {
+      return { accent: '#4d7c0f', accentSoft: 'rgba(77,124,15,.18)', bgA: '#f7fbf3', bgB: '#eef7e7' };
+    }
+    if (key.includes('pastel-sky')) {
+      return { accent: '#0284c7', accentSoft: 'rgba(2,132,199,.18)', bgA: '#f4fbff', bgB: '#e9f6ff' };
+    }
+    if (key.includes('pastel-teal')) {
+      return { accent: '#0f766e', accentSoft: 'rgba(15,118,110,.18)', bgA: '#f2fbfa', bgB: '#e6f7f5' };
+    }
+    if (key.includes('pastel-dawn')) {
+      return { accent: '#7da3d6', accentSoft: 'rgba(125,163,214,.2)', bgA: '#f5f8fc', bgB: '#edf3fa' };
     }
     if (key.includes('pastel')) {
       return { accent: '#0ea5e9', accentSoft: 'rgba(14,165,233,.16)', bgA: '#f8fbff', bgB: '#eef7ff' };
+    }
+    if (key.includes('blue')) {
+      return { accent: '#0284c7', accentSoft: 'rgba(2,132,199,.18)', bgA: '#f4f9fe', bgB: '#e9f4fd' };
     }
     if (key.includes('purple')) {
       return { accent: '#7c3aed', accentSoft: 'rgba(124,58,237,.18)', bgA: '#faf8ff', bgB: '#f2ecff' };
@@ -136,8 +173,10 @@
     const accentSoft = runtime.accentSoft || alphaColor(accent, 0.18) || pal.accentSoft;
     const bgA = runtime.bgA || pal.bgA;
     const bgB = runtime.bgB || pal.bgB;
-    const surface = runtime.bgA || pal.bgA;
+    const surface = runtime.bgA || runtime.bgB || pal.bgA;
     const surface2 = runtime.bgB || runtime.bgA || pal.bgB;
+    const border = runtime.border || alphaColor(accent, 0.26) || '';
+    const shadow = runtime.shadow || alphaColor(accent, 0.14) || '';
 
     state.shell.style.setProperty('--zmail-accent', accent);
     state.shell.style.setProperty('--zmail-accent-soft', accentSoft);
@@ -147,6 +186,6 @@
     state.shell.style.setProperty('--zmail-surface-2', surface2);
     state.shell.style.setProperty('--zmail-text', runtime.text || '');
     state.shell.style.setProperty('--zmail-text-muted', runtime.textMuted || '');
-    state.shell.style.setProperty('--zmail-border', runtime.border || '');
-    state.shell.style.setProperty('--zmail-shadow', runtime.shadow || '');
+    state.shell.style.setProperty('--zmail-border', border);
+    state.shell.style.setProperty('--zmail-shadow', shadow);
   }
