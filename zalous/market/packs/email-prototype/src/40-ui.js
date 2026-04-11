@@ -20,6 +20,36 @@
 
   function shift(container) {
     if (!container) return;
+    const item = document.getElementById(ITEM_ID);
+    if (!item || item.parentElement !== container) return;
+    const height = Math.ceil(item.getBoundingClientRect().height || PINNED_HEIGHT);
+    const children = Array.from(container.children);
+    let shifted = 0;
+    children.forEach((node) => {
+      if (!(node instanceof HTMLElement) || node === item) return;
+      const baseTop = node.hasAttribute(BASE_TOP_ATTR)
+        ? Number(node.getAttribute(BASE_TOP_ATTR))
+        : (() => {
+          const parsed = px(node.style.top);
+          if (parsed == null) return null;
+          node.setAttribute(BASE_TOP_ATTR, String(parsed));
+          return parsed;
+        })();
+      if (baseTop == null) return;
+      node.style.top = `${baseTop + height}px`;
+      shifted += 1;
+    });
+    if (shifted > 0) {
+      const baseHeight = container.hasAttribute(BASE_HEIGHT_ATTR)
+        ? Number(container.getAttribute(BASE_HEIGHT_ATTR))
+        : (() => {
+          const parsed = px(container.style.height);
+          if (parsed == null) return null;
+          container.setAttribute(BASE_HEIGHT_ATTR, String(parsed));
+          return parsed;
+        })();
+      if (baseHeight != null) container.style.height = `${baseHeight + height}px`;
+    }
   }
 
   function ensureItem() {
@@ -42,6 +72,15 @@
     if (!container) return;
     const item = document.getElementById(ITEM_ID);
     if (item && item.parentElement) item.remove();
+    Array.from(container.children).forEach((node) => {
+      if (!(node instanceof HTMLElement)) return;
+      const baseTop = node.getAttribute(BASE_TOP_ATTR);
+      if (baseTop != null) node.style.top = `${baseTop}px`;
+      node.removeAttribute(BASE_TOP_ATTR);
+    });
+    const baseHeight = container.getAttribute(BASE_HEIGHT_ATTR);
+    if (baseHeight != null) container.style.height = `${baseHeight}px`;
+    container.removeAttribute(BASE_HEIGHT_ATTR);
   }
 
   function mainEl() {
