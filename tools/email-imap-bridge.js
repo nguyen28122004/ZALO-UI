@@ -160,6 +160,64 @@ function decodeQuotedPrintable(v) {
     .replace(/=([0-9A-Fa-f]{2})/g, (m, h) => String.fromCharCode(parseInt(h, 16)));
 }
 
+function decodeBase64(v) {
+  const raw = String(v || '').replace(/\s+/g, '');
+  if (!raw) return '';
+  try {
+    return Buffer.from(raw, 'base64').toString('utf8');
+  } catch (_) {
+    return '';
+  }
+}
+
+function decodeTransferBody(content, headers) {
+  const enc = String((headers && headers['content-transfer-encoding']) || '').toLowerCase();
+  if (enc.includes('quoted-printable')) return decodeQuotedPrintable(content);
+  if (enc.includes('base64')) return decodeBase64(content);
+  return String(content || '');
+}
+
+function extractMimePart(raw, mime) {
+  const source = String(raw || '');
+  const re = new RegExp(`Content-Type:\\s*${mime}[^\\r\\n]*(?:\\r?\\n[ \\t].*)*\\r?\\n([\\s\\S]*?)\\r?\\n\\r?\\n([\\s\\S]*?)(?=\\r?\\n--[^\\r\\n]+|$)`, 'i');
+  const m = source.match(re);
+  if (!m) return '';
+  const headers = parseHeaders(m[1] || '');
+  return decodeTransferBody(m[2] || '', headers).trim();
+}
+
+function extractHtmlContent(raw) {
+  const decoded = String(raw || '');
+  const htmlTag = decoded.match(/<html[\s\S]*<\/html>/i);
+  if (htmlTag && htmlTag[0]) return htmlTag[0].trim();
+  const bodyTag = decoded.match(/<body[\s\S]*<\/body>/i);
+  if (bodyTag && bodyTag[0]) return bodyTag[0].trim();
+  return extractMimePart(raw, 'text\\/html');
+}
+
+function extractTextContent(raw) {
+  const decoded = String(raw || '');
+  const plain = extractMimePart(raw, 'text\\/plain');
+  if (plain) return plain.trim();
+  if (/<[a-z][\s\S]*>/i.test(decoded)) return stripHtml(decoded);
+  return decoded.trim();
+}
+
+function extractAttachments(raw) {
+  const source = String(raw || '');
+  const hits = [];
+  const re = /Content-Disposition:\s*attachment(?:;[^\r\n]*)*(?:\r?\n[ \t].*)*/gi;
+  let m;
+  while ((m = re.exec(source))) {
+    const block = m[0];
+    const fn = block.match(/filename\*?=(?:UTF-8''|")?([^";\r\n]+)/i);
+    const name = decodeWords((fn && fn[1] ? fn[1] : 'attachment').replace(/"$/g, '').trim());
+    if (!name) continue;
+    if (!hits.includes(name)) hits.push(name);
+  }
+  return hits.map((name) => ({ name, size: 0, type: '' }));
+}
+
 function stripHtml(html) {
   return String(html || '')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
@@ -173,10 +231,10 @@ function parseMessage(raw, uid) {
   const block = fetchBlocks(raw)[0] || raw;
   const head = parseHeaders(((block.match(/BODY\[HEADER\.FIELDS[^\]]*\] \{\d+\}\r\n([\s\S]*?)\r\nBODY\[TEXT\]/i) || [])[1]) || '');
   const bodyRaw = ((block.match(/BODY\[TEXT\]<0> \{\d+\}\r\n([\s\S]*?)\r\n\)$/i) || [])[1]) || '';
-  const decoded = /Content-Transfer-Encoding:\s*quoted-printable/i.test(bodyRaw)
-    ? decodeQuotedPrintable(bodyRaw)
-    : bodyRaw;
-  const content = /<html[\s>]/i.test(decoded) ? stripHtml(decoded) : decoded;
+  const html = extractHtmlContent(bodyRaw);
+  const text = extractTextContent(bodyRaw);
+  const attachments = extractAttachments(bodyRaw);
+  const snippet = String(text || stripHtml(html) || '').replace(/\r/g, '').replace(/\n{2,}/g, '\n').trim();
   return {
     uid: String(uid),
     flags: ((((block.match(/FLAGS \(([^)]*)\)/i) || [])[1]) || '').split(/\s+/).filter(Boolean)),
@@ -187,17 +245,20 @@ function parseMessage(raw, uid) {
     cc: fmtAddr(head.cc),
     subject: decodeWords(head.subject) || '(No subject)',
     messageId: head['message-id'] || '',
-    body: String(content || '').replace(/\r/g, '').trim()
+    body: snippet,
+    text,
+    html,
+    attachments
   };
 }
 
 function parseMessageBlock(block, uid) {
   const head = parseHeaders(((block.match(/BODY\[HEADER\.FIELDS[^\]]*\] \{\d+\}\r\n([\s\S]*?)\r\nBODY\[TEXT\]/i) || [])[1]) || '');
   const bodyRaw = ((block.match(/BODY\[TEXT\]<0> \{\d+\}\r\n([\s\S]*?)\r\n\)$/i) || [])[1]) || '';
-  const decoded = /Content-Transfer-Encoding:\s*quoted-printable/i.test(bodyRaw)
-    ? decodeQuotedPrintable(bodyRaw)
-    : bodyRaw;
-  const content = /<html[\s>]/i.test(decoded) ? stripHtml(decoded) : decoded;
+  const html = extractHtmlContent(bodyRaw);
+  const text = extractTextContent(bodyRaw);
+  const attachments = extractAttachments(bodyRaw);
+  const snippet = String(text || stripHtml(html) || '').replace(/\r/g, '').replace(/\n{2,}/g, '\n').trim();
   return {
     uid: String(uid),
     flags: ((((block.match(/FLAGS \(([^)]*)\)/i) || [])[1]) || '').split(/\s+/).filter(Boolean)),
@@ -208,7 +269,10 @@ function parseMessageBlock(block, uid) {
     cc: fmtAddr(head.cc),
     subject: decodeWords(head.subject) || '(No subject)',
     messageId: head['message-id'] || '',
-    body: String(content || '').replace(/\r/g, '').trim()
+    body: snippet,
+    text,
+    html,
+    attachments
   };
 }
 

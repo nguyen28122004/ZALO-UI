@@ -1,3 +1,43 @@
+  function sanitizeMailHtml(raw) {
+    const source = String(raw || '').trim();
+    if (!source) return '';
+    try {
+      const doc = document.implementation.createHTMLDocument('zmail');
+      doc.body.innerHTML = source;
+      doc.querySelectorAll('script,style,link,meta,iframe,object,embed,form,button,input,textarea,select').forEach((el) => el.remove());
+      doc.querySelectorAll('*').forEach((el) => {
+        Array.from(el.attributes || []).forEach((attr) => {
+          const name = String(attr.name || '').toLowerCase();
+          const value = String(attr.value || '').trim();
+          const scriptRef = /^(?:javascript:|data:text\/html)/i.test(value);
+          if (name.startsWith('on') || name === 'srcdoc' || name === 'formaction' || ((name === 'src' || name === 'href' || name === 'xlink:href') && scriptRef)) {
+            el.removeAttribute(attr.name);
+          }
+        });
+      });
+      return String(doc.body.innerHTML || '').trim();
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function renderAttachments(detail) {
+    const files = Array.isArray(detail && detail.attachments) ? detail.attachments : [];
+    if (!files.length) return '<div class="mail-attach-empty">No attachment</div>';
+    return `<div class="mail-attach-list">${
+      files.map((f) => {
+        const name = esc((f && f.name) || 'attachment');
+        const size = Number(f && f.size);
+        const type = esc((f && f.type) || '');
+        const meta = [
+          Number.isFinite(size) && size > 0 ? bytesText(size) : '',
+          type
+        ].filter(Boolean).join(' | ');
+        return `<div class="mail-attach-item"><strong>${name}</strong>${meta ? `<span>${meta}</span>` : ''}</div>`;
+      }).join('')
+    }</div>`;
+  }
+
   function renderDetailPanel(chip, showSettings) {
     const detail = state.selectedMessage;
     const currentStar = detail ? isStarred(state.currentFolder, detail.uid) : false;
@@ -27,11 +67,28 @@
       return '<div class="mail-card"><div class="mail-empty">Choose one email to view detail.</div></div>';
     }
 
+    const safeHtml = sanitizeMailHtml(detail.html || '');
+    const textBody = String(detail.text || detail.body || '(Empty body preview)');
+    const bodyPane = safeHtml
+      ? `<div class="mail-html">${safeHtml}</div>`
+      : `<div class="mail-text">${esc(textBody)}</div>`;
+    const attachmentCount = Array.isArray(detail.attachments) ? detail.attachments.length : 0;
+
     return `
       <div class="mail-card">
         <div class="mail-head"><div><div class="mail-detail-subject">${esc(detail.subject || '(No subject)')}</div><div class="mail-muted">Read-only IMAP detail view</div></div>
           <div class="mail-tools"><button class="mail-btn ghost" data-act="toggle-star">${currentStar ? 'Unstar' : 'Star'}</button><button class="mail-btn ghost" data-act="copy-message-id">Copy Message-ID</button>${chip}</div>
         </div>
-        <div class="mail-body"><div class="mail-grid"><div>From</div><div>${esc(detail.from || '--')}</div><div>To</div><div>${esc(detail.to || '--')}</div><div>CC</div><div>${esc(detail.cc || '--')}</div><div>Date</div><div>${esc(dateText(detail.date))}</div><div>Size</div><div>${esc(bytesText(detail.size))}</div><div>Message-ID</div><div>${esc(detail.messageId || '--')}</div></div><div class="mail-text">${esc(detail.body || '(Empty body preview)')}</div></div>
+        <div class="mail-body">
+          <div class="mail-outlook-head">
+            <div class="mail-outlook-line"><span>From</span><strong>${esc(detail.from || '--')}</strong></div>
+            <div class="mail-outlook-line"><span>To</span><strong>${esc(detail.to || '--')}</strong></div>
+            <div class="mail-outlook-line"><span>CC</span><strong>${esc(detail.cc || '--')}</strong></div>
+            <div class="mail-outlook-line"><span>Date</span><strong>${esc(dateText(detail.date))}</strong></div>
+          </div>
+          <div class="mail-grid"><div>Size</div><div>${esc(bytesText(detail.size))}</div><div>Message-ID</div><div>${esc(detail.messageId || '--')}</div><div>Attachment</div><div>${attachmentCount}</div></div>
+          <div class="mail-attach-wrap"><div class="mail-attach-title">Attachments</div>${renderAttachments(detail)}</div>
+          <div class="mail-preview-pane">${bodyPane}</div>
+        </div>
       </div>`;
   }

@@ -174,7 +174,9 @@
           size: 14200,
           flags: [],
           messageId: '<demo-9003@zalous.local>',
-          body: 'Runtime does not expose Node IMAP sockets in this build. Demo mailbox is enabled so UI remains usable.'
+          body: 'Runtime does not expose Node IMAP sockets in this build. Demo mailbox is enabled so UI remains usable.',
+          html: '<html><body><h3>Welcome to Zalous Mail</h3><p>Runtime does not expose Node IMAP sockets in this build. Demo mailbox is enabled so UI remains usable.</p></body></html>',
+          attachments: [{ name: 'onboarding.pdf', size: 92311, type: 'application/pdf' }]
         },
         {
           uid: '9002',
@@ -186,7 +188,9 @@
           size: 9624,
           flags: ['\\Seen'],
           messageId: '<demo-9002@zalous.local>',
-          body: 'Market and email surfaces are synced with active theme variables.'
+          body: 'Market and email surfaces are synced with active theme variables.',
+          html: '<html><body><p>Market and email surfaces are synced with active theme variables.</p></body></html>',
+          attachments: []
         }
       ],
       Updates: [
@@ -200,7 +204,9 @@
           size: 10311,
           flags: ['\\Seen'],
           messageId: '<demo-9101@zalous.local>',
-          body: 'After validating UI through CDP, run commit + tag + publish.'
+          body: 'After validating UI through CDP, run commit + tag + publish.',
+          html: '<html><body><p>After validating UI through CDP, run commit + tag + publish.</p></body></html>',
+          attachments: [{ name: 'release-checklist.xlsx', size: 40960, type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }]
         }
       ],
       Starred: []
@@ -270,7 +276,10 @@
         cc: row.cc || '--',
         subject: row.subject || '(No subject)',
         messageId: row.messageId || '',
-        body: row.body || ''
+        body: row.body || '',
+        text: row.body || '',
+        html: row.html || '',
+        attachments: Array.isArray(row.attachments) ? row.attachments : []
       };
     }
 
@@ -375,7 +384,10 @@
         cc: m.cc || '--',
         subject: m.subject || '(No subject)',
         messageId: m.messageId || '',
-        body: String(m.body || '')
+        body: String(m.body || ''),
+        text: String(m.text || ''),
+        html: String(m.html || ''),
+        attachments: Array.isArray(m.attachments) ? m.attachments : []
       };
     }
 
@@ -486,7 +498,10 @@
         cc: m.cc || '--',
         subject: m.subject || '(No subject)',
         messageId: m.messageId || '',
-        body: String(m.body || '')
+        body: String(m.body || ''),
+        text: String(m.text || ''),
+        html: String(m.html || ''),
+        attachments: Array.isArray(m.attachments) ? m.attachments : []
       };
     }
 
@@ -567,6 +582,67 @@
       .replace(/=([0-9A-Fa-f]{2})/g, (m, h) => String.fromCharCode(parseInt(h, 16)));
   }
 
+  function decodeBase64(v) {
+    const raw = String(v || '').replace(/\s+/g, '');
+    if (!raw) return '';
+    try {
+      if (BufferRef) return BufferRef.from(raw, 'base64').toString('utf8');
+    } catch (_) {}
+    try {
+      return decodeURIComponent(escape(atob(raw)));
+    } catch (_) {
+      try { return atob(raw); } catch (_) { return ''; }
+    }
+  }
+
+  function decodeTransferBody(content, headers) {
+    const enc = String((headers && headers['content-transfer-encoding']) || '').toLowerCase();
+    if (enc.includes('quoted-printable')) return decodeQuotedPrintable(content);
+    if (enc.includes('base64')) return decodeBase64(content);
+    return String(content || '');
+  }
+
+  function extractMimePart(raw, mime) {
+    const source = String(raw || '');
+    const re = new RegExp(`Content-Type:\\\\s*${mime}[^\\\\r\\\\n]*(?:\\\\r?\\\\n[ \\\\t].*)*\\\\r?\\\\n([\\\\s\\\\S]*?)\\\\r?\\\\n\\\\r?\\\\n([\\\\s\\\\S]*?)(?=\\\\r?\\\\n--[^\\\\r\\\\n]+|$)`, 'i');
+    const m = source.match(re);
+    if (!m) return '';
+    const headers = parseHeaders(m[1] || '');
+    return decodeTransferBody(m[2] || '', headers).trim();
+  }
+
+  function extractHtmlContent(raw) {
+    const decoded = String(raw || '');
+    const htmlTag = decoded.match(/<html[\s\S]*<\/html>/i);
+    if (htmlTag && htmlTag[0]) return htmlTag[0].trim();
+    const bodyTag = decoded.match(/<body[\s\S]*<\/body>/i);
+    if (bodyTag && bodyTag[0]) return bodyTag[0].trim();
+    return extractMimePart(raw, 'text\\/html');
+  }
+
+  function extractTextContent(raw) {
+    const decoded = String(raw || '');
+    const plain = extractMimePart(raw, 'text\\/plain');
+    if (plain) return plain.trim();
+    if (/<[a-z][\s\S]*>/i.test(decoded)) return stripHtml(decoded);
+    return decoded.trim();
+  }
+
+  function extractAttachments(raw) {
+    const source = String(raw || '');
+    const hits = [];
+    const re = /Content-Disposition:\s*attachment(?:;[^\r\n]*)*(?:\r?\n[ \t].*)*/gi;
+    let m;
+    while ((m = re.exec(source))) {
+      const block = m[0];
+      const fn = block.match(/filename\*?=(?:UTF-8''|")?([^";\r\n]+)/i);
+      const name = decodeWords((fn && fn[1] ? fn[1] : 'attachment').replace(/"$/g, '').trim());
+      if (!name) continue;
+      if (!hits.includes(name)) hits.push(name);
+    }
+    return hits.map((name) => ({ name, size: 0, type: '' }));
+  }
+
   function stripHtml(html) {
     const tmp = document.createElement('div');
     tmp.innerHTML = String(html || '');
@@ -577,10 +653,10 @@
     const block = fetchBlocks(raw)[0] || raw;
     const head = parseHeaders(((block.match(/BODY\[HEADER\.FIELDS[^\]]*\] \{\d+\}\r\n([\s\S]*?)\r\nBODY\[TEXT\]/i) || [])[1]) || '');
     const bodyRaw = ((block.match(/BODY\[TEXT\]<0> \{\d+\}\r\n([\s\S]*?)\r\n\)$/i) || [])[1]) || '';
-    const decoded = /Content-Transfer-Encoding:\s*quoted-printable/i.test(bodyRaw)
-      ? decodeQuotedPrintable(bodyRaw)
-      : bodyRaw;
-    const content = /<html[\s>]/i.test(decoded) ? stripHtml(decoded) : decoded;
+    const html = extractHtmlContent(bodyRaw);
+    const text = extractTextContent(bodyRaw);
+    const attachments = extractAttachments(bodyRaw);
+    const snippet = String(text || stripHtml(html) || '').replace(/\r/g, '').replace(/\n{2,}/g, '\n').trim();
     return {
       uid: String(uid),
       flags: ((((block.match(/FLAGS \(([^)]*)\)/i) || [])[1]) || '').split(/\s+/).filter(Boolean)),
@@ -591,6 +667,9 @@
       cc: fmtAddr(head.cc),
       subject: decodeWords(head.subject) || '(No subject)',
       messageId: head['message-id'] || '',
-      body: String(content || '').replace(/\r/g, '').trim()
+      body: snippet,
+      text,
+      html,
+      attachments
     };
   }

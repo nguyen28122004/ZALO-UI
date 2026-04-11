@@ -252,7 +252,7 @@
       `.${MAIN_MARKER} .mail-row-top{display:flex;justify-content:space-between;gap:10px;min-width:0;} .${MAIN_MARKER} .mail-row-from{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} .${MAIN_MARKER} .mail-row-date,.${MAIN_MARKER} .mail-row-meta{font-size:11px;color:var(--zmail-text-muted,#64748b);flex:0 0 auto;}`,
       `.${MAIN_MARKER} .mail-subject{font-size:13px;font-weight:700;margin-top:4px;word-break:break-word;} .${MAIN_MARKER} .mail-preview{font-size:12px;color:var(--zmail-text-muted,#64748b);margin-top:4px;line-height:1.4;word-break:break-word;} .${MAIN_MARKER} .mail-pager{padding:12px 16px;border-top:1px solid var(--zmail-border,rgba(148,163,184,.18));display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--zmail-text-muted,#475569);flex-wrap:wrap;}`,
       `.${MAIN_MARKER} .mail-detail-subject{font-size:24px;font-weight:700;line-height:1.2;margin-bottom:12px;word-break:break-word;} .${MAIN_MARKER} .mail-grid{display:grid;grid-template-columns:minmax(92px,110px) minmax(0,1fr);gap:8px 12px;font-size:12px;margin-bottom:16px;} .${MAIN_MARKER} .mail-grid div:nth-child(odd){color:var(--zmail-text-muted,#64748b);}`,
-      `.${MAIN_MARKER} .mail-text{white-space:pre-wrap;line-height:1.6;font-size:13px;color:var(--zmail-text,#1e293b);padding:18px;border-radius:16px;background:var(--zmail-surface,var(--layer-background,#fff));border:1px solid var(--zmail-border,rgba(148,163,184,.16));word-break:break-word;overflow-wrap:anywhere;} .${MAIN_MARKER} .mail-empty{padding:32px 18px;color:var(--zmail-text-muted,#64748b);text-align:center;}`,
+      `.${MAIN_MARKER} .mail-text{white-space:pre-wrap;line-height:1.6;font-size:13px;color:var(--zmail-text,#1e293b);padding:18px;border-radius:16px;background:var(--zmail-surface,var(--layer-background,#fff));border:1px solid var(--zmail-border,rgba(148,163,184,.16));word-break:break-word;overflow-wrap:anywhere;} .${MAIN_MARKER} .mail-html{line-height:1.55;font-size:13px;color:var(--zmail-text,#1e293b);padding:18px;border-radius:16px;background:var(--zmail-surface,var(--layer-background,#fff));border:1px solid var(--zmail-border,rgba(148,163,184,.16));overflow:auto;} .${MAIN_MARKER} .mail-html img{max-width:100%;height:auto;} .${MAIN_MARKER} .mail-empty{padding:32px 18px;color:var(--zmail-text-muted,#64748b);text-align:center;} .${MAIN_MARKER} .mail-outlook-head{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;padding:12px 14px;border-radius:14px;background:var(--zmail-surface-2,#f8fafc);border:1px solid var(--zmail-border,rgba(148,163,184,.16));} .${MAIN_MARKER} .mail-outlook-line{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px;align-items:flex-start;font-size:12px;} .${MAIN_MARKER} .mail-outlook-line span{color:var(--zmail-text-muted,#64748b);} .${MAIN_MARKER} .mail-outlook-line strong{font-weight:600;overflow-wrap:anywhere;} .${MAIN_MARKER} .mail-attach-wrap{margin-bottom:14px;padding:12px 14px;border-radius:14px;background:var(--zmail-surface-2,#f8fafc);border:1px solid var(--zmail-border,rgba(148,163,184,.16));} .${MAIN_MARKER} .mail-attach-title{font-size:12px;font-weight:700;margin-bottom:8px;} .${MAIN_MARKER} .mail-attach-list{display:flex;flex-direction:column;gap:6px;} .${MAIN_MARKER} .mail-attach-item{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;padding:8px 10px;border-radius:10px;background:var(--zmail-surface,var(--layer-background,#fff));border:1px solid var(--zmail-border,rgba(148,163,184,.16));} .${MAIN_MARKER} .mail-attach-item strong{font-weight:600;overflow-wrap:anywhere;} .${MAIN_MARKER} .mail-attach-item span{color:var(--zmail-text-muted,#64748b);font-size:11px;white-space:nowrap;} .${MAIN_MARKER} .mail-attach-empty{font-size:12px;color:var(--zmail-text-muted,#64748b);} .${MAIN_MARKER} .mail-preview-pane{padding:4px 0;}`,
       `.${MAIN_MARKER} .mail-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;} .${MAIN_MARKER} .mail-form label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--zmail-text,var(--text-primary,#334155));min-width:0;} .${MAIN_MARKER} .mail-form input{height:38px;border:1px solid var(--zmail-border,rgba(148,163,184,.3));border-radius:12px;padding:0 12px;background:var(--zmail-surface,var(--layer-background,#fff));min-width:0;color:var(--zmail-text,var(--text-primary,#0f172a));} .${MAIN_MARKER} .mail-form .full{grid-column:1/-1;} .${MAIN_MARKER} .mail-check{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--zmail-text,var(--text-primary,#334155));flex-direction:row;}`,
       `@media (max-width:1280px){.${MAIN_MARKER} .mail-app{grid-template-columns:minmax(220px,.95fr) minmax(320px,1.2fr);grid-auto-rows:minmax(0,1fr);} .${MAIN_MARKER} .mail-card:nth-child(3){grid-column:1/-1;}}`,
       `@media (max-width:980px){.${MAIN_MARKER}{padding:12px;} .${MAIN_MARKER} .mail-app{grid-template-columns:1fr;grid-auto-rows:auto;height:auto;} .${MAIN_MARKER} .mail-card{min-height:320px;} .${MAIN_MARKER} .mail-form{grid-template-columns:1fr;} .${MAIN_MARKER} .mail-detail-subject{font-size:20px;}}`,
@@ -630,7 +630,9 @@
           size: 14200,
           flags: [],
           messageId: '<demo-9003@zalous.local>',
-          body: 'Runtime does not expose Node IMAP sockets in this build. Demo mailbox is enabled so UI remains usable.'
+          body: 'Runtime does not expose Node IMAP sockets in this build. Demo mailbox is enabled so UI remains usable.',
+          html: '<html><body><h3>Welcome to Zalous Mail</h3><p>Runtime does not expose Node IMAP sockets in this build. Demo mailbox is enabled so UI remains usable.</p></body></html>',
+          attachments: [{ name: 'onboarding.pdf', size: 92311, type: 'application/pdf' }]
         },
         {
           uid: '9002',
@@ -642,7 +644,9 @@
           size: 9624,
           flags: ['\\Seen'],
           messageId: '<demo-9002@zalous.local>',
-          body: 'Market and email surfaces are synced with active theme variables.'
+          body: 'Market and email surfaces are synced with active theme variables.',
+          html: '<html><body><p>Market and email surfaces are synced with active theme variables.</p></body></html>',
+          attachments: []
         }
       ],
       Updates: [
@@ -656,7 +660,9 @@
           size: 10311,
           flags: ['\\Seen'],
           messageId: '<demo-9101@zalous.local>',
-          body: 'After validating UI through CDP, run commit + tag + publish.'
+          body: 'After validating UI through CDP, run commit + tag + publish.',
+          html: '<html><body><p>After validating UI through CDP, run commit + tag + publish.</p></body></html>',
+          attachments: [{ name: 'release-checklist.xlsx', size: 40960, type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }]
         }
       ],
       Starred: []
@@ -726,7 +732,10 @@
         cc: row.cc || '--',
         subject: row.subject || '(No subject)',
         messageId: row.messageId || '',
-        body: row.body || ''
+        body: row.body || '',
+        text: row.body || '',
+        html: row.html || '',
+        attachments: Array.isArray(row.attachments) ? row.attachments : []
       };
     }
 
@@ -831,7 +840,10 @@
         cc: m.cc || '--',
         subject: m.subject || '(No subject)',
         messageId: m.messageId || '',
-        body: String(m.body || '')
+        body: String(m.body || ''),
+        text: String(m.text || ''),
+        html: String(m.html || ''),
+        attachments: Array.isArray(m.attachments) ? m.attachments : []
       };
     }
 
@@ -942,7 +954,10 @@
         cc: m.cc || '--',
         subject: m.subject || '(No subject)',
         messageId: m.messageId || '',
-        body: String(m.body || '')
+        body: String(m.body || ''),
+        text: String(m.text || ''),
+        html: String(m.html || ''),
+        attachments: Array.isArray(m.attachments) ? m.attachments : []
       };
     }
 
@@ -1023,6 +1038,67 @@
       .replace(/=([0-9A-Fa-f]{2})/g, (m, h) => String.fromCharCode(parseInt(h, 16)));
   }
 
+  function decodeBase64(v) {
+    const raw = String(v || '').replace(/\s+/g, '');
+    if (!raw) return '';
+    try {
+      if (BufferRef) return BufferRef.from(raw, 'base64').toString('utf8');
+    } catch (_) {}
+    try {
+      return decodeURIComponent(escape(atob(raw)));
+    } catch (_) {
+      try { return atob(raw); } catch (_) { return ''; }
+    }
+  }
+
+  function decodeTransferBody(content, headers) {
+    const enc = String((headers && headers['content-transfer-encoding']) || '').toLowerCase();
+    if (enc.includes('quoted-printable')) return decodeQuotedPrintable(content);
+    if (enc.includes('base64')) return decodeBase64(content);
+    return String(content || '');
+  }
+
+  function extractMimePart(raw, mime) {
+    const source = String(raw || '');
+    const re = new RegExp(`Content-Type:\\\\s*${mime}[^\\\\r\\\\n]*(?:\\\\r?\\\\n[ \\\\t].*)*\\\\r?\\\\n([\\\\s\\\\S]*?)\\\\r?\\\\n\\\\r?\\\\n([\\\\s\\\\S]*?)(?=\\\\r?\\\\n--[^\\\\r\\\\n]+|$)`, 'i');
+    const m = source.match(re);
+    if (!m) return '';
+    const headers = parseHeaders(m[1] || '');
+    return decodeTransferBody(m[2] || '', headers).trim();
+  }
+
+  function extractHtmlContent(raw) {
+    const decoded = String(raw || '');
+    const htmlTag = decoded.match(/<html[\s\S]*<\/html>/i);
+    if (htmlTag && htmlTag[0]) return htmlTag[0].trim();
+    const bodyTag = decoded.match(/<body[\s\S]*<\/body>/i);
+    if (bodyTag && bodyTag[0]) return bodyTag[0].trim();
+    return extractMimePart(raw, 'text\\/html');
+  }
+
+  function extractTextContent(raw) {
+    const decoded = String(raw || '');
+    const plain = extractMimePart(raw, 'text\\/plain');
+    if (plain) return plain.trim();
+    if (/<[a-z][\s\S]*>/i.test(decoded)) return stripHtml(decoded);
+    return decoded.trim();
+  }
+
+  function extractAttachments(raw) {
+    const source = String(raw || '');
+    const hits = [];
+    const re = /Content-Disposition:\s*attachment(?:;[^\r\n]*)*(?:\r?\n[ \t].*)*/gi;
+    let m;
+    while ((m = re.exec(source))) {
+      const block = m[0];
+      const fn = block.match(/filename\*?=(?:UTF-8''|")?([^";\r\n]+)/i);
+      const name = decodeWords((fn && fn[1] ? fn[1] : 'attachment').replace(/"$/g, '').trim());
+      if (!name) continue;
+      if (!hits.includes(name)) hits.push(name);
+    }
+    return hits.map((name) => ({ name, size: 0, type: '' }));
+  }
+
   function stripHtml(html) {
     const tmp = document.createElement('div');
     tmp.innerHTML = String(html || '');
@@ -1033,10 +1109,10 @@
     const block = fetchBlocks(raw)[0] || raw;
     const head = parseHeaders(((block.match(/BODY\[HEADER\.FIELDS[^\]]*\] \{\d+\}\r\n([\s\S]*?)\r\nBODY\[TEXT\]/i) || [])[1]) || '');
     const bodyRaw = ((block.match(/BODY\[TEXT\]<0> \{\d+\}\r\n([\s\S]*?)\r\n\)$/i) || [])[1]) || '';
-    const decoded = /Content-Transfer-Encoding:\s*quoted-printable/i.test(bodyRaw)
-      ? decodeQuotedPrintable(bodyRaw)
-      : bodyRaw;
-    const content = /<html[\s>]/i.test(decoded) ? stripHtml(decoded) : decoded;
+    const html = extractHtmlContent(bodyRaw);
+    const text = extractTextContent(bodyRaw);
+    const attachments = extractAttachments(bodyRaw);
+    const snippet = String(text || stripHtml(html) || '').replace(/\r/g, '').replace(/\n{2,}/g, '\n').trim();
     return {
       uid: String(uid),
       flags: ((((block.match(/FLAGS \(([^)]*)\)/i) || [])[1]) || '').split(/\s+/).filter(Boolean)),
@@ -1047,7 +1123,10 @@
       cc: fmtAddr(head.cc),
       subject: decodeWords(head.subject) || '(No subject)',
       messageId: head['message-id'] || '',
-      body: String(content || '').replace(/\r/g, '').trim()
+      body: snippet,
+      text,
+      html,
+      attachments
     };
   }
 
@@ -1382,6 +1461,46 @@
   }
 
 // ===== 33-panel-detail.js =====
+  function sanitizeMailHtml(raw) {
+    const source = String(raw || '').trim();
+    if (!source) return '';
+    try {
+      const doc = document.implementation.createHTMLDocument('zmail');
+      doc.body.innerHTML = source;
+      doc.querySelectorAll('script,style,link,meta,iframe,object,embed,form,button,input,textarea,select').forEach((el) => el.remove());
+      doc.querySelectorAll('*').forEach((el) => {
+        Array.from(el.attributes || []).forEach((attr) => {
+          const name = String(attr.name || '').toLowerCase();
+          const value = String(attr.value || '').trim();
+          const scriptRef = /^(?:javascript:|data:text\/html)/i.test(value);
+          if (name.startsWith('on') || name === 'srcdoc' || name === 'formaction' || ((name === 'src' || name === 'href' || name === 'xlink:href') && scriptRef)) {
+            el.removeAttribute(attr.name);
+          }
+        });
+      });
+      return String(doc.body.innerHTML || '').trim();
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function renderAttachments(detail) {
+    const files = Array.isArray(detail && detail.attachments) ? detail.attachments : [];
+    if (!files.length) return '<div class="mail-attach-empty">No attachment</div>';
+    return `<div class="mail-attach-list">${
+      files.map((f) => {
+        const name = esc((f && f.name) || 'attachment');
+        const size = Number(f && f.size);
+        const type = esc((f && f.type) || '');
+        const meta = [
+          Number.isFinite(size) && size > 0 ? bytesText(size) : '',
+          type
+        ].filter(Boolean).join(' | ');
+        return `<div class="mail-attach-item"><strong>${name}</strong>${meta ? `<span>${meta}</span>` : ''}</div>`;
+      }).join('')
+    }</div>`;
+  }
+
   function renderDetailPanel(chip, showSettings) {
     const detail = state.selectedMessage;
     const currentStar = detail ? isStarred(state.currentFolder, detail.uid) : false;
@@ -1411,12 +1530,29 @@
       return '<div class="mail-card"><div class="mail-empty">Choose one email to view detail.</div></div>';
     }
 
+    const safeHtml = sanitizeMailHtml(detail.html || '');
+    const textBody = String(detail.text || detail.body || '(Empty body preview)');
+    const bodyPane = safeHtml
+      ? `<div class="mail-html">${safeHtml}</div>`
+      : `<div class="mail-text">${esc(textBody)}</div>`;
+    const attachmentCount = Array.isArray(detail.attachments) ? detail.attachments.length : 0;
+
     return `
       <div class="mail-card">
         <div class="mail-head"><div><div class="mail-detail-subject">${esc(detail.subject || '(No subject)')}</div><div class="mail-muted">Read-only IMAP detail view</div></div>
           <div class="mail-tools"><button class="mail-btn ghost" data-act="toggle-star">${currentStar ? 'Unstar' : 'Star'}</button><button class="mail-btn ghost" data-act="copy-message-id">Copy Message-ID</button>${chip}</div>
         </div>
-        <div class="mail-body"><div class="mail-grid"><div>From</div><div>${esc(detail.from || '--')}</div><div>To</div><div>${esc(detail.to || '--')}</div><div>CC</div><div>${esc(detail.cc || '--')}</div><div>Date</div><div>${esc(dateText(detail.date))}</div><div>Size</div><div>${esc(bytesText(detail.size))}</div><div>Message-ID</div><div>${esc(detail.messageId || '--')}</div></div><div class="mail-text">${esc(detail.body || '(Empty body preview)')}</div></div>
+        <div class="mail-body">
+          <div class="mail-outlook-head">
+            <div class="mail-outlook-line"><span>From</span><strong>${esc(detail.from || '--')}</strong></div>
+            <div class="mail-outlook-line"><span>To</span><strong>${esc(detail.to || '--')}</strong></div>
+            <div class="mail-outlook-line"><span>CC</span><strong>${esc(detail.cc || '--')}</strong></div>
+            <div class="mail-outlook-line"><span>Date</span><strong>${esc(dateText(detail.date))}</strong></div>
+          </div>
+          <div class="mail-grid"><div>Size</div><div>${esc(bytesText(detail.size))}</div><div>Message-ID</div><div>${esc(detail.messageId || '--')}</div><div>Attachment</div><div>${attachmentCount}</div></div>
+          <div class="mail-attach-wrap"><div class="mail-attach-title">Attachments</div>${renderAttachments(detail)}</div>
+          <div class="mail-preview-pane">${bodyPane}</div>
+        </div>
       </div>`;
   }
 
