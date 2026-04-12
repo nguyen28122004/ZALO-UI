@@ -5,7 +5,24 @@
   const MARKET_MODAL_ID = 'zalous-market-modal';
   const MAIN_TAB_FIX_ID = 'zalous-main-tab-fix';
   const THEME_PACK_HTML_ID = 'zalous-theme-pack-html';
+  const THEME_SYNC_ID = 'zalous-theme-sync';
   const LOCAL_CONFIG_KEY = 'zalous.config.v1';
+  const THEME_SURFACE_VARS = [
+    '--zalous-theme-accent',
+    '--zalous-theme-accent-soft',
+    '--zalous-theme-bg-a',
+    '--zalous-theme-bg-b',
+    '--zalous-theme-surface',
+    '--zalous-theme-surface-2',
+    '--zalous-theme-text',
+    '--zalous-theme-text-muted',
+    '--zalous-theme-border',
+    '--zalous-theme-titlebar-bg',
+    '--zalous-theme-titlebar-text',
+    '--zalous-theme-nav-bg',
+    '--zalous-theme-nav-text',
+    '--zalous-theme-scheme'
+  ];
 
   function log(...args) {
     try { console.log(MARK, ...args); } catch (_) {}
@@ -189,9 +206,138 @@
     return tag;
   }
 
+  function readCssVar(target, name) {
+    if (!target || !name) return '';
+    try { return String(getComputedStyle(target).getPropertyValue(name) || '').trim(); } catch (_) { return ''; }
+  }
+
+  function firstCssVar(targets, names) {
+    for (const target of targets) {
+      for (const name of names) {
+        const value = readCssVar(target, name);
+        if (value) return value;
+      }
+    }
+    return '';
+  }
+
+  function resolveThemeUiPalette(themeKey) {
+    const key = String(themeKey || '').toLowerCase();
+    const targets = [document.documentElement, document.body].filter(Boolean);
+    const runtimeBg = firstCssVar(targets, ['--surface-background', '--layer-background', '--bg-default', '--background']);
+    const runtimeBg2 = firstCssVar(targets, ['--surface-background-subtle', '--layer-background-subtle', '--surface-alt', '--background-subtle']);
+    const runtimeText = firstCssVar(targets, ['--text-primary', '--text-main', '--button-secondary-neutral-text']) || '#dfe2e7';
+    const runtimeMuted = firstCssVar(targets, ['--text-secondary', '--text-sub']) || '#8e97a3';
+    const runtimeAccent = firstCssVar(targets, ['--button-primary-normal', '--accent-blue-bg', '--accent-green-bg', '--accent-orange-bg', '--accent-pink-bg', '--accent-purple-bg']) || '#0068ff';
+    const runtimeBorder = firstCssVar(targets, ['--border', '--border-subtle', '--layer-border']) || 'rgba(148,163,184,.24)';
+
+    if (key.includes('console-minimal')) {
+      return {
+        accent: '#f1f1f1',
+        accentSoft: 'rgba(255,255,255,.10)',
+        bgA: '#000000',
+        bgB: '#020202',
+        surface: '#050505',
+        surface2: '#0b0b0b',
+        text: '#f3f3f3',
+        textMuted: '#9d9d9d',
+        border: 'rgba(255,255,255,.14)',
+        titlebarBg: '#000000',
+        titlebarText: '#f3f3f3',
+        navBg: '#000000',
+        navText: '#f3f3f3',
+        scheme: 'dark'
+      };
+    }
+
+    const fallback = {
+      accent: runtimeAccent,
+      accentSoft: 'rgba(0,104,255,.12)',
+      bgA: runtimeBg || '#f8fbff',
+      bgB: runtimeBg2 || '#eef4ff',
+      surface: runtimeBg2 || runtimeBg || '#ffffff',
+      surface2: runtimeBg || runtimeBg2 || '#f8fbff',
+      text: runtimeText,
+      textMuted: runtimeMuted,
+      border: runtimeBorder,
+      titlebarBg: runtimeBg2 || runtimeBg || '#f3f6fb',
+      titlebarText: runtimeText,
+      navBg: runtimeBg2 || runtimeBg || '#f3f6fb',
+      navText: runtimeText,
+      scheme: 'light'
+    };
+
+    if (key.includes('green-soft') || key.includes('pastel-mint')) return { ...fallback, accent: '#10b981', accentSoft: 'rgba(16,185,129,.16)', bgA: '#f3fdf8', bgB: '#e8fbf2', surface: '#ffffff', surface2: '#eefaf4', text: '#1f3a2b', textMuted: '#5e7a68', border: 'rgba(77,124,95,.18)', titlebarBg: '#e8fbf2', navBg: '#def6e8', navText: '#1f3a2b' };
+    if (key.includes('pastel-butter')) return { ...fallback, accent: '#d1a000', accentSoft: 'rgba(209,160,0,.18)', bgA: '#fffdf4', bgB: '#fff9e6', surface: '#fffef8', surface2: '#fff8df', text: '#4f3c05', textMuted: '#7a6640', border: 'rgba(161,132,48,.18)', titlebarBg: '#fff6dc', navBg: '#fff1c8', navText: '#4f3c05' };
+    if (key.includes('pastel-lilac')) return { ...fallback, accent: '#8b5cf6', accentSoft: 'rgba(139,92,246,.16)', bgA: '#fbf8ff', bgB: '#f4eeff', surface: '#ffffff', surface2: '#f3ebff', text: '#38245c', textMuted: '#6b5a89', border: 'rgba(139,92,246,.16)', titlebarBg: '#f0e8ff', navBg: '#e8dcff', navText: '#38245c' };
+    if (key.includes('pastel-peach')) return { ...fallback, accent: '#f97316', accentSoft: 'rgba(249,115,22,.16)', bgA: '#fff8f3', bgB: '#fff1e7', surface: '#fffdfa', surface2: '#ffefe3', text: '#5b2f13', textMuted: '#8b624d', border: 'rgba(214,115,54,.16)', titlebarBg: '#ffe9dc', navBg: '#ffdcca', navText: '#5b2f13' };
+    if (key.includes('pastel-rose')) return { ...fallback, accent: '#ec4899', accentSoft: 'rgba(236,72,153,.16)', bgA: '#fff7fb', bgB: '#ffedf5', surface: '#fffafb', surface2: '#ffe8f2', text: '#5a1f3d', textMuted: '#8f5f77', border: 'rgba(236,72,153,.16)', titlebarBg: '#ffe5f0', navBg: '#ffd7e9', navText: '#5a1f3d' };
+    if (key.includes('pastel-sage')) return { ...fallback, accent: '#4d7c0f', accentSoft: 'rgba(77,124,15,.16)', bgA: '#f7fbf3', bgB: '#eef7e7', surface: '#fcfef9', surface2: '#edf6e5', text: '#30461a', textMuted: '#63754c', border: 'rgba(94,131,55,.16)', titlebarBg: '#ecf5e1', navBg: '#e3f0d4', navText: '#30461a' };
+    if (key.includes('pastel-sky') || key.includes('pastel-dawn')) return { ...fallback, accent: '#0284c7', accentSoft: 'rgba(2,132,199,.16)', bgA: '#f4fbff', bgB: '#e9f6ff', surface: '#fbfeff', surface2: '#e8f4ff', text: '#183a52', textMuted: '#5d7d92', border: 'rgba(77,141,184,.16)', titlebarBg: '#e4f1fb', navBg: '#d7ebfb', navText: '#183a52' };
+    if (key.includes('pastel-teal')) return { ...fallback, accent: '#0f766e', accentSoft: 'rgba(15,118,110,.16)', bgA: '#f2fbfa', bgB: '#e6f7f5', surface: '#fbfefe', surface2: '#e5f5f2', text: '#184641', textMuted: '#5b7d79', border: 'rgba(73,124,119,.16)', titlebarBg: '#dff2ee', navBg: '#d1ebe5', navText: '#184641' };
+    return fallback;
+  }
+
+  function ensureThemeSyncTag() {
+    let tag = document.getElementById(THEME_SYNC_ID);
+    if (!tag) {
+      tag = document.createElement('style');
+      tag.id = THEME_SYNC_ID;
+      document.head.appendChild(tag);
+    }
+    tag.textContent = [
+      ':root{color-scheme:var(--zalous-theme-scheme,normal);}',
+      'body{background:var(--zalous-theme-bg-a,transparent) !important;color:var(--zalous-theme-text,inherit) !important;}',
+      '.nav__tabs,.nav__tabs__top,.nav__tabs__bottom,#main-tab,[id*="main-tab"],[class*="main-tab"],[class*="main_tab"],[class*="leftbar"],[class*="left-menu"],[class*="leftmenu"]{background:var(--zalous-theme-nav-bg,var(--zalous-theme-titlebar-bg,var(--zalous-theme-surface,var(--zalous-theme-bg-a)))) !important;color:var(--zalous-theme-nav-text,var(--zalous-theme-titlebar-text,var(--zalous-theme-text))) !important;border-color:var(--zalous-theme-border) !important;}',
+      '.nav__tabs *,.nav__tabs__top *,.nav__tabs__bottom *{border-color:var(--zalous-theme-border) !important;}',
+      '[class*="titlebar"],[class*="title-bar"],[class*="window-title"],[class*="topbar"],[class*="top-bar"],header[class*="top"],header[class*="title"]{background:var(--zalous-theme-titlebar-bg,var(--zalous-theme-nav-bg,var(--zalous-theme-surface))) !important;color:var(--zalous-theme-titlebar-text,var(--zalous-theme-text)) !important;border-color:var(--zalous-theme-border) !important;}'
+    ].join('\n');
+    return tag;
+  }
+
+  function syncThemeSurfaceVars(themeName) {
+    const root = document.documentElement;
+    const body = document.body || root;
+    const pal = resolveThemeUiPalette(themeName);
+    ensureThemeSyncTag();
+    const entries = {
+      '--zalous-theme-accent': pal.accent,
+      '--zalous-theme-accent-soft': pal.accentSoft,
+      '--zalous-theme-bg-a': pal.bgA,
+      '--zalous-theme-bg-b': pal.bgB,
+      '--zalous-theme-surface': pal.surface,
+      '--zalous-theme-surface-2': pal.surface2,
+      '--zalous-theme-text': pal.text,
+      '--zalous-theme-text-muted': pal.textMuted,
+      '--zalous-theme-border': pal.border,
+      '--zalous-theme-titlebar-bg': pal.titlebarBg,
+      '--zalous-theme-titlebar-text': pal.titlebarText,
+      '--zalous-theme-nav-bg': pal.navBg,
+      '--zalous-theme-nav-text': pal.navText,
+      '--zalous-theme-scheme': pal.scheme
+    };
+    Object.entries(entries).forEach(([name, value]) => {
+      try { root.style.setProperty(name, value); } catch (_) {}
+      try { if (body) body.style.setProperty(name, value); } catch (_) {}
+    });
+    try { root.style.setProperty('--title-bar', pal.titlebarBg); } catch (_) {}
+    try { root.style.setProperty('--NG15', pal.titlebarBg); } catch (_) {}
+    try { if (body) body.style.setProperty('--title-bar', pal.titlebarBg); } catch (_) {}
+    try { if (body) body.style.setProperty('--NG15', pal.titlebarBg); } catch (_) {}
+  }
+
+  function clearThemeSurfaceVars() {
+    [document.documentElement, document.body].filter(Boolean).forEach((target) => {
+      THEME_SURFACE_VARS.forEach((name) => {
+        try { target.style.removeProperty(name); } catch (_) {}
+      });
+    });
+  }
+
   function clearTheme() {
     const tag = document.getElementById(STYLE_ID);
     if (tag) tag.textContent = '';
+    clearThemeSurfaceVars();
     clearThemePackArtifacts();
   }
 
@@ -225,9 +371,12 @@
     const hasPack = !!(state.themePacks && state.themePacks[themeName]);
     const picked = (themeName && (hasTheme || hasPack)) ? themeName : allKeys[0];
 
+    syncThemeSurfaceVars(picked);
+
     if (state.themePacks && state.themePacks[picked]) {
       const pack = state.themePacks[picked] || {};
       clearThemePackArtifacts();
+      syncThemeSurfaceVars(picked);
       try {
         const key = String((pack.id || picked || '')).replace(/^pack:/, '').replace(/^themepack[._-]?/i, '').replace(/^[._-]+/, '');
         if (key) document.documentElement.setAttribute('data-zalous-theme-pack', key);
@@ -281,19 +430,19 @@
     }
 
     tag.textContent = [
-      'body:not(.dark) #main-tab,',
-      'body:not(.dark) [id*="main-tab"],',
-      'body:not(.dark) [class*="main-tab"],',
-      'body:not(.dark) [class*="main_tab"],',
-      'body:not(.dark) [class*="leftbar"],',
-      'body:not(.dark) [class*="left-bar"],',
-      'body:not(.dark) [class*="nav-left"] {',
+      ':root:not([data-zalous-theme-pack="console-minimal"]) #main-tab,',
+      ':root:not([data-zalous-theme-pack="console-minimal"]) [id*="main-tab"],',
+      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="main-tab"],',
+      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="main_tab"],',
+      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="leftbar"],',
+      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="left-bar"],',
+      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="nav-left"] {',
       '  background: var(--layer-background-leftmenu, var(--layer-background, var(--surface-background, inherit))) !important;',
       '}',
-      'body:not(.dark) #main-tab > *,',
-      'body:not(.dark) [id*="main-tab"] > *,',
-      'body:not(.dark) [class*="main-tab"] > *,',
-      'body:not(.dark) [class*="main_tab"] > * {',
+      ':root:not([data-zalous-theme-pack="console-minimal"]) #main-tab > *,',
+      ':root:not([data-zalous-theme-pack="console-minimal"]) [id*="main-tab"] > *,',
+      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="main-tab"] > *,',
+      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="main_tab"] > * {',
       '  background-color: var(--layer-background-leftmenu, var(--layer-background, var(--surface-background, inherit))) !important;',
       '}'
     ].join('\n');

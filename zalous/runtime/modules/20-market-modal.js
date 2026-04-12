@@ -112,18 +112,23 @@
       const body = document.body || root;
       const rootStyle = getComputedStyle(root);
       const bodyStyle = getComputedStyle(body);
-      const bg = firstParsedColor(rootStyle, ['--background','--background-color','--surface-background','--surface','--layer-background','--app-background','--main-background']) || firstParsedColor(bodyStyle, ['background-color']) || parseColor(bodyStyle.backgroundColor) || { r: 18, g: 24, b: 21, a: 1 };
-      const text = firstParsedColor(rootStyle, ['--text','--text-color','--foreground','--main-text-color','--color']) || parseColor(bodyStyle.color) || (isDark(bg) ? { r: 233, g: 239, b: 235, a: 1 } : { r: 31, g: 38, b: 34, a: 1 });
-      const accent = firstParsedColor(rootStyle, ['--primary','--primary-color','--accent','--accent-color','--brand','--brand-color','--highlight','--main-color','--color-primary']) || firstParsedColor(bodyStyle, ['color']) || (isDark(bg) ? { r: 110, g: 208, b: 138, a: 1 } : { r: 46, g: 132, b: 76, a: 1 });
+      const bg = firstParsedColor(rootStyle, ['--zalous-theme-bg-a','--zalous-theme-surface','--background','--background-color','--surface-background','--surface','--layer-background','--app-background','--main-background']) || firstParsedColor(bodyStyle, ['--zalous-theme-bg-a','--zalous-theme-surface','background-color']) || parseColor(bodyStyle.backgroundColor) || { r: 18, g: 24, b: 21, a: 1 };
+      const surface = firstParsedColor(rootStyle, ['--zalous-theme-surface','--zalous-theme-bg-b','--surface-background-subtle','--layer-background-subtle']) || firstParsedColor(bodyStyle, ['--zalous-theme-surface','--zalous-theme-bg-b']) || null;
+      const surface2 = firstParsedColor(rootStyle, ['--zalous-theme-surface-2','--zalous-theme-bg-b','--layer-background-selected']) || firstParsedColor(bodyStyle, ['--zalous-theme-surface-2','--zalous-theme-bg-b']) || null;
+      const text = firstParsedColor(rootStyle, ['--zalous-theme-text','--text','--text-color','--foreground','--main-text-color','--color']) || firstParsedColor(bodyStyle, ['--zalous-theme-text','color']) || parseColor(bodyStyle.color) || (isDark(bg) ? { r: 233, g: 239, b: 235, a: 1 } : { r: 31, g: 38, b: 34, a: 1 });
+      const muted = firstParsedColor(rootStyle, ['--zalous-theme-text-muted','--text-secondary','--text-sub']) || firstParsedColor(bodyStyle, ['--zalous-theme-text-muted']) || null;
+      const accent = firstParsedColor(rootStyle, ['--zalous-theme-accent','--primary','--primary-color','--accent','--accent-color','--brand','--brand-color','--highlight','--main-color','--color-primary']) || firstParsedColor(bodyStyle, ['--zalous-theme-accent','color']) || firstParsedColor(bodyStyle, ['color']) || (isDark(bg) ? { r: 110, g: 208, b: 138, a: 1 } : { r: 46, g: 132, b: 76, a: 1 });
+      const border = firstParsedColor(rootStyle, ['--zalous-theme-border','--border','--border-color','--layer-border']) || firstParsedColor(bodyStyle, ['--zalous-theme-border']) || null;
+      const accentSoft = firstParsedColor(rootStyle, ['--zalous-theme-accent-soft']) || firstParsedColor(bodyStyle, ['--zalous-theme-accent-soft']) || null;
       const mixBase = isDark(bg) ? { r: 255, g: 255, b: 255, a: 1 } : { r: 0, g: 0, b: 0, a: 1 };
-      const surface = mixColor(bg, mixBase, isDark(bg) ? 0.08 : 0.04);
-      const surface2 = mixColor(bg, mixBase, isDark(bg) ? 0.14 : 0.08);
-      const surface3 = mixColor(bg, mixBase, isDark(bg) ? 0.20 : 0.12);
-      const border = mixColor(text, bg, isDark(bg) ? 0.28 : 0.16);
-      const muted = mixColor(text, bg, 0.48);
-      const accentSoft = mixColor(accent, bg, isDark(bg) ? 0.80 : 0.86);
+      const nextSurface = surface || mixColor(bg, mixBase, isDark(bg) ? 0.08 : 0.04);
+      const nextSurface2 = surface2 || mixColor(bg, mixBase, isDark(bg) ? 0.14 : 0.08);
+      const surface3 = mixColor(nextSurface2, mixBase, isDark(bg) ? 0.10 : 0.04);
+      const nextBorder = border || mixColor(text, bg, isDark(bg) ? 0.28 : 0.16);
+      const nextMuted = muted || mixColor(text, bg, 0.48);
+      const nextAccentSoft = accentSoft || mixColor(accent, bg, isDark(bg) ? 0.80 : 0.86);
       const hover = mixColor(accent, bg, isDark(bg) ? 0.18 : 0.12);
-      return { bg: rgbaColor(bg), surface: rgbaColor(surface), surface2: rgbaColor(surface2), surface3: rgbaColor(surface3), border: rgbaColor(border), text: rgbaColor(text), muted: rgbaColor(muted), accent: rgbaColor(accent), accentSoft: rgbaColor(accentSoft), accentContrast: isDark(accent) ? 'rgba(255,255,255,.96)' : 'rgba(10,14,11,.96)', hover: rgbaColor(hover), overlay: isDark(bg) ? 'rgba(3,7,5,.64)' : 'rgba(8,12,10,.42)', shadow: isDark(bg) ? '0 28px 76px rgba(0,0,0,.52)' : '0 24px 58px rgba(18,24,20,.24)', scheme: isDark(bg) ? 'dark' : 'light' };
+      return { bg: rgbaColor(bg), surface: rgbaColor(nextSurface), surface2: rgbaColor(nextSurface2), surface3: rgbaColor(surface3), border: rgbaColor(nextBorder), text: rgbaColor(text), muted: rgbaColor(nextMuted), accent: rgbaColor(accent), accentSoft: rgbaColor(nextAccentSoft), accentContrast: isDark(accent) ? 'rgba(255,255,255,.96)' : 'rgba(10,14,11,.96)', hover: rgbaColor(hover), overlay: isDark(bg) ? 'rgba(3,7,5,.64)' : 'rgba(8,12,10,.42)', shadow: isDark(bg) ? '0 28px 76px rgba(0,0,0,.52)' : '0 24px 58px rgba(18,24,20,.24)', scheme: isDark(bg) ? 'dark' : 'light' };
     }
 
     function applyPalette(target, palette) {
@@ -239,7 +244,7 @@
       const themeCount = getAllThemeKeys(state).length;
       const extCount = Object.keys(state.extensions || {}).length;
       modal.innerHTML = [
-        '<div class="zalous-market-panel" role="dialog" aria-modal="true" aria-labelledby="zalous-market-title">',
+        '<div id="zalous-market-card" class="zalous-market-panel" role="dialog" aria-modal="true" aria-labelledby="zalous-market-title">',
         '  <div class="zalous-market-header">',
         '    <div class="zalous-market-heading">',
         '      <div class="zalous-market-eyebrow">Zalous Market</div>',

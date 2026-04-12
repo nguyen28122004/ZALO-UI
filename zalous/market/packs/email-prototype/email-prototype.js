@@ -338,6 +338,7 @@
 
     const targets = [document.documentElement, document.body, state.shell].filter(Boolean);
     const accent = firstCssVar(targets, [
+      '--zalous-theme-accent',
       '--button-primary-normal',
       '--button-primary-hover',
       '--button-secondary-neutral-text',
@@ -352,6 +353,7 @@
       '--accent-yellow-bg'
     ]);
     const accentSoft = firstCssVar(targets, [
+      '--zalous-theme-accent-soft',
       '--button-primary-tonal-normal',
       '--button-primary-tonal-hover',
       '--accent-blue-bg-subtle',
@@ -365,6 +367,8 @@
       '--accent-yellow-bg-subtle'
     ]);
     const bgA = firstCssVar(targets, [
+      '--zalous-theme-bg-a',
+      '--zalous-theme-surface',
       '--surface-background',
       '--layer-background',
       '--layer-background-subtle',
@@ -373,6 +377,8 @@
       '--background'
     ]);
     const bgB = firstCssVar(targets, [
+      '--zalous-theme-bg-b',
+      '--zalous-theme-surface-2',
       '--surface-background-subtle',
       '--layer-background-subtle',
       '--layer-background-pinned',
@@ -380,9 +386,9 @@
       '--background-subtle',
       '--background-alt'
     ]);
-    const text = firstCssVar(targets, ['--text-primary', '--text-main', '--zalo-text-main', '--button-secondary-neutral-text']);
-    const textMuted = firstCssVar(targets, ['--text-secondary', '--text-sub', '--zalo-text-sub']);
-    const border = firstCssVar(targets, ['--border', '--layer-border', '--border-color', '--layer-background-selected']);
+    const text = firstCssVar(targets, ['--zalous-theme-text', '--text-primary', '--text-main', '--zalo-text-main', '--button-secondary-neutral-text']);
+    const textMuted = firstCssVar(targets, ['--zalous-theme-text-muted', '--text-secondary', '--text-sub', '--zalo-text-sub']);
+    const border = firstCssVar(targets, ['--zalous-theme-border', '--border', '--layer-border', '--border-color', '--layer-background-selected']);
     const shadow = firstCssVar(targets, ['--shadow-color', '--layer-shadow']);
     const font = targets.map((t) => {
       try { return String(getComputedStyle(t).fontFamily || '').trim(); } catch (_) { return ''; }
@@ -394,7 +400,7 @@
   function resolveThemePalette(themeKey) {
     const key = String(themeKey || '').toLowerCase();
     if (key.includes('console-minimal')) {
-      return { accent: '#d8d8d8', accentSoft: 'rgba(216,216,216,.18)', bgA: '#0a0a0a', bgB: '#141414' };
+      return { accent: '#f1f1f1', accentSoft: 'rgba(255,255,255,.12)', bgA: '#000000', bgB: '#050505' };
     }
     if (key.includes('pastel-butter')) {
       return { accent: '#d1a000', accentSoft: 'rgba(209,160,0,.2)', bgA: '#fffdf4', bgB: '#fff9e6' };
@@ -460,12 +466,12 @@
     const accentSoft = strictConsolePack ? pal.accentSoft : (runtime.accentSoft || alphaColor(accent, 0.18) || pal.accentSoft);
     const bgA = strictConsolePack ? pal.bgA : (runtime.bgA || pal.bgA);
     const bgB = strictConsolePack ? pal.bgB : (runtime.bgB || pal.bgB);
-    const surface = strictConsolePack ? pal.bgA : (runtime.bgA || runtime.bgB || pal.bgA);
-    const surface2 = strictConsolePack ? pal.bgB : (runtime.bgB || runtime.bgA || pal.bgB);
-    const border = strictConsolePack ? 'rgba(255,255,255,.22)' : (runtime.border || alphaColor(accent, 0.26) || '');
-    const shadow = strictConsolePack ? 'rgba(0,0,0,.45)' : (runtime.shadow || alphaColor(accent, 0.14) || '');
+    const surface = strictConsolePack ? '#000000' : (runtime.bgA || runtime.bgB || pal.bgA);
+    const surface2 = strictConsolePack ? '#050505' : (runtime.bgB || runtime.bgA || pal.bgB);
+    const border = strictConsolePack ? 'rgba(255,255,255,.14)' : (runtime.border || alphaColor(accent, 0.26) || '');
+    const shadow = strictConsolePack ? 'rgba(0,0,0,.68)' : (runtime.shadow || alphaColor(accent, 0.14) || '');
     const text = strictConsolePack ? '#f3f3f3' : (runtime.text || '');
-    const textMuted = strictConsolePack ? '#c9c9c9' : (runtime.textMuted || '');
+    const textMuted = strictConsolePack ? '#9d9d9d' : (runtime.textMuted || '');
     const font = strictConsolePack ? '\"Cascadia Mono\",\"JetBrains Mono\",\"Consolas\",\"Courier New\",monospace' : (runtime.font || '\"Segoe UI Variable Text\",\"Segoe UI\",Tahoma,sans-serif');
 
     state.shell.style.setProperty('--zmail-accent', accent);
