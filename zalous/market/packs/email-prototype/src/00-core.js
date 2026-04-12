@@ -7,8 +7,10 @@
   const STYLE_ID = 'zalous-email-prototype-style';
   const MAIN_MARKER = 'zalous-email-prototype-main';
   const PINNED_HEIGHT = 78;
+  const PINNED_EXTRA_OFFSET = 20;
   const BASE_TOP_ATTR = 'data-zalous-email-base-top';
   const BASE_HEIGHT_ATTR = 'data-zalous-email-base-height';
+  const BASE_MIN_HEIGHT_ATTR = 'data-zalous-email-base-min-height';
   const ACTIVE_ATTR = 'data-zalous-email-active';
   const EXT_NAME = 'email-prototype.js';
 

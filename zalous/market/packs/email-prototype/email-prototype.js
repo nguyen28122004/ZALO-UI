@@ -11,8 +11,10 @@
   const STYLE_ID = 'zalous-email-prototype-style';
   const MAIN_MARKER = 'zalous-email-prototype-main';
   const PINNED_HEIGHT = 78;
+  const PINNED_EXTRA_OFFSET = 20;
   const BASE_TOP_ATTR = 'data-zalous-email-base-top';
   const BASE_HEIGHT_ATTR = 'data-zalous-email-base-height';
+  const BASE_MIN_HEIGHT_ATTR = 'data-zalous-email-base-min-height';
   const ACTIVE_ATTR = 'data-zalous-email-active';
   const EXT_NAME = 'email-prototype.js';
 
@@ -1617,9 +1619,10 @@
     if (!container) return;
     const item = document.getElementById(ITEM_ID);
     if (!item || item.parentElement !== container) return;
-    const height = Math.ceil(item.getBoundingClientRect().height || PINNED_HEIGHT);
+    const offset = Math.ceil((item.getBoundingClientRect().height || PINNED_HEIGHT) + PINNED_EXTRA_OFFSET);
     const children = Array.from(container.children);
     let shifted = 0;
+    let maxBottom = 0;
     children.forEach((node) => {
       if (!(node instanceof HTMLElement) || node === item) return;
       const baseTop = node.hasAttribute(BASE_TOP_ATTR)
@@ -1631,7 +1634,10 @@
           return parsed;
         })();
       if (baseTop == null) return;
-      node.style.top = `${baseTop + height}px`;
+      const nextTop = baseTop + offset;
+      node.style.top = `${nextTop}px`;
+      const nodeH = Math.ceil(node.getBoundingClientRect().height || node.offsetHeight || 0);
+      maxBottom = Math.max(maxBottom, nextTop + nodeH);
       shifted += 1;
     });
     if (shifted > 0) {
@@ -1643,7 +1649,22 @@
           container.setAttribute(BASE_HEIGHT_ATTR, String(parsed));
           return parsed;
         })();
-      if (baseHeight != null) container.style.height = `${baseHeight + height}px`;
+      const targetHeight = Math.max(
+        baseHeight != null ? baseHeight + offset : 0,
+        maxBottom + 8
+      );
+      if (targetHeight > 0) container.style.height = `${targetHeight}px`;
+
+      const baseMinHeight = container.hasAttribute(BASE_MIN_HEIGHT_ATTR)
+        ? Number(container.getAttribute(BASE_MIN_HEIGHT_ATTR))
+        : (() => {
+          const parsed = px(container.style.minHeight);
+          if (parsed == null) return null;
+          container.setAttribute(BASE_MIN_HEIGHT_ATTR, String(parsed));
+          return parsed;
+        })();
+      const nextMinHeight = Math.max(baseMinHeight != null ? baseMinHeight : 0, targetHeight);
+      if (nextMinHeight > 0) container.style.minHeight = `${nextMinHeight}px`;
     }
   }
 
@@ -1675,7 +1696,12 @@
     });
     const baseHeight = container.getAttribute(BASE_HEIGHT_ATTR);
     if (baseHeight != null) container.style.height = `${baseHeight}px`;
+    else container.style.height = '';
     container.removeAttribute(BASE_HEIGHT_ATTR);
+    const baseMinHeight = container.getAttribute(BASE_MIN_HEIGHT_ATTR);
+    if (baseMinHeight != null) container.style.minHeight = `${baseMinHeight}px`;
+    else container.style.minHeight = '';
+    container.removeAttribute(BASE_MIN_HEIGHT_ATTR);
   }
 
   function mainEl() {
