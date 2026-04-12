@@ -1,4 +1,5 @@
-﻿:root, :root .light {
+:root[data-zalous-theme-pack="pastel-dawn"],
+:root[data-zalous-theme-pack="pastel-dawn"] .light {
   --layer-background-leftmenu: #9cbce5;
   --layer-background-leftmenu-hover: #86aad8;
   --layer-background-leftmenu-selected: #7399ca;

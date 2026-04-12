@@ -1,4 +1,4 @@
-﻿body:not(.dark) {
+body {
   transition: background-color 1s, border-color .8s, color .8s, filter .5s;
 
   /* Core green pastel scale */
@@ -159,18 +159,18 @@
   --shadow-bubble: none;
 }
 
-body:not(.dark) ::selection {
+body ::selection {
   background: #a84f7f !important;
   color: #ffffff !important;
 }
 
-body:not(.dark) ::-moz-selection {
+body ::-moz-selection {
   background: #a84f7f !important;
   color: #ffffff !important;
 }
 
 /* Extended Palette Harmonization (green pastel full set) */
-body:not(.dark) {
+body {
   --NG10: #26161d;
   --NG15: #301f27;
   --NG20: #3a272e;
@@ -399,7 +399,7 @@ body:not(.dark) {
 }
 
 /* Final Semantic Sync Override (force green pastel for all remaining tokens) */
-body:not(.dark) {
+body {
   --V_Gradient_B60B40: linear-gradient(0deg, var(--G40), var(--G70));
   --V_Gradient_B55B30: linear-gradient(0deg, var(--G45, #bf6295), var(--G80));
   --V_Gradient_B50SKB55: linear-gradient(45deg, var(--G40) 14.64%, var(--G70) 85.36%);
@@ -791,7 +791,7 @@ body:not(.dark) {
 }
 
 /* Visual Balance Fix (CDP-tuned from current screenshot) */
-body:not(.dark) {
+body {
   --surface-background: #f6eff2;
   --surface-background-subtle: #f2e8ed;
   --surface-alt: #eee2e8;

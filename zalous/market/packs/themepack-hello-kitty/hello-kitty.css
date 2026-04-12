@@ -104,9 +104,9 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(circle at 12% 12%, rgba(255, 255, 255, 0.45), transparent 38%),
-    radial-gradient(circle at 88% 6%, rgba(255, 197, 225, 0.42), transparent 34%),
-    linear-gradient(180deg, rgba(255, 230, 244, 0.86), rgba(255, 224, 241, 0.86));
+    radial-gradient(circle at 12% 12%, rgba(255, 255, 255, 0.2), transparent 38%),
+    radial-gradient(circle at 88% 6%, rgba(255, 197, 225, 0.2), transparent 34%),
+    linear-gradient(180deg, rgba(255, 230, 244, 0.26), rgba(255, 224, 241, 0.26));
 }
 
 #zalous-theme-pack-html .zalous-kitty-stamp {
@@ -114,7 +114,7 @@
   left: 50%;
   top: 14%;
   transform: translateX(-50%);
-  opacity: 0.2;
+  opacity: 0.08;
   text-align: center;
 }
 

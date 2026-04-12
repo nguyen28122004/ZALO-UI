@@ -1,4 +1,4 @@
-Ôªøbody:not(.dark) {
+body {
   transition: background-color 1s, border-color .8s, color .8s, filter .5s;
 
   /* Core green pastel scale */
@@ -159,18 +159,18 @@
   --shadow-bubble: none;
 }
 
-body:not(.dark) ::selection {
+body ::selection {
   background: #a8784f !important;
   color: #ffffff !important;
 }
 
-body:not(.dark) ::-moz-selection {
+body ::-moz-selection {
   background: #a8784f !important;
   color: #ffffff !important;
 }
 
 /* Extended Palette Harmonization (green pastel full set) */
-body:not(.dark) {
+body {
   --NG10: #261f16;
   --NG15: #30281f;
   --NG20: #3a3327;
@@ -399,7 +399,7 @@ body:not(.dark) {
 }
 
 /* Final Semantic Sync Override (force green pastel for all remaining tokens) */
-body:not(.dark) {
+body {
   --V_Gradient_B60B40: linear-gradient(0deg, var(--G40), var(--G70));
   --V_Gradient_B55B30: linear-gradient(0deg, var(--G45, #bf8c62), var(--G80));
   --V_Gradient_B50SKB55: linear-gradient(45deg, var(--G40) 14.64%, var(--G70) 85.36%);
@@ -791,7 +791,7 @@ body:not(.dark) {
 }
 
 /* Visual Balance Fix (CDP-tuned from current screenshot) */
-body:not(.dark) {
+body {
   --surface-background: #f6f3ef;
   --surface-background-subtle: #f2ede8;
   --surface-alt: #eee8e2;
@@ -841,7 +841,7 @@ body:not(.dark) {
 
 
 /* ==== Pastel Override: pastel-butter ==== */
-body:not(.dark) {
+body {
   --link: #e6cf8b;
   --text-mention: #e6cf8b;
   --text-information: #bea45a;
@@ -902,19 +902,19 @@ body:not(.dark) {
   --border-highlight: #f7ebc8;
 }
 
-/* √©p m√†u main tab bar / tab indicator */
-body:not(.dark) #main-tab [role="tab"],
-body:not(.dark) [class*="main-tab"] [role="tab"],
-body:not(.dark) [class*="tab"][aria-selected="true"],
-body:not(.dark) [class*="tab"][class*="active"] {
+/* Èp m‡u main tab bar / tab indicator */
+body #main-tab [role="tab"],
+body [class*="main-tab"] [role="tab"],
+body [class*="tab"][aria-selected="true"],
+body [class*="tab"][class*="active"] {
   color: var(--text-navbar-sublevel-selected) !important;
   border-color: var(--accent-blue-border) !important;
   box-shadow: inset 0 -2px 0 var(--accent-blue-border) !important;
 }
 
-body:not(.dark) #main-tab [class*="tab-indicator"],
-body:not(.dark) #main-tab [class*="indicator"],
-body:not(.dark) [class*="main-tab"] [class*="tab-indicator"],
-body:not(.dark) [class*="main-tab"] [class*="indicator"] {
+body #main-tab [class*="tab-indicator"],
+body #main-tab [class*="indicator"],
+body [class*="main-tab"] [class*="tab-indicator"],
+body [class*="main-tab"] [class*="indicator"] {
   background: var(--accent-blue-border) !important;
 }
