@@ -1,0 +1,11 @@
+{
+  "id": "themepack.console-minimal-v2",
+  "name": "Theme Pack Console Minimal V2",
+  "type": "theme-pack",
+  "version": "1.0.0",
+  "description": "Minimal console v2: nen den, chu xanh, CSS-only",
+  "assets": {
+    "css": "console-minimal.css",
+    "html": "console-minimal.html"
+  }
+}

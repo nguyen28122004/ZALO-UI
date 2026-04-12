@@ -1,0 +1,772 @@
+:root[data-zalous-theme-pack="console-minimal-v2"],
+:root[data-zalous-theme-pack="console-minimal-v2"] .light {
+  --console-bg-0: #020403;
+  --console-bg-1: #050907;
+  --console-bg-2: #08110d;
+  --console-bg-3: #0c1711;
+  --console-bg-4: #102019;
+  --console-bg-5: #153126;
+  --console-bg-6: #1b4332;
+  --console-bg-7: #245740;
+
+  --console-fg-0: #d7ffe9;
+  --console-fg-1: #b7ffd7;
+  --console-fg-2: #8cf0bd;
+  --console-fg-3: #61c996;
+  --console-fg-4: #41936d;
+  --console-fg-5: #2d6a4f;
+
+  --console-accent: #00ff9c;
+  --console-accent-hover: #3cffb2;
+  --console-accent-press: #00cc7d;
+  --console-accent-soft: #7dffca;
+  --console-accent-soft-2: #d7ffe9;
+  --console-accent-weak: rgba(0, 255, 156, 0.16);
+
+  --console-border: rgba(120, 255, 197, 0.24);
+  --console-border-subtle: rgba(120, 255, 197, 0.14);
+  --console-border-strong: rgba(120, 255, 197, 0.4);
+  --console-divider: rgba(120, 255, 197, 0.22);
+  --console-divider-subtle: rgba(120, 255, 197, 0.1);
+  --title-bar: var(--console-bg-0);
+  --NG15: var(--console-bg-0);
+  --bg-message-info: rgba(7, 36, 25, 0.9);
+  --reaction-background: #183c2c;
+  --jump-to-message: #08110d;
+  --border-highlight: #8cf0bd;
+  --bg-default: var(--console-bg-0);
+  --surface-background: var(--console-bg-0);
+  --surface-background-subtle: var(--console-bg-1);
+  --surface-alt: var(--console-bg-1);
+  --layer-background: var(--console-bg-0);
+  --layer-background-CSC: #000;
+  --layer-background-subtle: var(--console-bg-1);
+  --layer-background-hover: var(--console-bg-4);
+  --layer-background-selected: var(--console-bg-5);
+  --layer-background-disabled: #0c0c0c;
+  --layer-background-inverse: #f5f5f5;
+  --layer-background-leftmenu: #000000;
+  --layer-background-leftmenu-hover: var(--console-bg-4);
+  --layer-background-leftmenu-selected: var(--console-bg-5);
+  --layer-background-navbar-normal: #000000;
+  --layer-background-navbar-hover: var(--console-bg-4);
+  --layer-background-navbar-selected: var(--console-bg-3);
+  --layer-background-navbar-sublevel-normal: var(--console-bg-2);
+  --layer-background-navbar-sublevel-hover: var(--console-bg-4);
+  --layer-background-navbar-sublevel-selected: var(--console-bg-5);
+  --layer-alert-background: #261a16;
+  --layer-error-background: #351717;
+  --layer-success-background: #0d1f18;
+  --layer-warning-background: #2a2612;
+  --layer-information-background: #0c1e18;
+  --layer-neutral-information-background: #0a1310;
+
+  --text-primary: var(--console-fg-1);
+  --text-secondary: var(--console-fg-3);
+  --text-placeholder: var(--console-fg-4);
+  --text-disabled: var(--console-fg-5);
+  --text-on-color: #021d12;
+  --text-information: #afffe0;
+  --text-navbar-sublevel-normal: var(--console-fg-2);
+  --text-navbar-sublevel-selected: var(--console-fg-0);
+  --text-warning: #f6e58d;
+  --text-errors: #ff9f9f;
+
+  --icon-primary: var(--console-fg-2);
+  --icon-secondary: var(--console-fg-4);
+  --icon-disabled: var(--console-fg-5);
+  --icon-information: #afffe0;
+  --icon-navbar-normal: var(--console-fg-2);
+  --icon-navbar-sublevel-normal: var(--console-fg-2);
+  --icon-navbar-sublevel-selected: var(--console-fg-0);
+
+  --border: var(--console-border);
+  --border-subtle: var(--console-border-subtle);
+  --border-hover: var(--console-border-strong);
+  --border-focused: var(--console-accent-hover);
+  --divider: var(--console-divider);
+  --divider-subtle: var(--console-divider-subtle);
+  --divider-bold: var(--console-border-strong);
+
+  --button-primary-normal: var(--console-accent);
+  --button-primary-hover: var(--console-accent-hover);
+  --button-primary-pressed: var(--console-accent-press);
+  --button-primary-text: #021d12;
+  --button-primary-tonal-normal: var(--console-bg-5);
+  --button-primary-tonal-hover: var(--console-bg-6);
+  --button-primary-tonal-pressed: var(--console-bg-7);
+  --button-primary-tonal-text: var(--console-fg-1);
+  --button-secondary-neutral-normal: var(--console-bg-3);
+  --button-secondary-neutral-hover: var(--console-bg-4);
+  --button-secondary-neutral-pressed: var(--console-bg-5);
+  --button-secondary-neutral-text: var(--console-fg-2);
+  --button-tertiary-neutral-text: var(--console-fg-2);
+
+  --input-field-bg-filled: var(--console-bg-3);
+  --input-field-bg-filled-hover: var(--console-bg-4);
+  --input-field-bg-filled-pressed: var(--console-bg-5);
+  --input-field-bg-outline: var(--console-bg-2);
+  --input-field-bg-outline-hover: var(--console-bg-4);
+  --input-field-bg-outline-pressed: var(--console-bg-5);
+
+  --white-message: var(--console-bg-3);
+  --white-message-selected: var(--console-bg-5);
+  --blue-message: #07261b;
+  --blue-message-selected: #0b3325;
+  --white-quote: var(--console-bg-2);
+  --blue-quote: #0a1f17;
+
+  --progress-indicator: var(--console-accent);
+  --link: var(--console-accent-soft);
+  --cta-link: var(--console-accent-soft);
+  --cta-link-hover: var(--console-accent-soft-2);
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] body,
+:root[data-zalous-theme-pack="console-minimal-v2"] button,
+:root[data-zalous-theme-pack="console-minimal-v2"] input,
+:root[data-zalous-theme-pack="console-minimal-v2"] textarea,
+:root[data-zalous-theme-pack="console-minimal-v2"] select {
+  font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", "Courier New", monospace !important;
+  letter-spacing: 0 !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"],
+:root[data-zalous-theme-pack="console-minimal-v2"] body,
+:root[data-zalous-theme-pack="console-minimal-v2"] #app,
+:root[data-zalous-theme-pack="console-minimal-v2"] #container,
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="app"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="layout"] {
+  background: var(--bg-default) !important;
+  color: var(--text-primary) !important;
+  color-scheme: dark !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #main-tab,
+:root[data-zalous-theme-pack="console-minimal-v2"] [id*="main-tab"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="main-tab"],
+:root[data-zalous-theme-pack="console-minimal-v2"] .nav__tabs,
+:root[data-zalous-theme-pack="console-minimal-v2"] .nav__tabs__top,
+:root[data-zalous-theme-pack="console-minimal-v2"] .nav__tabs__bottom,
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="leftmenu"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="left-menu"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="leftbar"] {
+  background: var(--layer-background-leftmenu) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] .nav__tabs *,
+:root[data-zalous-theme-pack="console-minimal-v2"] .nav__tabs__top *,
+:root[data-zalous-theme-pack="console-minimal-v2"] .nav__tabs__bottom * {
+  background-color: transparent !important;
+  border-color: var(--border-subtle) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="sidebar"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="conversation"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="chat-list"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="chat-detail"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="right-panel"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="panel"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="thread"] {
+  background: var(--layer-background) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="popup"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="popover"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="dropdown"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="tooltip"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="context-menu"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="modal"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="dialog"] {
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="title"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="header"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="label"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="name"] {
+  color: var(--text-primary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="subtitle"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="desc"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="meta"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="secondary"] {
+  color: var(--text-secondary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] .msg-item,
+:root[data-zalous-theme-pack="console-minimal-v2"] .conv-item,
+:root[data-zalous-theme-pack="console-minimal-v2"] .message-content-wrapper {
+  background: transparent !important;
+  border-color: var(--border-subtle) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] .msg-item,
+:root[data-zalous-theme-pack="console-minimal-v2"] .conv-item,
+:root[data-zalous-theme-pack="console-minimal-v2"] .message-content-wrapper,
+:root[data-zalous-theme-pack="console-minimal-v2"] input,
+:root[data-zalous-theme-pack="console-minimal-v2"] textarea,
+:root[data-zalous-theme-pack="console-minimal-v2"] button {
+  border-radius: 0 !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] input,
+:root[data-zalous-theme-pack="console-minimal-v2"] textarea,
+:root[data-zalous-theme-pack="console-minimal-v2"] select,
+:root[data-zalous-theme-pack="console-minimal-v2"] [contenteditable="true"] {
+  background: var(--input-field-bg-filled) !important;
+  color: var(--text-primary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] input::placeholder,
+:root[data-zalous-theme-pack="console-minimal-v2"] textarea::placeholder {
+  color: var(--text-placeholder) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] button,
+:root[data-zalous-theme-pack="console-minimal-v2"] [role="button"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="btn"] {
+  background: var(--button-secondary-neutral-normal) !important;
+  color: var(--button-secondary-neutral-text) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] button:hover,
+:root[data-zalous-theme-pack="console-minimal-v2"] [role="button"]:hover,
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="btn"]:hover {
+  background: var(--button-secondary-neutral-hover) !important;
+  border-color: var(--border-hover) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] button:active,
+:root[data-zalous-theme-pack="console-minimal-v2"] [role="button"]:active,
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="btn"]:active {
+  background: var(--button-secondary-neutral-pressed) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="primary"] button,
+:root[data-zalous-theme-pack="console-minimal-v2"] button[class*="primary"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="btn-primary"] {
+  background: var(--button-primary-normal) !important;
+  border-color: var(--button-primary-normal) !important;
+  color: var(--button-primary-text) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="primary"] button:hover,
+:root[data-zalous-theme-pack="console-minimal-v2"] button[class*="primary"]:hover,
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="btn-primary"]:hover {
+  background: var(--button-primary-hover) !important;
+  border-color: var(--button-primary-hover) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="primary"] button:active,
+:root[data-zalous-theme-pack="console-minimal-v2"] button[class*="primary"]:active,
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="btn-primary"]:active {
+  background: var(--button-primary-pressed) !important;
+  border-color: var(--button-primary-pressed) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="nav"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="navbar"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="tab"] {
+  color: var(--icon-navbar-normal) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="nav"] [class*="active"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="tab"][class*="active"] {
+  background: var(--layer-background-navbar-selected) !important;
+  color: var(--text-navbar-sublevel-selected) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] a {
+  color: var(--link) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] a:hover {
+  color: var(--cta-link-hover) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="avatar"],
+:root[data-zalous-theme-pack="console-minimal-v2"] .avatar {
+  filter: grayscale(0.2) contrast(1.05);
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="badge"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="count"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="notify"] {
+  color: var(--console-accent-soft-2) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="divider"],
+:root[data-zalous-theme-pack="console-minimal-v2"] hr {
+  border-color: var(--divider) !important;
+  background: var(--divider) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] ::selection {
+  background: var(--button-primary-tonal-pressed);
+  color: var(--console-fg-0);
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] *::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] *::-webkit-scrollbar-thumb {
+  background: var(--console-bg-6);
+  border: 1px solid var(--console-bg-4);
+}
+
+#zalous-theme-pack-html .zalous-console-minimal-v2-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(0, 255, 156, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 156, 0.045) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-controls,
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card,
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal > div {
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] svg,
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="icon"] svg,
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="icon"] path {
+  color: var(--icon-primary) !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="chip"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="tag"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="pill"] {
+  color: var(--console-fg-2) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="toast"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="snackbar"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="alert"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [role="alert"] {
+  background: var(--surface-background-subtle) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="error"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="danger"] {
+  color: var(--text-errors) !important;
+  border-color: rgba(255, 178, 178, 0.35) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="warning"] {
+  color: var(--text-warning) !important;
+  border-color: rgba(241, 219, 162, 0.35) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] progress,
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="progress"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="slider"] {
+  accent-color: var(--progress-indicator) !important;
+  color: var(--progress-indicator) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] table,
+:root[data-zalous-theme-pack="console-minimal-v2"] thead,
+:root[data-zalous-theme-pack="console-minimal-v2"] tbody,
+:root[data-zalous-theme-pack="console-minimal-v2"] tr,
+:root[data-zalous-theme-pack="console-minimal-v2"] td,
+:root[data-zalous-theme-pack="console-minimal-v2"] th,
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="row"] {
+  border-color: var(--divider-subtle) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="row"]:hover {
+  background: var(--layer-background-hover) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] input[type="checkbox"],
+:root[data-zalous-theme-pack="console-minimal-v2"] input[type="radio"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="switch"] {
+  accent-color: var(--console-accent) !important;
+  border-color: var(--border-focused) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="skeleton"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="placeholder"] {
+  background: linear-gradient(90deg, var(--console-bg-3), var(--console-bg-4), var(--console-bg-3)) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="composer"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="editor"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="search"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="filter"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="input"] {
+  background-color: var(--input-field-bg-filled) !important;
+  color: var(--text-primary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="media"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="attachment"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="upload"] {
+  background: var(--surface-background-subtle) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+  border-radius: 5px !important;
+  overflow: auto !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="preview"] {
+  border-radius: 5px !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="preview"]::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="drawer"] {
+  background: var(--surface-background) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-controls button,
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card button,
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal button {
+  border-radius: 0 !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-theme-pack-html,
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-theme-pack-html * {
+  color-scheme: dark;
+}
+
+
+:root[data-zalous-theme-pack="console-minimal-v2"] pre,
+:root[data-zalous-theme-pack="console-minimal-v2"] code,
+:root[data-zalous-theme-pack="console-minimal-v2"] kbd {
+  background: var(--console-bg-3) !important;
+  color: var(--console-fg-1) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="card"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="tile"],
+:root[data-zalous-theme-pack="console-minimal-v2"] [class*="box"] {
+  background: var(--surface-background-subtle) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] .conv-item:hover,
+:root[data-zalous-theme-pack="console-minimal-v2"] .msg-item:hover,
+:root[data-zalous-theme-pack="console-minimal-v2"] .message-content-wrapper:hover {
+  background: var(--layer-background-hover) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] .conv-item.active,
+:root[data-zalous-theme-pack="console-minimal-v2"] .msg-item.active,
+:root[data-zalous-theme-pack="console-minimal-v2"] .message-content-wrapper.active {
+  background: var(--layer-background-selected) !important;
+  border-color: var(--border-hover) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] .chat-item.flx.chat-item-audit.chat-item-spacing.me[class*="--s1"] .message-reaction-container.message-reaction-container-v2.has-send-time.show-react-btn {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 400ms ease, visibility 0s linear 400ms !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] .chat-item.flx.chat-item-audit.chat-item-spacing.me[class*="--s1"]:hover .message-reaction-container.message-reaction-container-v2.has-send-time.show-react-btn {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transition: opacity 400ms ease !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] img,
+:root[data-zalous-theme-pack="console-minimal-v2"] video,
+:root[data-zalous-theme-pack="console-minimal-v2"] canvas {
+  border-color: var(--border-subtle) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] :focus-visible {
+  outline: 1px solid var(--border-focused) !important;
+  outline-offset: 1px !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] {
+  --layer-background-CSC: #000 !important;
+  --jump-to-message: #111111;
+  --border-highlight: #d3d3d3 !important;
+}
+
+
+
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-modal {
+  background: rgba(0, 0, 0, 0.72) !important;
+  backdrop-filter: blur(2px);
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card {
+  background: var(--surface-background-subtle) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card,
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card * {
+  color: var(--text-primary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card [style*="color:#567664"],
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card [style*="color:#60786a"],
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card [style*="color:#72877b"] {
+  color: var(--text-secondary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card [style*="background:#fff"],
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card [style*="background:#eef4f1"],
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card [style*="background:#f4faf7"],
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card [style*="background:#e8f3ee"] {
+  background: var(--console-bg-3) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card [style*="border:1px solid #c8d8d0"],
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card [style*="border:1px solid #b8cfc1"],
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card [style*="border:1px solid #b9cec3"] {
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card button {
+  background: var(--button-secondary-neutral-normal) !important;
+  color: var(--button-secondary-neutral-text) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card button:hover {
+  background: var(--button-secondary-neutral-hover) !important;
+  border-color: var(--border-hover) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card button:active {
+  background: var(--button-secondary-neutral-pressed) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-market-card input[type="checkbox"] {
+  accent-color: var(--console-accent) !important;
+}
+
+/* ZALOUS_EXT_CONFIG_MODAL_MINIMAL */
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal {
+  background: rgba(0, 0, 0, 0.72) !important;
+  backdrop-filter: blur(2px);
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal > div {
+  background: var(--surface-background-subtle) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal,
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal * {
+  color: var(--text-primary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal [style*="color:#4d6c5d"],
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal [style*="color:#234536"] {
+  color: var(--text-secondary) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal select,
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal input[type="text"],
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal input[type="number"],
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal textarea {
+  background: var(--input-field-bg-filled) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal button {
+  background: var(--button-secondary-neutral-normal) !important;
+  color: var(--button-secondary-neutral-text) !important;
+  border: 1px solid var(--border) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal button:hover {
+  background: var(--button-secondary-neutral-hover) !important;
+  border-color: var(--border-hover) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal button:active {
+  background: var(--button-secondary-neutral-pressed) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal-v2"] #zalous-ext-config-modal input[type="checkbox"] {
+  accent-color: var(--console-accent) !important;
+}
+
+/* ZALOUS_THEME_SYNC_BEGIN */
+:root,
+body {
+  --zsync-bg-main: var(--layer-background, var(--surface-background, var(--bg-default, #111827)));
+  --zsync-bg-soft: var(--layer-background-subtle, var(--surface-background-subtle, var(--surface-alt, var(--zsync-bg-main))));
+  --zsync-bg-hover: var(--layer-background-hover, var(--zsync-bg-soft));
+  --zsync-bg-active: var(--layer-background-selected, var(--zsync-bg-hover));
+  --zsync-text: var(--text-primary, #e5e7eb);
+  --zsync-text-muted: var(--text-secondary, #9ca3af);
+  --zsync-icon: var(--icon-primary, var(--zsync-text));
+  --zsync-border: var(--border, rgba(148, 163, 184, 0.35));
+  --zsync-border-soft: var(--border-subtle, rgba(148, 163, 184, 0.2));
+  --zsync-accent: var(--button-primary-normal, var(--accent-blue-bg, #60a5fa));
+  --zsync-accent-hover: var(--button-primary-hover, var(--zsync-accent));
+  --zsync-accent-press: var(--button-primary-pressed, var(--zsync-accent-hover));
+  --zsync-accent-text: var(--button-primary-text, var(--text-on-color, #ffffff));
+  --zsync-chip-bg: var(--button-primary-tonal-normal, color-mix(in srgb, var(--zsync-accent) 20%, transparent));
+}
+
+#zalous-controls,
+#zalous-controls *,
+#zalous-market-modal,
+#zalous-market-modal *,
+#zalous-ext-config-modal,
+#zalous-ext-config-modal *,
+.zalous-email-prototype-main,
+.zalous-email-prototype-main * {
+  pointer-events: auto !important;
+}
+
+#zalous-market-modal {
+  background: color-mix(in srgb, var(--zsync-bg-main) 72%, #000 28%) !important;
+}
+
+#zalous-market-card,
+#zalous-ext-config-modal > div {
+  background: var(--zsync-bg-main) !important;
+  color: var(--zsync-text) !important;
+  border: 1px solid var(--zsync-border) !important;
+}
+
+#zalous-market-card *,
+#zalous-ext-config-modal * {
+  color: var(--zsync-text) !important;
+  border-color: var(--zsync-border-soft) !important;
+}
+
+#zalous-market-card button,
+#zalous-ext-config-modal button,
+#zalous-controls button {
+  background: var(--zsync-bg-soft) !important;
+  color: var(--zsync-text) !important;
+  border: 1px solid var(--zsync-border) !important;
+}
+
+#zalous-market-card button:hover,
+#zalous-ext-config-modal button:hover,
+#zalous-controls button:hover {
+  background: var(--zsync-bg-hover) !important;
+}
+
+#zalous-market-card button:active,
+#zalous-ext-config-modal button:active,
+#zalous-controls button:active {
+  background: var(--zsync-bg-active) !important;
+}
+
+#zalous-market-card button[class*="primary"],
+#zalous-market-card [class*="btn-primary"],
+#zalous-ext-config-modal button[class*="primary"] {
+  background: var(--zsync-accent) !important;
+  border-color: var(--zsync-accent) !important;
+  color: var(--zsync-accent-text) !important;
+}
+
+#zalous-market-card button[class*="primary"]:hover,
+#zalous-market-card [class*="btn-primary"]:hover,
+#zalous-ext-config-modal button[class*="primary"]:hover {
+  background: var(--zsync-accent-hover) !important;
+  border-color: var(--zsync-accent-hover) !important;
+}
+
+#zalous-market-card button[class*="primary"]:active,
+#zalous-market-card [class*="btn-primary"]:active,
+#zalous-ext-config-modal button[class*="primary"]:active {
+  background: var(--zsync-accent-press) !important;
+  border-color: var(--zsync-accent-press) !important;
+}
+
+.zalous-email-prototype-main {
+  --zmail-accent: var(--zsync-accent);
+  --zmail-accent-soft: var(--zsync-chip-bg);
+  --zmail-bg-a: var(--zsync-bg-main);
+  --zmail-bg-b: var(--zsync-bg-soft);
+  --zmail-surface: var(--zsync-bg-main);
+  --zmail-surface-2: var(--zsync-bg-soft);
+  --zmail-text: var(--zsync-text);
+  --zmail-text-muted: var(--zsync-text-muted);
+  --zmail-border: var(--zsync-border-soft);
+}
+
+.zalous-email-prototype-main .mail-row,
+.zalous-email-prototype-main [class*="mail-row"] {
+  border-color: var(--zsync-border-soft) !important;
+}
+
+.zalous-email-prototype-main .mail-row:hover,
+.zalous-email-prototype-main [class*="mail-row"]:hover {
+  background: var(--zsync-bg-hover) !important;
+}
+
+.zalous-email-prototype-main .mail-row.active,
+.zalous-email-prototype-main .mail-row[aria-selected="true"],
+.zalous-email-prototype-main [class*="mail-row"].active {
+  background: var(--zsync-bg-active) !important;
+  border-color: var(--zsync-border) !important;
+}
+
+.zalous-email-prototype-main button,
+.zalous-email-prototype-main [role="button"] {
+  border-color: var(--zsync-border) !important;
+}
+
+.zalous-email-prototype-main button:hover,
+.zalous-email-prototype-main [role="button"]:hover {
+  background: var(--zsync-bg-hover) !important;
+}
+
+.zalous-email-prototype-main svg,
+.zalous-email-prototype-main [class*="icon"],
+.zalous-email-prototype-main [class*="icon"] * {
+  color: var(--zsync-icon) !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+/* ZALOUS_THEME_SYNC_END */
+

@@ -6,7 +6,6 @@
   "description": "Giao dien toi gian kieu console: mono, it mau, an avatar",
   "assets": {
     "css": "console-minimal.css",
-    "js": "console-minimal.js",
     "html": "console-minimal.html"
   }
 }
