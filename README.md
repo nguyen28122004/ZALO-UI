@@ -1,55 +1,69 @@
 # ZALO-UI / hara-zalous
 
-Toolkit patch UI cho Zalo Desktop theo mô hình `theme`, `theme-pack`, `extension`.
+Toolkit patch UI cho Zalo Desktop theo mo hinh `theme`, `theme-pack`, `extension`.
 
-## Quick Start
+## Repo layout
+
+- `tools/zalous-cli.js`: CLI entry.
+- `tools/zalous-cli/core.js`: CLI core.
+- `zalous/runtime/`: runtime inject vao Zalo.
+- `zalous/market/packs/`: built-in theme packs va extensions.
+- `docs/zalous/`: tai lieu van hanh.
+
+## Quick start
 
 ```powershell
+npm install
 node .\tools\zalous-cli.js init
 node .\tools\zalous-cli.js detect
-node .\tools\zalous-cli.js apply
+node .\tools\zalous-cli.js status
 ```
 
-## Kiến trúc mới
+## Daily direct flow
 
-- CLI entry: `tools/zalous-cli.js`
-- CLI core module: `tools/zalous-cli/core.js`
-- Runtime loader: `zalous/runtime/zalous-runtime.js`
-- Runtime modules: `zalous/runtime/modules/*.js`
-- Market packs: `zalous/market/packs/*`
-- Email extension source modules: `zalous/market/packs/email-prototype/src/*.js`
-
-## Build extension email
-
-```powershell
-node .\tools\build-email-prototype.js
-```
-
-Script trên sẽ build `zalous/market/packs/email-prototype/email-prototype.js` từ các module trong `src/`.
-
-## Daily Flow (không repack)
+Khong can repack `app.asar` neu chi dang sua theme, theme-pack, hoac extension.
 
 ```powershell
 node .\tools\zalous-cli.js patch --type theme-pack --id themepack.console-minimal --dir .\zalous\market\packs\themepack-console-minimal --reload
 node .\tools\zalous-cli.js reload --type theme-pack --name themepack.console-minimal
 ```
 
-## Email Extension
+## Asar apply flow
 
-`email-prototype` hiện hỗ trợ:
+Chi dung khi can patch thang vao Zalo Desktop.
 
-- Folder tree + đếm mail/unseen
-- Pagination `First/Prev/Next/Last`
+```powershell
+node .\tools\zalous-cli.js apply
+```
+
+## Email extension
+
+Pack `email-prototype` them mot pinned item vao conversation list va mo workspace mail read-only:
+
+- Folder list + unread count
 - Search/filter
-- Read-only detail
-- Star/Unstar local (không ghi lên IMAP server)
-- Config IMAP/SMTP ngay trong market config
+- Pagination `First/Prev/Next/Last`
+- Read-only message detail
+- Local star/tag state
+- Theme palette dong bo voi giao dien Zalo
 
-Local config nằm tại `%APPDATA%\Zalous\config.json`:
+Build bundle:
 
-- `extensionConfigs["email-prototype.js"]`
+```powershell
+npm run build:email-prototype
+```
 
-## Docs
+## Build exe
+
+```powershell
+npm run build:email-prototype
+npm run build:exe
+Copy-Item .\dist\zalous.exe .\tools\zalous.exe -Force
+```
+
+`pkg.assets` da include runtime + market packs, nen file exe se gom toan bo packs trong repo.
+
+## Main docs
 
 - `docs/zalous/ARCHITECTURE.md`
 - `docs/zalous/CLI.md`

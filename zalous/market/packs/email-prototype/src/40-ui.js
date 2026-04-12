@@ -5,7 +5,7 @@
     item.setAttribute('data-zalous-email-item', '1');
     item.setAttribute('role', 'button');
     item.setAttribute('tabindex', '0');
-    item.innerHTML = '<div class="mail-pin"><div class="mail-pin-k">Workspace Mail</div><div class="mail-pin-t">Email (IMAP)</div><div class="mail-pin-p">Folder + pagination + read-only message viewer</div></div>';
+    item.innerHTML = '<div class="mail-pin-shell"><div class="mail-pin"><div class="mail-pin-k">Workspace Mail</div><div class="mail-pin-t">Email (IMAP)</div><div class="mail-pin-p">Folder + pagination + read-only message viewer</div></div></div>';
 
     const go = (e) => {
       if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;

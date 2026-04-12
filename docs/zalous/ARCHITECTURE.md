@@ -1,36 +1,42 @@
 # Architecture
 
-## Core Layers
+## Layers
 
 1. CLI
 - Entry: `tools/zalous-cli.js`
 - Core: `tools/zalous-cli/core.js`
-- Nhiệm vụ: init workspace, detect/apply/restore asar, manage market packs, hot-reload signal.
+- Nhiem vu: init workspace, detect/apply/restore asar, sync assets, reload signal.
 
 2. Runtime
 - Loader: `zalous/runtime/zalous-runtime.js`
-- Runtime modules: `zalous/runtime/modules/*.js`
-- Inject vào `pc-dist/index.html` trong `app.asar`.
+- Modules: `zalous/runtime/modules/*.js`
+- Runtime inject vao `pc-dist/index.html` trong `app.asar`.
 
 3. Market
 - Catalog: `zalous/market/catalog.local.json`
 - Packs: `zalous/market/packs/*`
 
-## Runtime Boot
+## Config priority
 
-Config priority:
-1. External `%APPDATA%\Zalous\config.json` (nếu runtime đọc được filesystem)
-2. `localStorage` (`zalous.config.v1`)
-3. Embedded payload
+1. `%APPDATA%\Zalous\config.json`
+2. `localStorage` key `zalous.config.v1`
+3. Embedded payload trong runtime
 
-Asset merge priority:
-- External assets ghi đè embedded assets.
+Neu runtime doc duoc filesystem, external config va assets se de len embedded payload.
 
-## Email Extension (Modular)
+## Theme flow
+
+- Runtime sync palette chung qua bo bien `--zalous-theme-*`.
+- `#main-tab` duoc force theo `--layer-background-leftmenu`.
+- `.block-date` duoc sync theo `--zalous-theme-surface`.
+- Theme-pack co the them CSS/JS/HTML rieng.
+
+## Email prototype pack
 
 Pack: `zalous/market/packs/email-prototype`
 
 Source modules:
+
 - `src/00-core.js`
 - `src/10-style.js`
 - `src/15-theme-palette.js`
@@ -42,21 +48,30 @@ Source modules:
 - `src/40-ui.js`
 - `src/90-init.js`
 
-Build:
+Build script:
+
 - `tools/build-email-prototype.js`
-- output: `email-prototype.js`
 
-## Hot Reload
+Output:
 
-CLI ghi `config.hotReload`:
-- `token`, `type`, `name`, `source`, `at`
+- `zalous/market/packs/email-prototype/email-prototype.js`
 
-Runtime watcher phát hiện token đổi sẽ reload trang.
+## Hot reload
 
-## Patch Strategy
+CLI ghi `config.hotReload` voi:
 
-1. Restore clean base backup theo version
-2. Extract asar
-3. Inject runtime/payload
-4. Repack + sync `.unpacked`
-5. Backup timestamped file trước khi overwrite
+- `token`
+- `type`
+- `name`
+- `source`
+- `at`
+
+Runtime watcher thay token doi se reload tab.
+
+## Patch strategy
+
+1. Restore clean backup phu hop version.
+2. Extract `app.asar`.
+3. Inject runtime + payload.
+4. Repack.
+5. Sync lai `app.asar.unpacked`.

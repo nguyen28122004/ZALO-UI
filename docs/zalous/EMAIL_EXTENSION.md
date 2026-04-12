@@ -2,48 +2,60 @@
 
 Pack: `zalous/market/packs/email-prototype`
 
-## Mục tiêu
+## Goal
 
-- Tạo tab mail riêng trong UI Zalo.
-- IMAP read-only client: folder, list, pagination, xem chi tiết mail.
-- Không reply/send.
+Them mot workspace mail read-only vao giao dien Zalo Desktop.
 
-## Chức năng chính
+## UI behavior
 
-- Pinned item `#zalous-email-prototype-item` ở danh sách hội thoại.
-- Khi mở tab mail, extension thay nội dung main panel.
-- Khi click item hội thoại khác, extension restore main panel cũ.
-- IMAP folder list + unseen count.
-- Search/filter list.
-- Pagination `First/Prev/Next/Last`.
-- Star/Unstar local theo folder (lưu local config, không ghi server).
-- Keyboard shortcuts trong mail tab:
-  - `Ctrl+R`: refresh mailbox
-  - `J/K`: chọn mail kế tiếp/trước
-  - `S`: star/unstar mail đang chọn
-  - `Alt+C`: copy `Message-ID` của mail đang chọn
+- Conversation list co pinned item `#zalous-email-prototype-item`.
+- Container goc cua item nay khong giu padding/border visual.
+- Phan visual duoc boc trong `.mail-pin-shell`.
+- Khi active, extension thay noi dung main panel bang mail workspace.
+- Khi chon conversation khac, extension restore lai main panel goc.
 
-## Local Config
+## Features
+
+- Folder tree + unseen count
+- Search/filter
+- Pagination `First/Prev/Next/Last`
+- Read-only detail pane
+- Local star/unstar
+- Local tags
+- Copy `Message-ID`
+- Share selected mail as generated image
+
+## Keyboard shortcuts
+
+- `Ctrl+R`: refresh mailbox
+- `J / K`: next or previous mail
+- `S`: star or unstar selected mail
+- `Alt+C`: copy `Message-ID`
+
+## Local config
 
 Path:
-- `%APPDATA%\\Zalous\\config.json`
+
+- `%APPDATA%\Zalous\config.json`
 
 Key:
+
 - `extensionConfigs["email-prototype.js"]`
 
-Các trường:
+Fields:
+
 - `imapHost`, `imapPort`, `imapSsl`
 - `smtpHost`, `smtpPort`, `smtpSsl`
 - `username`, `password`
 - `pageSize`, `previewBytes`
 - `allowSelfSigned`
 - `onlyUnread`
-- `starredByFolder` (internal, local-only)
+- `starredByFolder`
 
 ## Build
 
 ```powershell
-node .\tools\build-email-prototype.js
+npm run build:email-prototype
 ```
 
-Script build sẽ concat `src/*.js` theo thứ tự tên file số prefix.
+Build script se concat `src/*.js` theo thu tu ten file sang `email-prototype.js`.
