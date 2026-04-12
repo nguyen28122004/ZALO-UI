@@ -28,16 +28,3 @@
   background: radial-gradient(circle at 10% 0%, rgba(255, 232, 214, 0.16), transparent 38%),
     radial-gradient(circle at 100% 12%, rgba(192, 233, 245, 0.18), transparent 40%);
 }
-/* ZALOUS EMAIL PALETTE */
-:root {
-  --zmail-accent: var(--button-primary-normal, #7da3d6);
-  --zmail-accent-soft: var(--button-primary-tonal-normal, rgba(125,163,214,.2));
-  --zmail-bg-a: var(--layer-background, #f5f8fc);
-  --zmail-bg-b: var(--layer-background-subtle, #edf3fa);
-  --zmail-surface: var(--surface-background, var(--layer-background, #f5f8fc));
-  --zmail-surface-2: var(--surface-background-subtle, var(--layer-background-subtle, #edf3fa));
-  --zmail-text: var(--text-primary, #2d415c);
-  --zmail-text-muted: var(--text-secondary, #5f7896);
-  --zmail-border: var(--border, rgba(96,129,168,.24));
-  --zmail-shadow: rgba(76,109,150,.18);
-}

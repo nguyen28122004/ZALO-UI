@@ -323,6 +323,45 @@
     }) || null;
   }
 
+  function tryAttachViaFileInput(file) {
+    const inputs = Array.from(document.querySelectorAll('input[type="file"]'));
+    const target = inputs.find((el) => {
+      const accept = String(el.getAttribute('accept') || '').toLowerCase();
+      const cls = String(el.className || '').toLowerCase();
+      return accept.includes('image') || accept.includes('*/*') || cls.includes('attach') || cls.includes('file');
+    }) || null;
+    if (!target || typeof DataTransfer !== 'function') return false;
+    try {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      target.files = dt.files;
+      target.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function tryAttachViaPaste(file) {
+    const composer = document.querySelector('[contenteditable="true"], textarea');
+    if (!composer) return false;
+    try {
+      if (typeof DataTransfer !== 'function') return false;
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      const ev = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: dt
+      });
+      Object.defineProperty(ev, 'clipboardData', { value: dt });
+      composer.dispatchEvent(ev);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   async function shareSelectedMailAsImage() {
     const detail = state.selectedMessage;
     if (!detail) {
@@ -330,19 +369,27 @@
       render(false);
       return;
     }
-    const blob = await makeMailSnapshotBlob(detail);
-    if (navigator.clipboard && typeof window.ClipboardItem === 'function') {
-      await navigator.clipboard.write([new window.ClipboardItem({ 'image/png': blob })]);
-    } else {
-      throw new Error('Clipboard image API is unavailable.');
-    }
 
     const conv = findShareConversation();
-    if (conv) {
-      try { conv.dispatchEvent(new MouseEvent('click', { bubbles: true })); } catch (_) {}
-      state.notice = 'Image copied. Chat \"Nguyen Bui/Bui Nguyen\" selected; paste to send.';
+    if (!conv) {
+      throw new Error('Khong tim thay chat Nguyen Bui/Bui Nguyen.');
+    }
+    try { conv.dispatchEvent(new MouseEvent('click', { bubbles: true })); } catch (_) {}
+    await new Promise((r) => setTimeout(r, 250));
+
+    const blob = await makeMailSnapshotBlob(detail);
+    const file = new File([blob], `mail-snapshot-${Date.now()}.png`, { type: 'image/png' });
+    const viaFileInput = tryAttachViaFileInput(file);
+    const viaPaste = viaFileInput ? false : tryAttachViaPaste(file);
+    if (!viaFileInput && !viaPaste) {
+      if (navigator.clipboard && typeof window.ClipboardItem === 'function') {
+        await navigator.clipboard.write([new window.ClipboardItem({ 'image/png': blob })]);
+        state.notice = 'Khong auto-attach duoc; da copy anh vao clipboard trong chat Nguyen Bui/Bui Nguyen.';
+      } else {
+        throw new Error('Khong tim thay luong attach/forward file cua Zalo.');
+      }
     } else {
-      state.notice = 'Image copied. Khong tim thay chat Nguyen Bui/Bui Nguyen de auto-focus.';
+      state.notice = 'Da dua anh vao composer chat Nguyen Bui/Bui Nguyen qua luong attach file.';
     }
     render(false);
   }

@@ -69,6 +69,7 @@
 
     const safeHtml = sanitizeMailHtml(detail.html || '');
     const textBody = String(detail.text || detail.body || '(Empty body preview)');
+    const previewLine = String(detail.text || detail.body || '').replace(/\s+/g, ' ').trim().slice(0, 180);
     const bodyPane = safeHtml
       ? `<div class="mail-html">${safeHtml}</div>`
       : `<div class="mail-text">${esc(textBody)}</div>`;
@@ -80,7 +81,7 @@
 
     return `
       <div class="mail-card">
-        <div class="mail-head"><div><div class="mail-detail-subject">${esc(detail.subject || '(No subject)')}</div><div class="mail-muted">Read-only IMAP detail view</div></div>
+        <div class="mail-head"><div><div class="mail-detail-subject">${esc(detail.subject || '(No subject)')}</div><div class="mail-muted">${esc(previewLine || 'Read-only IMAP detail view')}</div></div>
           <div class="mail-tools"><button class="mail-btn ghost" data-act="toggle-star">${currentStar ? 'Unstar' : 'Star'}</button><button class="mail-btn ghost" data-act="copy-message-id">Copy Message-ID</button><button class="mail-btn ghost" data-act="tag-mail">Tag</button><button class="mail-btn pri" data-act="share-mail-image">Share as image</button>${chip}</div>
         </div>
         <div class="mail-body">

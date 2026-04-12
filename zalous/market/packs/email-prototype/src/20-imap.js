@@ -602,45 +602,96 @@
     return String(content || '');
   }
 
-  function extractMimePart(raw, mime) {
+  function parseContentType(v) {
+    const raw = String(v || '');
+    const parts = raw.split(';').map((x) => x.trim()).filter(Boolean);
+    const mime = String(parts.shift() || 'text/plain').toLowerCase();
+    const params = {};
+    parts.forEach((p) => {
+      const i = p.indexOf('=');
+      if (i <= 0) return;
+      const k = p.slice(0, i).trim().toLowerCase();
+      let val = p.slice(i + 1).trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      params[k] = val;
+    });
+    return { mime, params };
+  }
+
+  function splitMimeEntity(raw) {
     const source = String(raw || '');
-    const re = new RegExp(`Content-Type:\\\\s*${mime}[^\\\\r\\\\n]*(?:\\\\r?\\\\n[ \\\\t].*)*\\\\r?\\\\n([\\\\s\\\\S]*?)\\\\r?\\\\n\\\\r?\\\\n([\\\\s\\\\S]*?)(?=\\\\r?\\\\n--[^\\\\r\\\\n]+|$)`, 'i');
-    const m = source.match(re);
-    if (!m) return '';
-    const headers = parseHeaders(m[1] || '');
-    return decodeTransferBody(m[2] || '', headers).trim();
+    const idx = source.search(/\r?\n\r?\n/);
+    if (idx < 0) return { headers: parseHeaders(''), body: source };
+    const headRaw = source.slice(0, idx);
+    const body = source.slice(idx).replace(/^\r?\n\r?\n/, '');
+    return { headers: parseHeaders(headRaw), body };
   }
 
-  function extractHtmlContent(raw) {
-    const decoded = String(raw || '');
-    const htmlTag = decoded.match(/<html[\s\S]*<\/html>/i);
-    if (htmlTag && htmlTag[0]) return htmlTag[0].trim();
-    const bodyTag = decoded.match(/<body[\s\S]*<\/body>/i);
-    if (bodyTag && bodyTag[0]) return bodyTag[0].trim();
-    return extractMimePart(raw, 'text\\/html');
+  function extractMimeSections(body, boundary) {
+    const source = String(body || '');
+    const marker = `--${boundary}`;
+    const rawParts = source.split(marker).slice(1);
+    const parts = [];
+    rawParts.forEach((chunk) => {
+      const cleaned = String(chunk || '').replace(/^\r?\n/, '');
+      if (cleaned.startsWith('--')) return;
+      const payload = cleaned.replace(/\r?\n$/, '');
+      if (payload.trim()) parts.push(payload);
+    });
+    return parts;
   }
 
-  function extractTextContent(raw) {
-    const decoded = String(raw || '');
-    const plain = extractMimePart(raw, 'text\\/plain');
-    if (plain) return plain.trim();
-    if (/<[a-z][\s\S]*>/i.test(decoded)) return stripHtml(decoded);
-    return decoded.trim();
-  }
+  function parseMimeEntity(raw) {
+    const node = splitMimeEntity(raw);
+    const contentType = parseContentType(node.headers['content-type'] || '');
+    const dispo = parseContentType(node.headers['content-disposition'] || '');
+    const transferDecoded = decodeTransferBody(node.body || '', node.headers).trim();
 
-  function extractAttachments(raw) {
-    const source = String(raw || '');
-    const hits = [];
-    const re = /Content-Disposition:\s*attachment(?:;[^\r\n]*)*(?:\r?\n[ \t].*)*/gi;
-    let m;
-    while ((m = re.exec(source))) {
-      const block = m[0];
-      const fn = block.match(/filename\*?=(?:UTF-8''|")?([^";\r\n]+)/i);
-      const name = decodeWords((fn && fn[1] ? fn[1] : 'attachment').replace(/"$/g, '').trim());
-      if (!name) continue;
-      if (!hits.includes(name)) hits.push(name);
+    if (contentType.mime.startsWith('multipart/') && contentType.params.boundary) {
+      const sections = extractMimeSections(node.body, contentType.params.boundary);
+      return sections.reduce((acc, partRaw) => {
+        const part = parseMimeEntity(partRaw);
+        if (!acc.html && part.html) acc.html = part.html;
+        if (!acc.text && part.text) acc.text = part.text;
+        acc.attachments.push(...part.attachments);
+        return acc;
+      }, { text: '', html: '', attachments: [] });
     }
-    return hits.map((name) => ({ name, size: 0, type: '' }));
+
+    const nameGuess = decodeWords(
+      String(
+        dispo.params.filename
+        || contentType.params.filename
+        || contentType.params.name
+        || ''
+      )
+    ).trim();
+    const isAttachment = dispo.mime.includes('attachment') || (!!nameGuess && !contentType.mime.startsWith('text/'));
+
+    if (isAttachment) {
+      return {
+        text: '',
+        html: '',
+        attachments: [{
+          name: nameGuess || 'attachment',
+          size: Math.max(0, transferDecoded.length),
+          type: contentType.mime || ''
+        }]
+      };
+    }
+
+    if (contentType.mime === 'text/html') {
+      return { text: '', html: transferDecoded, attachments: [] };
+    }
+    if (contentType.mime === 'text/plain' || !contentType.mime) {
+      return { text: transferDecoded, html: '', attachments: [] };
+    }
+    if (/<html[\s\S]*<\/html>/i.test(transferDecoded) || /<body[\s\S]*<\/body>/i.test(transferDecoded)) {
+      return { text: '', html: transferDecoded, attachments: [] };
+    }
+    return { text: transferDecoded, html: '', attachments: [] };
   }
 
   function stripHtml(html) {
@@ -649,13 +700,29 @@
     return (tmp.textContent || tmp.innerText || '').trim();
   }
 
+  function extractFetchHeader(block) {
+    const m = String(block || '').match(/BODY\[HEADER\.FIELDS[^\]]*\]\s*\{\d+\}\r\n([\s\S]*?)(?=\r\nBODY\[TEXT\]|\r\n[A-Z0-9]+\s(?:OK|NO|BAD)|\r\n\))/i);
+    return (m && m[1]) ? m[1] : '';
+  }
+
+  function extractFetchBodyText(block) {
+    const m = String(block || '').match(/BODY\[TEXT\][^\r\n]*\{\d+\}\r\n([\s\S]*?)(?=\r\n\)|\r\n[A-Z0-9]+\s(?:OK|NO|BAD)|$)/i);
+    return (m && m[1]) ? m[1] : '';
+  }
+
   function parseMessage(raw, uid) {
     const block = fetchBlocks(raw)[0] || raw;
-    const head = parseHeaders(((block.match(/BODY\[HEADER\.FIELDS[^\]]*\] \{\d+\}\r\n([\s\S]*?)\r\nBODY\[TEXT\]/i) || [])[1]) || '');
-    const bodyRaw = ((block.match(/BODY\[TEXT\]<0> \{\d+\}\r\n([\s\S]*?)\r\n\)$/i) || [])[1]) || '';
-    const html = extractHtmlContent(bodyRaw);
-    const text = extractTextContent(bodyRaw);
-    const attachments = extractAttachments(bodyRaw);
+    const head = parseHeaders(extractFetchHeader(block));
+    const bodyRaw = extractFetchBodyText(block);
+    const parsed = parseMimeEntity(bodyRaw);
+    const html = String(parsed.html || '').trim();
+    const text = String(parsed.text || '').trim();
+    const attachmentMap = new Map();
+    (parsed.attachments || []).forEach((it) => {
+      const k = `${it.name}|${it.type}|${it.size}`;
+      if (!attachmentMap.has(k)) attachmentMap.set(k, it);
+    });
+    const attachments = Array.from(attachmentMap.values());
     const snippet = String(text || stripHtml(html) || '').replace(/\r/g, '').replace(/\n{2,}/g, '\n').trim();
     return {
       uid: String(uid),

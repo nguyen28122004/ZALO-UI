@@ -838,16 +838,3 @@ body:not(.dark) {
   --button-tertiary-neutral-normal: #e4efe8;
   --button-tertiary-neutral-text: #244638;
 }
-/* ZALOUS EMAIL PALETTE */
-:root {
-  --zmail-accent: var(--button-primary-normal, #16a34a);
-  --zmail-accent-soft: var(--button-primary-tonal-normal, rgba(22,163,74,.18));
-  --zmail-bg-a: var(--layer-background, #f4fbf6);
-  --zmail-bg-b: var(--layer-background-subtle, #eaf7ee);
-  --zmail-surface: var(--surface-background, var(--layer-background, #f4fbf6));
-  --zmail-surface-2: var(--surface-background-subtle, var(--layer-background-subtle, #eaf7ee));
-  --zmail-text: var(--text-primary, #1f4a31);
-  --zmail-text-muted: var(--text-secondary, #4b7f63);
-  --zmail-border: var(--border, rgba(22,163,74,.24));
-  --zmail-shadow: rgba(22,163,74,.16);
-}

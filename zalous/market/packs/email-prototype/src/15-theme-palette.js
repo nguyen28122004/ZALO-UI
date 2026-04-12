@@ -43,7 +43,7 @@
 
   function runtimeThemePalette() {
     if (!state.shell) {
-      return { accent: '', accentSoft: '', bgA: '', bgB: '', text: '', textMuted: '', border: '', shadow: '', sig: '' };
+      return { accent: '', accentSoft: '', bgA: '', bgB: '', text: '', textMuted: '', border: '', shadow: '', font: '', sig: '' };
     }
 
     const targets = [state.shell, document.documentElement, document.body].filter(Boolean);
@@ -98,8 +98,11 @@
     const textMuted = firstCssVar(targets, ['--zmail-text-muted', '--text-secondary', '--text-sub', '--zalo-text-sub']);
     const border = firstCssVar(targets, ['--zmail-border', '--border', '--layer-border', '--border-color', '--layer-background-selected']);
     const shadow = firstCssVar(targets, ['--shadow-color', '--layer-shadow']);
-    const sig = [accent, accentSoft, bgA, bgB, text, textMuted, border, shadow].join('|');
-    return { accent, accentSoft, bgA, bgB, text, textMuted, border, shadow, sig };
+    const font = targets.map((t) => {
+      try { return String(getComputedStyle(t).fontFamily || '').trim(); } catch (_) { return ''; }
+    }).find(Boolean) || '';
+    const sig = [accent, accentSoft, bgA, bgB, text, textMuted, border, shadow, font].join('|');
+    return { accent, accentSoft, bgA, bgB, text, textMuted, border, shadow, font, sig };
   }
 
   function resolveThemePalette(themeKey) {
@@ -188,4 +191,5 @@
     state.shell.style.setProperty('--zmail-text-muted', runtime.textMuted || '');
     state.shell.style.setProperty('--zmail-border', border);
     state.shell.style.setProperty('--zmail-shadow', shadow);
+    state.shell.style.setProperty('--zmail-font', runtime.font || '"Segoe UI Variable Text","Segoe UI",Tahoma,sans-serif');
   }

@@ -918,16 +918,3 @@ body:not(.dark) [class*="main-tab"] [class*="tab-indicator"],
 body:not(.dark) [class*="main-tab"] [class*="indicator"] {
   background: var(--accent-blue-border) !important;
 }
-/* ZALOUS EMAIL PALETTE */
-:root {
-  --zmail-accent: var(--button-primary-normal, #d1a000);
-  --zmail-accent-soft: var(--button-primary-tonal-normal, rgba(209,160,0,.2));
-  --zmail-bg-a: var(--layer-background, #fffdf4);
-  --zmail-bg-b: var(--layer-background-subtle, #fff9e6);
-  --zmail-surface: var(--surface-background, var(--layer-background, #fffdf4));
-  --zmail-surface-2: var(--surface-background-subtle, var(--layer-background-subtle, #fff9e6));
-  --zmail-text: var(--text-primary, #5a4b1c);
-  --zmail-text-muted: var(--text-secondary, #8d7b3a);
-  --zmail-border: var(--border, rgba(209,160,0,.24));
-  --zmail-shadow: rgba(209,160,0,.15);
-}
