@@ -1,8 +1,0 @@
-﻿{
-    "id":  "theme.zalo-pink",
-    "name":  "Zalo Pink",
-    "description":  "Built-in Zalo pink theme",
-    "type":  "theme",
-    "version":  "1.0.0",
-    "entry":  "zalo-pink.css"
-}

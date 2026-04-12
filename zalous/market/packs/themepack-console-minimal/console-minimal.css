@@ -131,12 +131,15 @@
   letter-spacing: 0 !important;
 }
 
+:root[data-zalous-theme-pack="console-minimal"],
 :root[data-zalous-theme-pack="console-minimal"] body,
 :root[data-zalous-theme-pack="console-minimal"] #app,
 :root[data-zalous-theme-pack="console-minimal"] #container,
 :root[data-zalous-theme-pack="console-minimal"] [class*="app"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="layout"] {
+  background: var(--bg-default) !important;
   color: var(--text-primary) !important;
+  color-scheme: dark !important;
 }
 
 :root[data-zalous-theme-pack="console-minimal"] * {
@@ -147,10 +150,20 @@
 :root[data-zalous-theme-pack="console-minimal"] #main-tab,
 :root[data-zalous-theme-pack="console-minimal"] [id*="main-tab"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="main-tab"],
+:root[data-zalous-theme-pack="console-minimal"] .nav__tabs,
+:root[data-zalous-theme-pack="console-minimal"] .nav__tabs__top,
+:root[data-zalous-theme-pack="console-minimal"] .nav__tabs__bottom,
 :root[data-zalous-theme-pack="console-minimal"] [class*="leftmenu"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="left-menu"],
 :root[data-zalous-theme-pack="console-minimal"] [class*="leftbar"] {
   background: var(--layer-background-leftmenu) !important;
+}
+
+:root[data-zalous-theme-pack="console-minimal"] .nav__tabs *,
+:root[data-zalous-theme-pack="console-minimal"] .nav__tabs__top *,
+:root[data-zalous-theme-pack="console-minimal"] .nav__tabs__bottom * {
+  background-color: transparent !important;
+  border-color: var(--border-subtle) !important;
 }
 
 :root[data-zalous-theme-pack="console-minimal"] [class*="sidebar"],

@@ -202,6 +202,7 @@
   }
 
   function clearThemePackArtifacts() {
+    const prevPack = String(document.documentElement.getAttribute('data-zalous-theme-pack') || '');
     try {
       if (typeof window.__zalousThemePackCleanup === 'function') window.__zalousThemePackCleanup();
     } catch (err) {
@@ -211,6 +212,10 @@
     const root = document.getElementById(THEME_PACK_HTML_ID);
     if (root && root.parentElement) root.remove();
     try { document.documentElement.removeAttribute('data-zalous-theme-pack'); } catch (_) {}
+    if (prevPack.includes('console-minimal')) {
+      try { document.documentElement.style.removeProperty('color-scheme'); } catch (_) {}
+      try { if (document.body) document.body.style.removeProperty('color-scheme'); } catch (_) {}
+    }
   }
 
   function applyTheme(themeName, state) {

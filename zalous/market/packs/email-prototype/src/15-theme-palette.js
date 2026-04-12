@@ -46,9 +46,8 @@
       return { accent: '', accentSoft: '', bgA: '', bgB: '', text: '', textMuted: '', border: '', shadow: '', font: '', sig: '' };
     }
 
-    const targets = [state.shell, document.documentElement, document.body].filter(Boolean);
+    const targets = [document.documentElement, document.body, state.shell].filter(Boolean);
     const accent = firstCssVar(targets, [
-      '--zmail-accent',
       '--button-primary-normal',
       '--button-primary-hover',
       '--button-secondary-neutral-text',
@@ -63,7 +62,6 @@
       '--accent-yellow-bg'
     ]);
     const accentSoft = firstCssVar(targets, [
-      '--zmail-accent-soft',
       '--button-primary-tonal-normal',
       '--button-primary-tonal-hover',
       '--accent-blue-bg-subtle',
@@ -77,7 +75,6 @@
       '--accent-yellow-bg-subtle'
     ]);
     const bgA = firstCssVar(targets, [
-      '--zmail-bg-a',
       '--surface-background',
       '--layer-background',
       '--layer-background-subtle',
@@ -86,7 +83,6 @@
       '--background'
     ]);
     const bgB = firstCssVar(targets, [
-      '--zmail-bg-b',
       '--surface-background-subtle',
       '--layer-background-subtle',
       '--layer-background-pinned',
@@ -94,9 +90,9 @@
       '--background-subtle',
       '--background-alt'
     ]);
-    const text = firstCssVar(targets, ['--zmail-text', '--text-primary', '--text-main', '--zalo-text-main', '--button-secondary-neutral-text']);
-    const textMuted = firstCssVar(targets, ['--zmail-text-muted', '--text-secondary', '--text-sub', '--zalo-text-sub']);
-    const border = firstCssVar(targets, ['--zmail-border', '--border', '--layer-border', '--border-color', '--layer-background-selected']);
+    const text = firstCssVar(targets, ['--text-primary', '--text-main', '--zalo-text-main', '--button-secondary-neutral-text']);
+    const textMuted = firstCssVar(targets, ['--text-secondary', '--text-sub', '--zalo-text-sub']);
+    const border = firstCssVar(targets, ['--border', '--layer-border', '--border-color', '--layer-background-selected']);
     const shadow = firstCssVar(targets, ['--shadow-color', '--layer-shadow']);
     const font = targets.map((t) => {
       try { return String(getComputedStyle(t).fontFamily || '').trim(); } catch (_) { return ''; }
@@ -169,7 +165,7 @@
     state.themePaletteSig = nextSig;
 
     const pal = resolveThemePalette(nextKey);
-    const strictConsolePack = String(nextKey || '').toLowerCase().includes('pack:themepack.console-minimal');
+    const strictConsolePack = String(nextKey || '').toLowerCase().includes('console-minimal');
     const accent = strictConsolePack ? pal.accent : (runtime.accent || pal.accent);
     const accentSoft = strictConsolePack ? pal.accentSoft : (runtime.accentSoft || alphaColor(accent, 0.18) || pal.accentSoft);
     const bgA = strictConsolePack ? pal.bgA : (runtime.bgA || pal.bgA);

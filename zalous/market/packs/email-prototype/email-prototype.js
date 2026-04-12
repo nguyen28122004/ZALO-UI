@@ -336,9 +336,8 @@
       return { accent: '', accentSoft: '', bgA: '', bgB: '', text: '', textMuted: '', border: '', shadow: '', font: '', sig: '' };
     }
 
-    const targets = [state.shell, document.documentElement, document.body].filter(Boolean);
+    const targets = [document.documentElement, document.body, state.shell].filter(Boolean);
     const accent = firstCssVar(targets, [
-      '--zmail-accent',
       '--button-primary-normal',
       '--button-primary-hover',
       '--button-secondary-neutral-text',
@@ -353,7 +352,6 @@
       '--accent-yellow-bg'
     ]);
     const accentSoft = firstCssVar(targets, [
-      '--zmail-accent-soft',
       '--button-primary-tonal-normal',
       '--button-primary-tonal-hover',
       '--accent-blue-bg-subtle',
@@ -367,7 +365,6 @@
       '--accent-yellow-bg-subtle'
     ]);
     const bgA = firstCssVar(targets, [
-      '--zmail-bg-a',
       '--surface-background',
       '--layer-background',
       '--layer-background-subtle',
@@ -376,7 +373,6 @@
       '--background'
     ]);
     const bgB = firstCssVar(targets, [
-      '--zmail-bg-b',
       '--surface-background-subtle',
       '--layer-background-subtle',
       '--layer-background-pinned',
@@ -384,9 +380,9 @@
       '--background-subtle',
       '--background-alt'
     ]);
-    const text = firstCssVar(targets, ['--zmail-text', '--text-primary', '--text-main', '--zalo-text-main', '--button-secondary-neutral-text']);
-    const textMuted = firstCssVar(targets, ['--zmail-text-muted', '--text-secondary', '--text-sub', '--zalo-text-sub']);
-    const border = firstCssVar(targets, ['--zmail-border', '--border', '--layer-border', '--border-color', '--layer-background-selected']);
+    const text = firstCssVar(targets, ['--text-primary', '--text-main', '--zalo-text-main', '--button-secondary-neutral-text']);
+    const textMuted = firstCssVar(targets, ['--text-secondary', '--text-sub', '--zalo-text-sub']);
+    const border = firstCssVar(targets, ['--border', '--layer-border', '--border-color', '--layer-background-selected']);
     const shadow = firstCssVar(targets, ['--shadow-color', '--layer-shadow']);
     const font = targets.map((t) => {
       try { return String(getComputedStyle(t).fontFamily || '').trim(); } catch (_) { return ''; }
@@ -459,7 +455,7 @@
     state.themePaletteSig = nextSig;
 
     const pal = resolveThemePalette(nextKey);
-    const strictConsolePack = String(nextKey || '').toLowerCase().includes('pack:themepack.console-minimal');
+    const strictConsolePack = String(nextKey || '').toLowerCase().includes('console-minimal');
     const accent = strictConsolePack ? pal.accent : (runtime.accent || pal.accent);
     const accentSoft = strictConsolePack ? pal.accentSoft : (runtime.accentSoft || alphaColor(accent, 0.18) || pal.accentSoft);
     const bgA = strictConsolePack ? pal.bgA : (runtime.bgA || pal.bgA);
@@ -488,17 +484,15 @@
 // ===== 20-imap.js =====
   function decodeWords(v) {
     if (!v) return '';
-    if (!BufferRef) return String(v).replace(/\r?\n\s+/g, ' ').trim();
     return String(v)
       .replace(/\r?\n\s+/g, ' ')
       .replace(/=\?([^?]+)\?([bBqQ])\?([^?]*)\?=/g, (_, cs, enc, data) => {
         try {
-          const charset = String(cs || '').toLowerCase() === 'iso-8859-1' ? 'latin1' : 'utf8';
-          if (String(enc).toUpperCase() === 'B') return BufferRef.from(String(data || ''), 'base64').toString(charset);
-          const qp = String(data || '')
-            .replace(/_/g, ' ')
-            .replace(/=([0-9A-Fa-f]{2})/g, (m, h) => String.fromCharCode(parseInt(h, 16)));
-          return BufferRef.from(qp, 'binary').toString(charset);
+          const charset = normalizeCharset(cs);
+          const bytes = String(enc).toUpperCase() === 'B'
+            ? Uint8Array.from(BufferRef ? BufferRef.from(String(data || ''), 'base64') : atob(String(data || '')).split('').map((ch) => ch.charCodeAt(0)))
+            : quotedPrintableToBytes(data, true);
+          return decodeBytes(bytes, charset);
         } catch (_) {
           return String(data || '');
         }
@@ -1064,30 +1058,28 @@
       .sort((a, b) => Number(b.uid) - Number(a.uid));
   }
 
-  function decodeQuotedPrintable(v) {
-    return String(v || '')
-      .replace(/=\r?\n/g, '')
-      .replace(/=([0-9A-Fa-f]{2})/g, (m, h) => String.fromCharCode(parseInt(h, 16)));
+  function decodeQuotedPrintable(v, charset) {
+    return decodeBytes(quotedPrintableToBytes(v, false), charset);
   }
 
-  function decodeBase64(v) {
+  function decodeBase64(v, charset) {
     const raw = String(v || '').replace(/\s+/g, '');
     if (!raw) return '';
     try {
-      if (BufferRef) return BufferRef.from(raw, 'base64').toString('utf8');
+      if (BufferRef) return decodeBytes(Uint8Array.from(BufferRef.from(raw, 'base64')), charset);
     } catch (_) {}
     try {
-      return decodeURIComponent(escape(atob(raw)));
+      return decodeBytes(Uint8Array.from(atob(raw).split('').map((ch) => ch.charCodeAt(0))), charset);
     } catch (_) {
       try { return atob(raw); } catch (_) { return ''; }
     }
   }
 
-  function decodeTransferBody(content, headers) {
+  function decodeTransferBody(content, headers, charset) {
     const enc = String((headers && headers['content-transfer-encoding']) || '').toLowerCase();
-    if (enc.includes('quoted-printable')) return decodeQuotedPrintable(content);
-    if (enc.includes('base64')) return decodeBase64(content);
-    return String(content || '');
+    if (enc.includes('quoted-printable')) return decodeQuotedPrintable(content, charset);
+    if (enc.includes('base64')) return decodeBase64(content, charset);
+    return decodeBytes(quotedPrintableToBytes(content, false), charset);
   }
 
   function parseContentType(v) {
@@ -1135,7 +1127,7 @@
     const node = splitMimeEntity(raw);
     const contentType = parseContentType(node.headers['content-type'] || '');
     const dispo = parseContentType(node.headers['content-disposition'] || '');
-    const transferDecoded = decodeTransferBody(node.body || '', node.headers).trim();
+    const transferDecoded = decodeTransferBody(node.body || '', node.headers, contentType.params.charset).trim();
 
     if (contentType.mime.startsWith('multipart/') && contentType.params.boundary) {
       const sections = extractMimeSections(node.body, contentType.params.boundary);
@@ -1227,6 +1219,47 @@
       html,
       attachments
     };
+  }
+  function normalizeCharset(charset) {
+    const raw = String(charset || '').trim().toLowerCase();
+    if (!raw) return 'utf-8';
+    if (raw === 'utf8' || raw === 'utf_8') return 'utf-8';
+    if (raw === 'iso-8859-1') return 'windows-1252';
+    return raw;
+  }
+
+  function decodeBytes(bytes, charset) {
+    const label = normalizeCharset(charset);
+    if (!bytes || !bytes.length) return '';
+    try {
+      if (typeof TextDecoder === 'function') return new TextDecoder(label, { fatal: false }).decode(bytes);
+    } catch (_) {}
+    try {
+      if (BufferRef) {
+        const nodeCharset = label === 'windows-1252' ? 'latin1' : label.replace(/-/g, '');
+        return BufferRef.from(bytes).toString(nodeCharset);
+      }
+    } catch (_) {}
+    return Array.from(bytes).map((n) => String.fromCharCode(n)).join('');
+  }
+
+  function quotedPrintableToBytes(v, treatUnderscoreAsSpace) {
+    const input = String(v || '').replace(/=\r?\n/g, '');
+    const out = [];
+    for (let i = 0; i < input.length; i += 1) {
+      const ch = input[i];
+      if (ch === '=' && /^[0-9A-Fa-f]{2}$/.test(input.slice(i + 1, i + 3))) {
+        out.push(parseInt(input.slice(i + 1, i + 3), 16));
+        i += 2;
+        continue;
+      }
+      if (treatUnderscoreAsSpace && ch === '_') {
+        out.push(0x20);
+        continue;
+      }
+      out.push(ch.charCodeAt(0) & 0xff);
+    }
+    return Uint8Array.from(out);
   }
 
 // ===== 30-data-render.js =====

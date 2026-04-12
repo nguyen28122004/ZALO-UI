@@ -1,8 +1,0 @@
-﻿{
-    "id":  "theme.zalo-orange",
-    "name":  "Zalo Orange",
-    "description":  "Built-in Zalo orange theme",
-    "type":  "theme",
-    "version":  "1.0.0",
-    "entry":  "zalo-orange.css"
-}

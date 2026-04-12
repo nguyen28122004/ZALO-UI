@@ -12,6 +12,7 @@ const APPDATA = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roami
 const LOCALAPPDATA = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
 const ZALOUS_ROOT = path.join(APPDATA, 'Zalous');
 const CONFIG_PATH = path.join(ZALOUS_ROOT, 'config.json');
+const MANAGED_ASSETS_PATH = path.join(ZALOUS_ROOT, 'managed-assets.json');
 const LOCAL_CATALOG = path.join(REPO_ROOT, 'zalous', 'market', 'catalog.local.json');
 let HOT_RELOAD_SEQ = 0;
 
@@ -76,6 +77,56 @@ async function readConfig() {
 async function saveConfig(cfg) {
   await ensureLayout();
   await fsp.writeFile(CONFIG_PATH, JSON.stringify(cfg, null, 2), 'utf8');
+}
+
+function defaultManagedAssets() {
+  return {
+    themes: [],
+    themePacks: [],
+    extensions: []
+  };
+}
+
+async function readManagedAssets() {
+  await ensureLayout();
+  if (!fs.existsSync(MANAGED_ASSETS_PATH)) return defaultManagedAssets();
+  try {
+    const text = (await fsp.readFile(MANAGED_ASSETS_PATH, 'utf8')).replace(/^\uFEFF/, '');
+    const parsed = JSON.parse(text);
+    return {
+      themes: Array.isArray(parsed.themes) ? parsed.themes : [],
+      themePacks: Array.isArray(parsed.themePacks) ? parsed.themePacks : [],
+      extensions: Array.isArray(parsed.extensions) ? parsed.extensions : []
+    };
+  } catch (_) {
+    return defaultManagedAssets();
+  }
+}
+
+async function saveManagedAssets(assets) {
+  await ensureLayout();
+  const next = {
+    themes: Array.from(new Set((assets && assets.themes) || [])).sort(),
+    themePacks: Array.from(new Set((assets && assets.themePacks) || [])).sort(),
+    extensions: Array.from(new Set((assets && assets.extensions) || [])).sort()
+  };
+  await fsp.writeFile(MANAGED_ASSETS_PATH, JSON.stringify(next, null, 2), 'utf8');
+}
+
+async function pruneManagedFiles(dir, previousNames, nextNames) {
+  const nextSet = new Set(nextNames || []);
+  for (const name of previousNames || []) {
+    if (!name || nextSet.has(name)) continue;
+    await fsp.rm(path.join(dir, name), { force: true });
+  }
+}
+
+async function pruneManagedDirs(dir, previousNames, nextNames) {
+  const nextSet = new Set(nextNames || []);
+  for (const name of previousNames || []) {
+    if (!name || nextSet.has(name)) continue;
+    await fsp.rm(path.join(dir, name), { recursive: true, force: true });
+  }
 }
 
 function themePackAssetFiles(manifest) {
@@ -162,7 +213,8 @@ async function copyBuiltInThemes() {
   await ensureLayout();
   const packsRoot = path.join(REPO_ROOT, 'zalous', 'market', 'packs');
   const dstDir = path.join(ZALOUS_ROOT, 'themes');
-  if (!fs.existsSync(packsRoot)) return;
+  const copied = new Set();
+  if (!fs.existsSync(packsRoot)) return copied;
 
   const packs = await fsp.readdir(packsRoot, { withFileTypes: true });
   for (const p of packs) {
@@ -181,15 +233,19 @@ async function copyBuiltInThemes() {
     if (!manifest || manifest.type !== 'theme' || !manifest.entry) continue;
     const src = path.join(packDir, manifest.entry);
     if (!fs.existsSync(src)) continue;
-    await fsp.copyFile(src, path.join(dstDir, path.basename(manifest.entry)));
+    const outName = path.basename(manifest.entry);
+    await fsp.copyFile(src, path.join(dstDir, outName));
+    copied.add(outName);
   }
+  return copied;
 }
 
 async function copyBuiltInThemePacks() {
   await ensureLayout();
   const packsRoot = path.join(REPO_ROOT, 'zalous', 'market', 'packs');
   const dstRoot = path.join(ZALOUS_ROOT, 'theme-packs');
-  if (!fs.existsSync(packsRoot)) return;
+  const copied = new Set();
+  if (!fs.existsSync(packsRoot)) return copied;
 
   const packs = await fsp.readdir(packsRoot, { withFileTypes: true });
   for (const p of packs) {
@@ -208,26 +264,32 @@ async function copyBuiltInThemePacks() {
     if (!manifest || manifest.type !== 'theme-pack') continue;
     const id = safePackId(manifest.id || p.name, p.name);
     await copyThemePackDir(packDir, path.join(dstRoot, id), manifest);
+    copied.add(id);
   }
+  return copied;
 }
 
 async function copyLegacyThemesFromRoot() {
   await ensureLayout();
   const srcDir = path.join(REPO_ROOT, 'themes');
   const dstDir = path.join(ZALOUS_ROOT, 'themes');
-  if (!fs.existsSync(srcDir)) return;
+  const copied = new Set();
+  if (!fs.existsSync(srcDir)) return copied;
   const entries = await fsp.readdir(srcDir, { withFileTypes: true });
   for (const ent of entries) {
     if (!ent.isFile() || !ent.name.toLowerCase().endsWith('.css')) continue;
     await fsp.copyFile(path.join(srcDir, ent.name), path.join(dstDir, ent.name));
+    copied.add(ent.name);
   }
+  return copied;
 }
 
 async function copyBuiltInExtensions() {
   await ensureLayout();
   const packsRoot = path.join(REPO_ROOT, 'zalous', 'market', 'packs');
   const dstDir = path.join(ZALOUS_ROOT, 'extensions');
-  if (!fs.existsSync(packsRoot)) return;
+  const copied = new Set();
+  if (!fs.existsSync(packsRoot)) return copied;
 
   const packs = await fsp.readdir(packsRoot, { withFileTypes: true });
   for (const p of packs) {
@@ -246,15 +308,29 @@ async function copyBuiltInExtensions() {
     if (!manifest || manifest.type !== 'extension' || !manifest.entry) continue;
     const src = path.join(packDir, manifest.entry);
     if (!fs.existsSync(src)) continue;
-    await fsp.copyFile(src, path.join(dstDir, path.basename(manifest.entry)));
+    const outName = path.basename(manifest.entry);
+    await fsp.copyFile(src, path.join(dstDir, outName));
+    copied.add(outName);
   }
+  return copied;
 }
 
 async function syncBuiltInAssets() {
-  await copyBuiltInThemes();
-  await copyBuiltInThemePacks();
-  await copyLegacyThemesFromRoot();
-  await copyBuiltInExtensions();
+  const prev = await readManagedAssets();
+  const builtInThemes = await copyBuiltInThemes();
+  const legacyThemes = await copyLegacyThemesFromRoot();
+  const themePacks = await copyBuiltInThemePacks();
+  const extensions = await copyBuiltInExtensions();
+  const next = {
+    themes: Array.from(new Set([...builtInThemes, ...legacyThemes])),
+    themePacks: Array.from(themePacks),
+    extensions: Array.from(extensions)
+  };
+
+  await pruneManagedFiles(path.join(ZALOUS_ROOT, 'themes'), prev.themes, next.themes);
+  await pruneManagedDirs(path.join(ZALOUS_ROOT, 'theme-packs'), prev.themePacks, next.themePacks);
+  await pruneManagedFiles(path.join(ZALOUS_ROOT, 'extensions'), prev.extensions, next.extensions);
+  await saveManagedAssets(next);
 }
 
 async function collectThemePacks() {
@@ -678,7 +754,7 @@ async function applyPatch({ asarPath, noBackup, fullPayload = true, keepControls
 
   const payload = {
     meta: {
-      version: '0.2.1',
+      version: '0.3.2',
       generatedAt: new Date().toISOString(),
       engine: 'hara-zalous',
       mode: fullPayload ? 'full' : 'lite'
