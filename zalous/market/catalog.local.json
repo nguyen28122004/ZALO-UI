@@ -129,13 +129,6 @@
                       "path":  "packs/themepack-console-minimal"
                   },
                   {
-                      "id":  "themepack.hello-kitty",
-                      "name":  "Theme Pack Hello Kitty",
-                      "type":  "theme-pack",
-                      "description":  "Nền hồng pastel kiểu Hello Kitty",
-                      "path":  "packs/themepack-hello-kitty"
-                  },
-                  {
                       "id":  "extension.blur-elements",
                       "name":  "Blur Elements",
                       "type":  "extension",

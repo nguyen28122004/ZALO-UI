@@ -1,4 +1,4 @@
-body {
+﻿body {
   transition: background-color 1s, border-color .8s, color .8s, filter .5s;
 
   /* Core green pastel scale */
@@ -838,3 +838,141 @@ body {
   --button-tertiary-neutral-normal: #efe4ea;
   --button-tertiary-neutral-text: #46242f;
 }
+
+/* ZALOUS_THEME_SYNC_BEGIN */
+:root,
+body {
+  --zsync-bg-main: var(--layer-background, var(--surface-background, var(--bg-default, #111827)));
+  --zsync-bg-soft: var(--layer-background-subtle, var(--surface-background-subtle, var(--surface-alt, var(--zsync-bg-main))));
+  --zsync-bg-hover: var(--layer-background-hover, var(--zsync-bg-soft));
+  --zsync-bg-active: var(--layer-background-selected, var(--zsync-bg-hover));
+  --zsync-text: var(--text-primary, #e5e7eb);
+  --zsync-text-muted: var(--text-secondary, #9ca3af);
+  --zsync-icon: var(--icon-primary, var(--zsync-text));
+  --zsync-border: var(--border, rgba(148, 163, 184, 0.35));
+  --zsync-border-soft: var(--border-subtle, rgba(148, 163, 184, 0.2));
+  --zsync-accent: var(--button-primary-normal, var(--accent-blue-bg, #60a5fa));
+  --zsync-accent-hover: var(--button-primary-hover, var(--zsync-accent));
+  --zsync-accent-press: var(--button-primary-pressed, var(--zsync-accent-hover));
+  --zsync-accent-text: var(--button-primary-text, var(--text-on-color, #ffffff));
+  --zsync-chip-bg: var(--button-primary-tonal-normal, color-mix(in srgb, var(--zsync-accent) 20%, transparent));
+}
+
+#zalous-controls,
+#zalous-controls *,
+#zalous-market-modal,
+#zalous-market-modal *,
+#zalous-ext-config-modal,
+#zalous-ext-config-modal *,
+.zalous-email-prototype-main,
+.zalous-email-prototype-main * {
+  pointer-events: auto !important;
+}
+
+#zalous-market-modal {
+  background: color-mix(in srgb, var(--zsync-bg-main) 72%, #000 28%) !important;
+}
+
+#zalous-market-card,
+#zalous-ext-config-modal > div {
+  background: var(--zsync-bg-main) !important;
+  color: var(--zsync-text) !important;
+  border: 1px solid var(--zsync-border) !important;
+}
+
+#zalous-market-card *,
+#zalous-ext-config-modal * {
+  color: var(--zsync-text) !important;
+  border-color: var(--zsync-border-soft) !important;
+}
+
+#zalous-market-card button,
+#zalous-ext-config-modal button,
+#zalous-controls button {
+  background: var(--zsync-bg-soft) !important;
+  color: var(--zsync-text) !important;
+  border: 1px solid var(--zsync-border) !important;
+}
+
+#zalous-market-card button:hover,
+#zalous-ext-config-modal button:hover,
+#zalous-controls button:hover {
+  background: var(--zsync-bg-hover) !important;
+}
+
+#zalous-market-card button:active,
+#zalous-ext-config-modal button:active,
+#zalous-controls button:active {
+  background: var(--zsync-bg-active) !important;
+}
+
+#zalous-market-card button[class*="primary"],
+#zalous-market-card [class*="btn-primary"],
+#zalous-ext-config-modal button[class*="primary"] {
+  background: var(--zsync-accent) !important;
+  border-color: var(--zsync-accent) !important;
+  color: var(--zsync-accent-text) !important;
+}
+
+#zalous-market-card button[class*="primary"]:hover,
+#zalous-market-card [class*="btn-primary"]:hover,
+#zalous-ext-config-modal button[class*="primary"]:hover {
+  background: var(--zsync-accent-hover) !important;
+  border-color: var(--zsync-accent-hover) !important;
+}
+
+#zalous-market-card button[class*="primary"]:active,
+#zalous-market-card [class*="btn-primary"]:active,
+#zalous-ext-config-modal button[class*="primary"]:active {
+  background: var(--zsync-accent-press) !important;
+  border-color: var(--zsync-accent-press) !important;
+}
+
+.zalous-email-prototype-main {
+  --zmail-accent: var(--zsync-accent);
+  --zmail-accent-soft: var(--zsync-chip-bg);
+  --zmail-bg-a: var(--zsync-bg-main);
+  --zmail-bg-b: var(--zsync-bg-soft);
+  --zmail-surface: var(--zsync-bg-main);
+  --zmail-surface-2: var(--zsync-bg-soft);
+  --zmail-text: var(--zsync-text);
+  --zmail-text-muted: var(--zsync-text-muted);
+  --zmail-border: var(--zsync-border-soft);
+}
+
+.zalous-email-prototype-main .mail-row,
+.zalous-email-prototype-main [class*="mail-row"] {
+  border-color: var(--zsync-border-soft) !important;
+}
+
+.zalous-email-prototype-main .mail-row:hover,
+.zalous-email-prototype-main [class*="mail-row"]:hover {
+  background: var(--zsync-bg-hover) !important;
+}
+
+.zalous-email-prototype-main .mail-row.active,
+.zalous-email-prototype-main .mail-row[aria-selected="true"],
+.zalous-email-prototype-main [class*="mail-row"].active {
+  background: var(--zsync-bg-active) !important;
+  border-color: var(--zsync-border) !important;
+}
+
+.zalous-email-prototype-main button,
+.zalous-email-prototype-main [role="button"] {
+  border-color: var(--zsync-border) !important;
+}
+
+.zalous-email-prototype-main button:hover,
+.zalous-email-prototype-main [role="button"]:hover {
+  background: var(--zsync-bg-hover) !important;
+}
+
+.zalous-email-prototype-main svg,
+.zalous-email-prototype-main [class*="icon"],
+.zalous-email-prototype-main [class*="icon"] * {
+  color: var(--zsync-icon) !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+/* ZALOUS_THEME_SYNC_END */
+

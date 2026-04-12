@@ -400,9 +400,6 @@
     if (key.includes('console-minimal')) {
       return { accent: '#d8d8d8', accentSoft: 'rgba(216,216,216,.18)', bgA: '#0a0a0a', bgB: '#141414' };
     }
-    if (key.includes('hello-kitty')) {
-      return { accent: '#d977ac', accentSoft: 'rgba(217,119,172,.18)', bgA: '#fff2fa', bgB: '#ffe8f5' };
-    }
     if (key.includes('pastel-butter')) {
       return { accent: '#d1a000', accentSoft: 'rgba(209,160,0,.2)', bgA: '#fffdf4', bgB: '#fff9e6' };
     }
@@ -462,14 +459,18 @@
     state.themePaletteSig = nextSig;
 
     const pal = resolveThemePalette(nextKey);
-    const accent = runtime.accent || pal.accent;
-    const accentSoft = runtime.accentSoft || alphaColor(accent, 0.18) || pal.accentSoft;
-    const bgA = runtime.bgA || pal.bgA;
-    const bgB = runtime.bgB || pal.bgB;
-    const surface = runtime.bgA || runtime.bgB || pal.bgA;
-    const surface2 = runtime.bgB || runtime.bgA || pal.bgB;
-    const border = runtime.border || alphaColor(accent, 0.26) || '';
-    const shadow = runtime.shadow || alphaColor(accent, 0.14) || '';
+    const strictConsolePack = String(nextKey || '').toLowerCase().includes('pack:themepack.console-minimal');
+    const accent = strictConsolePack ? pal.accent : (runtime.accent || pal.accent);
+    const accentSoft = strictConsolePack ? pal.accentSoft : (runtime.accentSoft || alphaColor(accent, 0.18) || pal.accentSoft);
+    const bgA = strictConsolePack ? pal.bgA : (runtime.bgA || pal.bgA);
+    const bgB = strictConsolePack ? pal.bgB : (runtime.bgB || pal.bgB);
+    const surface = strictConsolePack ? pal.bgA : (runtime.bgA || runtime.bgB || pal.bgA);
+    const surface2 = strictConsolePack ? pal.bgB : (runtime.bgB || runtime.bgA || pal.bgB);
+    const border = strictConsolePack ? 'rgba(255,255,255,.22)' : (runtime.border || alphaColor(accent, 0.26) || '');
+    const shadow = strictConsolePack ? 'rgba(0,0,0,.45)' : (runtime.shadow || alphaColor(accent, 0.14) || '');
+    const text = strictConsolePack ? '#f3f3f3' : (runtime.text || '');
+    const textMuted = strictConsolePack ? '#c9c9c9' : (runtime.textMuted || '');
+    const font = strictConsolePack ? '\"Cascadia Mono\",\"JetBrains Mono\",\"Consolas\",\"Courier New\",monospace' : (runtime.font || '\"Segoe UI Variable Text\",\"Segoe UI\",Tahoma,sans-serif');
 
     state.shell.style.setProperty('--zmail-accent', accent);
     state.shell.style.setProperty('--zmail-accent-soft', accentSoft);
@@ -477,11 +478,11 @@
     state.shell.style.setProperty('--zmail-bg-b', bgB);
     state.shell.style.setProperty('--zmail-surface', surface);
     state.shell.style.setProperty('--zmail-surface-2', surface2);
-    state.shell.style.setProperty('--zmail-text', runtime.text || '');
-    state.shell.style.setProperty('--zmail-text-muted', runtime.textMuted || '');
+    state.shell.style.setProperty('--zmail-text', text);
+    state.shell.style.setProperty('--zmail-text-muted', textMuted);
     state.shell.style.setProperty('--zmail-border', border);
     state.shell.style.setProperty('--zmail-shadow', shadow);
-    state.shell.style.setProperty('--zmail-font', runtime.font || '"Segoe UI Variable Text","Segoe UI",Tahoma,sans-serif');
+    state.shell.style.setProperty('--zmail-font', font);
   }
 
 // ===== 20-imap.js =====

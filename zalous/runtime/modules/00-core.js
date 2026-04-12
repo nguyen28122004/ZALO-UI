@@ -210,6 +210,7 @@
     window.__zalousThemePackCleanup = null;
     const root = document.getElementById(THEME_PACK_HTML_ID);
     if (root && root.parentElement) root.remove();
+    try { document.documentElement.removeAttribute('data-zalous-theme-pack'); } catch (_) {}
   }
 
   function applyTheme(themeName, state) {
@@ -221,8 +222,12 @@
 
     if (state.themePacks && state.themePacks[picked]) {
       const pack = state.themePacks[picked] || {};
-      ensureStyleTag().textContent = pack.css || '';
       clearThemePackArtifacts();
+      try {
+        const key = String((pack.id || picked || '')).replace(/^pack:/, '').replace(/^themepack[._-]?/i, '').replace(/^[._-]+/, '');
+        if (key) document.documentElement.setAttribute('data-zalous-theme-pack', key);
+      } catch (_) {}
+      ensureStyleTag().textContent = pack.css || '';
 
       if (pack.html) {
         const host = document.createElement('div');
@@ -257,6 +262,7 @@
 
     const css = (state.themes && state.themes[picked]) || '';
     clearThemePackArtifacts();
+    try { document.documentElement.removeAttribute('data-zalous-theme-pack'); } catch (_) {}
     ensureStyleTag().textContent = css;
     return { ok: true, name: picked, length: css.length, type: 'theme' };
   }
