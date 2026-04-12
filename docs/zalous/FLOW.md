@@ -1,6 +1,6 @@
 # Flow
 
-## Init
+## 1. Init
 
 ```powershell
 node .\tools\zalous-cli.js init
@@ -10,7 +10,7 @@ node .\tools\zalous-cli.js init
 - Sync built-in packs
 - Normalize config
 
-## Detect
+## 2. Detect
 
 ```powershell
 node .\tools\zalous-cli.js detect
@@ -19,13 +19,13 @@ node .\tools\zalous-cli.js detect
 - Resolve `app.asar`
 - Luu path vao config
 
-## Daily direct flow
+## 3. Daily direct flow
 
 Dung cho theme, theme-pack, extension. Khong can repack `app.asar`.
 
 ```powershell
-node .\tools\zalous-cli.js patch --type theme-pack --id themepack.console-minimal --dir .\zalous\market\packs\themepack-console-minimal --reload
-node .\tools\zalous-cli.js reload --type theme-pack --name themepack.console-minimal
+node .\tools\zalous-cli.js patch --type theme-pack --id themepack.console-minimal-v2 --dir .\zalous\market\packs\themepack-console-minimal-v2 --reload
+node .\tools\zalous-cli.js reload --type theme-pack --name themepack.console-minimal-v2
 ```
 
 Flow:
@@ -35,7 +35,7 @@ Flow:
 3. Bump `config.hotReload.token`.
 4. Runtime watcher reload neu dang bat.
 
-## Apply flow
+## 4. Apply flow
 
 Chi dung khi can patch that vao Zalo Desktop.
 
@@ -51,15 +51,29 @@ Apply internals:
 4. Repack.
 5. Sync lai `.unpacked`.
 
-## Restore
+## 5. Startup flow for CDP
+
+Da verify on may nay:
+
+```powershell
+explorer.exe "C:\Users\ACER\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Zalo.lnk"
+```
+
+Sau do:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:9222/json/list
+```
+
+## 6. Restore
 
 ```powershell
 node .\tools\zalous-cli.js restore
 ```
 
-- Uu tien backup patch moi nhat.
+- Uu tien backup patch moi nhat
 
-## Common issue
+## 7. Common issue
 
 ### `ENOENT ... app.asar.unpacked`
 

@@ -2,13 +2,18 @@
 
 Toolkit patch UI cho Zalo Desktop theo mo hinh `theme`, `theme-pack`, `extension`.
 
-## Repo layout
+## Current structure
 
-- `tools/zalous-cli.js`: CLI entry.
-- `tools/zalous-cli/core.js`: CLI core.
+- `tools/zalous-cli.js`: CLI entry duy nhat.
+- `tools/zalous-cli/core.js`: bridge nho de goi command layer.
+- `tools/zalous-cli/lib/constants.js`: path constants.
+- `tools/zalous-cli/lib/config-store.js`: config/layout store.
+- `tools/zalous-cli/lib/asset-store.js`: sync assets + runtime state helpers.
+- `tools/zalous-cli/lib/asar-service.js`: detect/apply/restore `app.asar`.
+- `tools/zalous-cli/lib/market-service.js`: import/add/patch/reload market assets.
+- `tools/zalous-cli/lib/commands.js`: command router.
 - `zalous/runtime/`: runtime inject vao Zalo.
 - `zalous/market/packs/`: built-in theme packs va extensions.
-- `docs/zalous/`: tai lieu van hanh.
 
 ## Quick start
 
@@ -19,33 +24,40 @@ node .\tools\zalous-cli.js detect
 node .\tools\zalous-cli.js status
 ```
 
-## Daily direct flow
+## Verified flows
 
-Khong can repack `app.asar` neu chi dang sua theme, theme-pack, hoac extension.
+Direct patch workspace:
 
 ```powershell
-node .\tools\zalous-cli.js patch --type theme-pack --id themepack.console-minimal --dir .\zalous\market\packs\themepack-console-minimal --reload
-node .\tools\zalous-cli.js reload --type theme-pack --name themepack.console-minimal
+node .\tools\zalous-cli.js patch --type theme-pack --id themepack.console-minimal-v2 --dir .\zalous\market\packs\themepack-console-minimal-v2 --reload
+node .\tools\zalous-cli.js reload --type theme-pack --name themepack.console-minimal-v2
 ```
 
-## Asar apply flow
-
-Chi dung khi can patch thang vao Zalo Desktop.
+Patch `app.asar`:
 
 ```powershell
 node .\tools\zalous-cli.js apply
 ```
 
+Launch verified for CDP:
+
+```powershell
+explorer.exe "C:\Users\ACER\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Zalo.lnk"
+```
+
+Trong moi truong nay, `explorer.exe` la cach da verify de shortcut mo dung Zalo va expose CDP port `9222`.
+
 ## Email extension
 
-Pack `email-prototype` them mot pinned item vao conversation list va mo workspace mail read-only:
+Pack `email-prototype` them pinned mail workspace vao conversation list:
 
 - Folder list + unread count
 - Search/filter
 - Pagination `First/Prev/Next/Last`
 - Read-only message detail
 - Local star/tag state
-- Theme palette dong bo voi giao dien Zalo
+- Theme-aware mail UI
+- Wrapper visual moi `.mail-pin-shell` cho pinned item
 
 Build bundle:
 
@@ -61,12 +73,14 @@ npm run build:exe
 Copy-Item .\dist\zalous.exe .\tools\zalous.exe -Force
 ```
 
-`pkg.assets` da include runtime + market packs, nen file exe se gom toan bo packs trong repo.
+`pkg.assets` da include runtime + market packs, nen `zalous.exe` mang day du packs trong repo.
 
-## Main docs
+## Docs
 
 - `docs/zalous/ARCHITECTURE.md`
-- `docs/zalous/CLI.md`
-- `docs/zalous/FLOW.md`
 - `docs/zalous/BUILD.md`
+- `docs/zalous/CLI.md`
 - `docs/zalous/EMAIL_EXTENSION.md`
+- `docs/zalous/FLOW.md`
+- `docs/zalous/USAGE.md`
+- `docs/zalous/CDP_FLOW.md`

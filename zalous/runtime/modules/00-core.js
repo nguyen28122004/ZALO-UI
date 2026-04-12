@@ -21,7 +21,14 @@
     '--zalous-theme-titlebar-text',
     '--zalous-theme-nav-bg',
     '--zalous-theme-nav-text',
-    '--zalous-theme-scheme'
+    '--zalous-theme-scheme',
+    '--zalous-theme-selected-bg',
+    '--zalous-theme-hover-bg',
+    '--zalous-theme-on-color',
+    '--zalous-theme-timestamp',
+    '--button-primary-text-disabled',
+    '--text-on-color',
+    '--timestamp'
   ];
 
   function log(...args) {
@@ -221,6 +228,29 @@
     return '';
   }
 
+  function alphaColor(value, alpha) {
+    const v = String(value || '').trim();
+    const a = Math.max(0, Math.min(1, Number(alpha) || 0));
+    if (!v) return '';
+    const hex = v.match(/^#([0-9a-f]{3,8})$/i);
+    if (hex) {
+      const raw = hex[1];
+      const parts = raw.length === 3 || raw.length === 4
+        ? raw.split('').map((ch) => parseInt(ch + ch, 16))
+        : raw.length === 6 || raw.length === 8
+          ? raw.match(/.{2}/g).map((pair) => parseInt(pair, 16))
+          : null;
+      if (!parts) return '';
+      return `rgba(${parts[0]},${parts[1]},${parts[2]},${a})`;
+    }
+    const rgb = v.match(/^rgba?\(([^)]+)\)$/i);
+    if (rgb) {
+      const parts = rgb[1].split(',').map((x) => x.trim()).slice(0, 3);
+      if (parts.length === 3) return `rgba(${parts[0]},${parts[1]},${parts[2]},${a})`;
+    }
+    return '';
+  }
+
   function resolveThemeUiPalette(themeKey) {
     const key = String(themeKey || '').toLowerCase();
     const targets = [document.documentElement, document.body].filter(Boolean);
@@ -246,7 +276,12 @@
         titlebarText: '#f3f3f3',
         navBg: '#000000',
         navText: '#f3f3f3',
-        scheme: 'dark'
+        scheme: 'dark',
+        selectedBg: '#111111',
+        hoverBg: '#0b0b0b',
+        onColor: '#021d12',
+        timestamp: 'rgba(243,243,243,.58)',
+        disabledText: 'rgba(2,29,18,.58)'
       };
     }
 
@@ -264,17 +299,22 @@
       titlebarText: runtimeText,
       navBg: runtimeBg2 || runtimeBg || '#f3f6fb',
       navText: runtimeText,
-      scheme: 'light'
+      scheme: 'light',
+      selectedBg: runtimeBg2 || runtimeBg || '#eef4ff',
+      hoverBg: runtimeBg2 || runtimeBg || '#f3f6fb',
+      onColor: '#ffffff',
+      timestamp: alphaColor(runtimeText, 0.46) || 'rgba(15,23,42,.46)',
+      disabledText: alphaColor('#ffffff', 0.76) || 'rgba(255,255,255,.76)'
     };
 
-    if (key.includes('green-soft') || key.includes('pastel-mint')) return { ...fallback, accent: '#10b981', accentSoft: 'rgba(16,185,129,.16)', bgA: '#f3fdf8', bgB: '#e8fbf2', surface: '#ffffff', surface2: '#eefaf4', text: '#1f3a2b', textMuted: '#5e7a68', border: 'rgba(77,124,95,.18)', titlebarBg: '#e8fbf2', navBg: '#def6e8', navText: '#1f3a2b' };
-    if (key.includes('pastel-butter')) return { ...fallback, accent: '#d1a000', accentSoft: 'rgba(209,160,0,.18)', bgA: '#fffdf4', bgB: '#fff9e6', surface: '#fffef8', surface2: '#fff8df', text: '#4f3c05', textMuted: '#7a6640', border: 'rgba(161,132,48,.18)', titlebarBg: '#fff6dc', navBg: '#fff1c8', navText: '#4f3c05' };
-    if (key.includes('pastel-lilac')) return { ...fallback, accent: '#8b5cf6', accentSoft: 'rgba(139,92,246,.16)', bgA: '#fbf8ff', bgB: '#f4eeff', surface: '#ffffff', surface2: '#f3ebff', text: '#38245c', textMuted: '#6b5a89', border: 'rgba(139,92,246,.16)', titlebarBg: '#f0e8ff', navBg: '#e8dcff', navText: '#38245c' };
-    if (key.includes('pastel-peach')) return { ...fallback, accent: '#f97316', accentSoft: 'rgba(249,115,22,.16)', bgA: '#fff8f3', bgB: '#fff1e7', surface: '#fffdfa', surface2: '#ffefe3', text: '#5b2f13', textMuted: '#8b624d', border: 'rgba(214,115,54,.16)', titlebarBg: '#ffe9dc', navBg: '#ffdcca', navText: '#5b2f13' };
-    if (key.includes('pastel-rose')) return { ...fallback, accent: '#ec4899', accentSoft: 'rgba(236,72,153,.16)', bgA: '#fff7fb', bgB: '#ffedf5', surface: '#fffafb', surface2: '#ffe8f2', text: '#5a1f3d', textMuted: '#8f5f77', border: 'rgba(236,72,153,.16)', titlebarBg: '#ffe5f0', navBg: '#ffd7e9', navText: '#5a1f3d' };
-    if (key.includes('pastel-sage')) return { ...fallback, accent: '#4d7c0f', accentSoft: 'rgba(77,124,15,.16)', bgA: '#f7fbf3', bgB: '#eef7e7', surface: '#fcfef9', surface2: '#edf6e5', text: '#30461a', textMuted: '#63754c', border: 'rgba(94,131,55,.16)', titlebarBg: '#ecf5e1', navBg: '#e3f0d4', navText: '#30461a' };
-    if (key.includes('pastel-sky') || key.includes('pastel-dawn')) return { ...fallback, accent: '#0284c7', accentSoft: 'rgba(2,132,199,.16)', bgA: '#f4fbff', bgB: '#e9f6ff', surface: '#fbfeff', surface2: '#e8f4ff', text: '#183a52', textMuted: '#5d7d92', border: 'rgba(77,141,184,.16)', titlebarBg: '#e4f1fb', navBg: '#d7ebfb', navText: '#183a52' };
-    if (key.includes('pastel-teal')) return { ...fallback, accent: '#0f766e', accentSoft: 'rgba(15,118,110,.16)', bgA: '#f2fbfa', bgB: '#e6f7f5', surface: '#fbfefe', surface2: '#e5f5f2', text: '#184641', textMuted: '#5b7d79', border: 'rgba(73,124,119,.16)', titlebarBg: '#dff2ee', navBg: '#d1ebe5', navText: '#184641' };
+    if (key.includes('green-soft') || key.includes('pastel-mint')) return { ...fallback, accent: '#10b981', accentSoft: 'rgba(16,185,129,.16)', bgA: '#f3fdf8', bgB: '#e8fbf2', surface: '#ffffff', surface2: '#eefaf4', text: '#1f3a2b', textMuted: '#5e7a68', border: 'rgba(77,124,95,.18)', titlebarBg: '#e8fbf2', navBg: '#57b678', navText: '#1f3a2b', selectedBg: '#c7decf', hoverBg: '#def6e8', onColor: '#ffffff', timestamp: 'rgba(31,58,43,.46)', disabledText: 'rgba(255,255,255,.76)' };
+    if (key.includes('pastel-butter')) return { ...fallback, accent: '#d1a000', accentSoft: 'rgba(209,160,0,.18)', bgA: '#fffdf4', bgB: '#fff9e6', surface: '#fffef8', surface2: '#fff8df', text: '#4f3c05', textMuted: '#7a6640', border: 'rgba(161,132,48,.18)', titlebarBg: '#fff6dc', navBg: '#e6cf8b', navText: '#4f3c05', selectedBg: '#ded1c7', hoverBg: '#fff1c8', onColor: '#ffffff', timestamp: 'rgba(79,60,5,.46)', disabledText: 'rgba(255,255,255,.76)' };
+    if (key.includes('pastel-lilac')) return { ...fallback, accent: '#8b5cf6', accentSoft: 'rgba(139,92,246,.16)', bgA: '#fbf8ff', bgB: '#f4eeff', surface: '#ffffff', surface2: '#f3ebff', text: '#38245c', textMuted: '#6b5a89', border: 'rgba(139,92,246,.16)', titlebarBg: '#f0e8ff', navBg: '#b79adf', navText: '#38245c', selectedBg: '#d3c7de', hoverBg: '#e8dcff', onColor: '#ffffff', timestamp: 'rgba(56,36,92,.46)', disabledText: 'rgba(255,255,255,.76)' };
+    if (key.includes('pastel-peach')) return { ...fallback, accent: '#f97316', accentSoft: 'rgba(249,115,22,.16)', bgA: '#fff8f3', bgB: '#fff1e7', surface: '#fffdfa', surface2: '#ffefe3', text: '#5b2f13', textMuted: '#8b624d', border: 'rgba(214,115,54,.16)', titlebarBg: '#ffe9dc', navBg: '#e8a97d', navText: '#5b2f13', selectedBg: '#ded1c7', hoverBg: '#ffdcca', onColor: '#ffffff', timestamp: 'rgba(91,47,19,.46)', disabledText: 'rgba(255,255,255,.76)' };
+    if (key.includes('pastel-rose')) return { ...fallback, accent: '#ec4899', accentSoft: 'rgba(236,72,153,.16)', bgA: '#fff7fb', bgB: '#ffedf5', surface: '#fffafb', surface2: '#ffe8f2', text: '#5a1f3d', textMuted: '#8f5f77', border: 'rgba(236,72,153,.16)', titlebarBg: '#ffe5f0', navBg: '#d98faf', navText: '#5a1f3d', selectedBg: '#dec7d4', hoverBg: '#ffd7e9', onColor: '#ffffff', timestamp: 'rgba(90,31,61,.46)', disabledText: 'rgba(255,255,255,.76)' };
+    if (key.includes('pastel-sage')) return { ...fallback, accent: '#4d7c0f', accentSoft: 'rgba(77,124,15,.16)', bgA: '#f7fbf3', bgB: '#eef7e7', surface: '#fcfef9', surface2: '#edf6e5', text: '#30461a', textMuted: '#63754c', border: 'rgba(94,131,55,.16)', titlebarBg: '#ecf5e1', navBg: '#93b09b', navText: '#30461a', selectedBg: '#c7decf', hoverBg: '#e3f0d4', onColor: '#ffffff', timestamp: 'rgba(48,70,26,.46)', disabledText: 'rgba(255,255,255,.76)' };
+    if (key.includes('pastel-sky') || key.includes('pastel-dawn')) return { ...fallback, accent: '#0284c7', accentSoft: 'rgba(2,132,199,.16)', bgA: '#f4fbff', bgB: '#e9f6ff', surface: '#fbfeff', surface2: '#e8f4ff', text: '#183a52', textMuted: '#5d7d92', border: 'rgba(77,141,184,.16)', titlebarBg: '#e4f1fb', navBg: key.includes('pastel-dawn') ? '#9cbce5' : '#8bbfe8', navText: '#183a52', selectedBg: key.includes('pastel-dawn') ? '#e7f0fb' : '#c7d4de', hoverBg: '#d7ebfb', onColor: '#ffffff', timestamp: 'rgba(24,58,82,.46)', disabledText: 'rgba(255,255,255,.76)' };
+    if (key.includes('pastel-teal')) return { ...fallback, accent: '#0f766e', accentSoft: 'rgba(15,118,110,.16)', bgA: '#f2fbfa', bgB: '#e6f7f5', surface: '#fbfefe', surface2: '#e5f5f2', text: '#184641', textMuted: '#5b7d79', border: 'rgba(73,124,119,.16)', titlebarBg: '#dff2ee', navBg: '#7ecdc8', navText: '#184641', selectedBg: '#c7d4de', hoverBg: '#d1ebe5', onColor: '#ffffff', timestamp: 'rgba(24,70,65,.46)', disabledText: 'rgba(255,255,255,.76)' };
     return fallback;
   }
 
@@ -294,7 +334,10 @@
       '.nav__tabs__top > *,.nav__tabs__bottom > *{background:var(--zalous-theme-nav-bg,var(--zalous-theme-titlebar-bg,var(--zalous-theme-surface,var(--zalous-theme-bg-a)))) !important;background-color:var(--zalous-theme-nav-bg,var(--zalous-theme-titlebar-bg,var(--zalous-theme-surface,var(--zalous-theme-bg-a)))) !important;background-image:none !important;color:var(--zalous-theme-nav-text,var(--zalous-theme-titlebar-text,var(--zalous-theme-text))) !important;border-color:var(--zalous-theme-border) !important;}',
       '.nav__tabs *,.nav__tabs__top *,.nav__tabs__bottom *{border-color:var(--zalous-theme-border) !important;}',
       '#contact-search-input,.msg-item,.msg-item.pinned,.conv-item,[class*="conversation-item"],[class*="chat-item"],[class*="thread-item"]{background:var(--zalous-theme-surface,var(--zalous-theme-bg-a)) !important;color:var(--zalous-theme-text,var(--zalous-theme-nav-text)) !important;border-color:var(--zalous-theme-border) !important;}',
+      '.msg-item:hover,.conv-item:hover,.msg-item.pinned:hover,[class*="conversation-item"]:hover,[class*="chat-item"]:hover,[class*="thread-item"]:hover{background:var(--zalous-theme-hover-bg,var(--layer-background-hover,var(--zalous-theme-surface-2,var(--zalous-theme-bg-b)))) !important;background-color:var(--zalous-theme-hover-bg,var(--layer-background-hover,var(--zalous-theme-surface-2,var(--zalous-theme-bg-b)))) !important;}',
+      '.conv-item.chat-message.first-selected,.conv-item.chat-message.last-selected,.conv-item.selected,.msg-item.selected,[class*="conversation-item"].selected,[class*="chat-item"].selected,[aria-selected="true"]{background:var(--zalous-theme-selected-bg,var(--layer-background-selected,var(--zalous-theme-surface-2,var(--zalous-theme-bg-b)))) !important;background-color:var(--zalous-theme-selected-bg,var(--layer-background-selected,var(--zalous-theme-surface-2,var(--zalous-theme-bg-b)))) !important;border-right:none !important;}',
       '.block-date{background:var(--zalous-theme-surface,var(--layer-background,var(--surface-background,inherit))) !important;background-color:var(--zalous-theme-surface,var(--layer-background,var(--surface-background,inherit))) !important;}',
+      '.chat-date,[class*="chat-date"],[class*="timestamp"]{color:var(--timestamp,var(--zalous-theme-timestamp,var(--zalous-theme-text-muted))) !important;}',
       '.msg-item *,#contact-search-input::placeholder{color:inherit !important;}',
       '[class*="titlebar"],[class*="title-bar"],[class*="window-title"],[class*="topbar"],[class*="top-bar"],header[class*="top"],header[class*="title"]{background:var(--zalous-theme-titlebar-bg,var(--zalous-theme-nav-bg,var(--zalous-theme-surface))) !important;color:var(--zalous-theme-titlebar-text,var(--zalous-theme-text)) !important;border-color:var(--zalous-theme-border) !important;}'
     ].join('\n');
@@ -306,6 +349,12 @@
     const body = document.body || root;
     const pal = resolveThemeUiPalette(themeName);
     ensureThemeSyncTag();
+    const leftMenuBg = firstCssVar([root, body], ['--layer-background-leftmenu']) || pal.navBg;
+    const selectedBg = firstCssVar([root, body], ['--layer-background-selected']) || pal.selectedBg || pal.surface2 || pal.bgB;
+    const hoverBg = firstCssVar([root, body], ['--layer-background-leftmenu-hover', '--layer-background-hover']) || pal.hoverBg || pal.surface2 || pal.bgB;
+    const onColor = pal.onColor || firstCssVar([root, body], ['--text-on-color', '--button-primary-text']) || '#ffffff';
+    const timestamp = pal.timestamp || alphaColor(pal.text, 0.46) || pal.textMuted;
+    const disabledText = pal.disabledText || alphaColor(onColor, 0.76) || onColor;
     const entries = {
       '--zalous-theme-accent': pal.accent,
       '--zalous-theme-accent-soft': pal.accentSoft,
@@ -318,9 +367,19 @@
       '--zalous-theme-border': pal.border,
       '--zalous-theme-titlebar-bg': pal.titlebarBg,
       '--zalous-theme-titlebar-text': pal.titlebarText,
-      '--zalous-theme-nav-bg': pal.navBg,
+      '--zalous-theme-nav-bg': leftMenuBg,
       '--zalous-theme-nav-text': pal.navText,
-      '--zalous-theme-scheme': pal.scheme
+      '--zalous-theme-scheme': pal.scheme,
+      '--zalous-theme-selected-bg': selectedBg,
+      '--zalous-theme-hover-bg': hoverBg,
+      '--zalous-theme-on-color': onColor,
+      '--zalous-theme-timestamp': timestamp,
+      '--layer-background-leftmenu': pal.navBg,
+      '--layer-background-leftmenu-hover': hoverBg,
+      '--layer-background-selected': selectedBg,
+      '--button-primary-text-disabled': disabledText,
+      '--text-on-color': onColor,
+      '--timestamp': timestamp
     };
     Object.entries(entries).forEach(([name, value]) => {
       try { root.style.setProperty(name, value); } catch (_) {}
@@ -341,8 +400,8 @@
     ].forEach((selector) => {
       document.querySelectorAll(selector).forEach((node) => {
         const bg = selector === '#main-tab'
-          ? 'var(--layer-background-leftmenu, ' + pal.navBg + ')'
-          : pal.navBg;
+          ? 'var(--layer-background-leftmenu, ' + leftMenuBg + ')'
+          : leftMenuBg;
         try { node.style.setProperty('background', bg, 'important'); } catch (_) {}
         try { node.style.setProperty('background-color', bg, 'important'); } catch (_) {}
         try { node.style.setProperty('color', pal.navText, 'important'); } catch (_) {}

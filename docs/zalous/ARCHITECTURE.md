@@ -4,15 +4,23 @@
 
 1. CLI
 - Entry: `tools/zalous-cli.js`
-- Core: `tools/zalous-cli/core.js`
-- Nhiem vu: init workspace, detect/apply/restore asar, sync assets, reload signal.
+- Bridge: `tools/zalous-cli/core.js`
+- Command layer: `tools/zalous-cli/lib/commands.js`
 
-2. Runtime
+2. CLI support modules
+- `lib/constants.js`: repo/appdata/install paths
+- `lib/config-store.js`: `config.json`, managed assets, workspace layout
+- `lib/asset-store.js`: built-in sync, theme-pack map, hot-reload token helpers
+- `lib/asar-service.js`: detect/apply/restore `app.asar`, unpacked repair
+- `lib/market-service.js`: import/add/patch/reload/install assets
+- `lib/cli-utils.js`: argv parsing + help text
+
+3. Runtime
 - Loader: `zalous/runtime/zalous-runtime.js`
 - Modules: `zalous/runtime/modules/*.js`
-- Runtime inject vao `pc-dist/index.html` trong `app.asar`.
+- Runtime inject vao `pc-dist/index.html` trong `app.asar`
 
-3. Market
+4. Market
 - Catalog: `zalous/market/catalog.local.json`
 - Packs: `zalous/market/packs/*`
 
@@ -24,12 +32,12 @@
 
 Neu runtime doc duoc filesystem, external config va assets se de len embedded payload.
 
-## Theme flow
+## Theme/runtime sync
 
-- Runtime sync palette chung qua bo bien `--zalous-theme-*`.
-- `#main-tab` duoc force theo `--layer-background-leftmenu`.
-- `.block-date` duoc sync theo `--zalous-theme-surface`.
-- Theme-pack co the them CSS/JS/HTML rieng.
+- Runtime sync palette chung qua bo bien `--zalous-theme-*`
+- `#main-tab` duoc force theo `--layer-background-leftmenu`
+- `.block-date` duoc sync theo `--zalous-theme-surface`
+- Theme-pack co the mount CSS + JS + HTML rieng
 
 ## Email prototype pack
 
@@ -56,22 +64,15 @@ Output:
 
 - `zalous/market/packs/email-prototype/email-prototype.js`
 
-## Hot reload
-
-CLI ghi `config.hotReload` voi:
-
-- `token`
-- `type`
-- `name`
-- `source`
-- `at`
-
-Runtime watcher thay token doi se reload tab.
-
 ## Patch strategy
 
-1. Restore clean backup phu hop version.
+1. Restore clean backup theo version.
 2. Extract `app.asar`.
 3. Inject runtime + payload.
 4. Repack.
 5. Sync lai `app.asar.unpacked`.
+
+## Verified startup note
+
+Shortcut `Zalo.lnk` da verify mo on dinh qua Windows shell (`explorer.exe`).
+Tren may nay, viec goi `.lnk` qua Node/Python/cmd khong tao duoc instance giong nhu Explorer, nen flow CDP chuan hoa theo shell launch.

@@ -4,9 +4,9 @@
 
 - Node.js >= 18
 - `npm install`
-- Windows host cho `pkg` target `node18-win-x64`
+- Windows host cho target `node18-win-x64`
 
-## Build extension bundle
+## Build email bundle
 
 ```powershell
 npm run build:email-prototype
@@ -44,17 +44,20 @@ Copy-Item .\dist\zalous.exe .\tools\zalous.exe -Force
 - `zalous/market/**/*.json`
 - `zalous/market/packs/**/*`
 
-Muc tieu: `zalous.exe` mang day du runtime, manifest va tat ca packs.
+Muc tieu: `zalous.exe` mang day du runtime, manifest, va tat ca packs.
 
 ## Release flow
 
 1. Build `email-prototype`.
 2. Build `dist/zalous.exe`.
 3. Copy exe sang `tools/zalous.exe`.
-4. Commit code + docs + generated bundle.
-5. Push branch chinh.
+4. Verify `help`, `doctor`, `init`, `status`.
+5. Patch workspace / patch `asar` neu can.
+6. Verify lai bang CDP.
+7. Commit code + docs + generated bundle.
 
 ## Notes
 
-- Daily update cho theme/theme-pack/extension nen dung `add` / `patch` / `reload`.
+- Daily update theme/theme-pack/extension nen dung `add` / `patch` / `reload`.
 - `apply` chi dung khi can patch that vao `app.asar`.
+- Shortcut launch de verify CDP nen uu tien Windows shell `explorer.exe`.

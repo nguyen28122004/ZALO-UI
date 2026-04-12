@@ -3,52 +3,61 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { spawn, spawnSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
-function resolveShortcut(shortcutPath) {
-  const tempJs = path.join(os.tmpdir(), `resolve-shortcut-${process.pid}-${Date.now()}.js`);
-  const script = [
-    'var shell = WScript.CreateObject("WScript.Shell");',
-    `var shortcut = shell.CreateShortcut(${JSON.stringify(shortcutPath)});`,
-    'var out = [shortcut.TargetPath || "", shortcut.WorkingDirectory || "", shortcut.Arguments || "", shortcut.IconLocation || ""].join("\\n");',
-    'WScript.StdOut.Write(out);'
-  ].join('\n');
-  fs.writeFileSync(tempJs, script, 'utf8');
+function runCscript(sourceLines) {
+  const tempJs = path.join(os.tmpdir(), `zalo-shortcut-${process.pid}-${Date.now()}.js`);
+  fs.writeFileSync(tempJs, sourceLines.join('\n'), 'utf8');
   try {
     const result = spawnSync('cscript.exe', ['//nologo', tempJs], { encoding: 'utf8' });
     if (result.status !== 0) {
-      throw new Error((result.stderr || result.stdout || 'resolve shortcut failed').trim());
+      throw new Error((result.stderr || result.stdout || 'cscript failed').trim());
     }
-    const [targetPath = '', workingDirectory = '', argumentsText = ''] = String(result.stdout || '').split(/\r?\n/);
-    if (!targetPath) throw new Error('shortcut target is empty');
-    return { targetPath, workingDirectory, argumentsText };
+    return String(result.stdout || '').trim();
   } finally {
     try { fs.unlinkSync(tempJs); } catch (_) {}
   }
 }
 
+function resolveShortcut(shortcutPath) {
+  const output = runCscript([
+    'var shell = WScript.CreateObject("WScript.Shell");',
+    `var shortcut = shell.CreateShortcut(${JSON.stringify(shortcutPath)});`,
+    'var out = [shortcut.TargetPath || "", shortcut.WorkingDirectory || "", shortcut.Arguments || "", shortcut.IconLocation || ""].join("\\n");',
+    'WScript.StdOut.Write(out);'
+  ]);
+  const [targetPath = '', workingDirectory = '', argumentsText = '', iconLocation = ''] = output.split(/\r?\n/);
+  return { targetPath, workingDirectory, argumentsText, iconLocation };
+}
+
+function launchShortcut(shortcutPath) {
+  runCscript([
+    'var shell = WScript.CreateObject("WScript.Shell");',
+    `shell.Run(${JSON.stringify(shortcutPath)}, 1, false);`
+  ]);
+}
+
 function main() {
   const shortcutPath = process.argv[2];
-  const extraArgs = process.argv.slice(3);
   if (!shortcutPath) {
-    console.error('Usage: node tools/launch-zalo-shortcut.js <shortcut.lnk> [...extra args]');
+    console.error('Usage: node tools/launch-zalo-shortcut.js <shortcut.lnk>');
     process.exit(1);
   }
 
-  const resolved = resolveShortcut(path.resolve(shortcutPath));
-  const baseArgs = resolved.argumentsText ? resolved.argumentsText.match(/(?:[^\s"]+|"[^"]*")+/g) || [] : [];
-  const mergedArgs = [...baseArgs.map((x) => x.replace(/^"(.*)"$/, '$1')), ...extraArgs];
-  const child = spawn(resolved.targetPath, mergedArgs, {
-    cwd: resolved.workingDirectory || path.dirname(resolved.targetPath),
-    detached: true,
-    stdio: 'ignore'
-  });
-  child.unref();
+  const resolvedShortcut = path.resolve(shortcutPath);
+  if (!fs.existsSync(resolvedShortcut)) {
+    console.error(`Shortcut not found: ${resolvedShortcut}`);
+    process.exit(1);
+  }
+
+  const resolved = resolveShortcut(resolvedShortcut);
+  launchShortcut(resolvedShortcut);
   console.log(JSON.stringify({
-    shortcutPath: path.resolve(shortcutPath),
+    shortcutPath: resolvedShortcut,
     targetPath: resolved.targetPath,
-    workingDirectory: resolved.workingDirectory || path.dirname(resolved.targetPath),
-    args: mergedArgs
+    workingDirectory: resolved.workingDirectory,
+    args: resolved.argumentsText ? resolved.argumentsText.match(/(?:[^\s"]+|"[^"]*")+/g) || [] : [],
+    launchedVia: 'shortcut'
   }, null, 2));
 }
 
