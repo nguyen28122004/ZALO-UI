@@ -1,6 +1,6 @@
 ﻿{
     "version":  1,
-    "updatedAt":  "2026-04-08",
+    "updatedAt":  "2026-04-25",
     "packs":  [
                   {
                       "id":  "theme.green-soft",
@@ -94,10 +94,17 @@
                       "path":  "packs/themepack-console-minimal"
                   },
                   {
+                      "id":  "themepack.console-minimal-v2",
+                      "name":  "Theme Pack Console Minimal V2",
+                      "type":  "theme-pack",
+                      "description":  "Giao diện console xanh đen CSS-only",
+                      "path":  "packs/themepack-console-minimal-v2"
+                  },
+                  {
                       "id":  "extension.blur-elements",
                       "name":  "Blur Elements",
                       "type":  "extension",
-                      "description":  "Configurable blur for chat-list elements",
+                      "description":  "Privacy presets for blurring chat previews and message content",
                       "path":  "packs/blur-elements"
                   },
                   {

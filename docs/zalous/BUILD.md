@@ -18,6 +18,24 @@ Script:
 "build:email-prototype": "node tools/build-email-prototype.js"
 ```
 
+## Build theme tokens
+
+```powershell
+npm run build:themes
+```
+
+Script:
+
+```json
+"build:themes": "node tools/build-themes.js"
+```
+
+Palette source:
+
+```text
+zalous/market/theme-palettes.json
+```
+
 ## Build exe
 
 ```powershell
@@ -48,13 +66,15 @@ Muc tieu: `zalous.exe` mang day du runtime, manifest, va tat ca packs.
 
 ## Release flow
 
-1. Build `email-prototype`.
-2. Build `dist/zalous.exe`.
-3. Copy exe sang `tools/zalous.exe`.
-4. Verify `help`, `doctor`, `init`, `status`.
-5. Patch workspace / patch `asar` neu can.
-6. Verify lai bang CDP.
-7. Commit code + docs + generated bundle.
+1. Build theme tokens.
+2. Build `email-prototype`.
+3. Build `dist/zalous.exe`.
+4. Copy exe sang `tools/zalous.exe`.
+5. Verify `help`, `doctor`, `init`, `status`.
+6. Patch latest `app.asar` neu can.
+7. Mo Zalo bang shortcut `.lnk` da co remote debug.
+8. Verify lai bang CDP.
+9. Commit code + docs + generated bundle.
 
 ## Notes
 

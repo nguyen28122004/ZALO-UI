@@ -8,6 +8,8 @@ Flow da verify:
 explorer.exe "C:\Users\ACER\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Zalo.lnk"
 ```
 
+Shortcut nay da co san remote debug flag. Khong gan them flag khi launch de tranh mo instance khac.
+
 Kiem tra endpoint:
 
 ```powershell
@@ -27,6 +29,8 @@ Theme cycle check:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\cdp-theme-cycle.ps1 -Port 9222 -TargetMatch 'Zalo' -OutDir .\artifacts\theme-cycle-refactor -WaitMs 1600
 ```
+
+Script se cycle theme/pack, click market, mo email workspace, scroll cac panel chinh, va test blur presets qua CDP API neu runtime co san.
 
 ## What to expect
 

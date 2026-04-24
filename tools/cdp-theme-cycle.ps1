@@ -124,23 +124,38 @@ try {
   await sleep($WaitMs);
 
   const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const scrollFirst = (selectors, amount = 180) => {
+    for (const selector of selectors) {
+      const node = document.querySelector(selector);
+      if (!node) continue;
+      const before = node.scrollTop || 0;
+      try { node.scrollTop = before + amount; } catch (_) {}
+      try { node.dispatchEvent(new Event('scroll', { bubbles: true })); } catch (_) {}
+      return { selector, before, after: node.scrollTop || 0 };
+    }
+    return null;
+  };
   const chatTargets = ['nguyen bui','bui nguyen'];
   const chatItems = Array.from(document.querySelectorAll('.msg-item,[class*="conversation"],[class*="chat-item"]'));
   const chat = chatItems.find((el) => chatTargets.some((t) => norm(el.textContent || '').includes(t)));
   if (chat) { chat.click(); await sleep(450); }
+  const conversationScroll = scrollFirst(['#conversationListId', '[class*="conversation-list"]', '[class*="chat-list"]'], 160);
 
   let marketOpened = false;
+  let marketScroll = null;
   if (window.zalous && typeof window.zalous.openMarket === 'function') {
     window.zalous.openMarket();
     await sleep(300);
     const modal = document.querySelector('#zalous-market-modal');
     marketOpened = !!(modal && getComputedStyle(modal).display !== 'none');
+    marketScroll = scrollFirst(['#zalous-market-modal .zalous-market-grid', '#zalous-market-modal .zalous-market-list'], 180);
     const closeBtn = document.querySelector('#zalous-market-close');
     if (closeBtn) { closeBtn.click(); await sleep(220); }
   }
 
   let emailOpened = false;
   let emailRowClicked = false;
+  let emailScroll = null;
   const emailItem = document.querySelector('#zalous-email-prototype-item');
   if (emailItem) {
     emailItem.click();
@@ -152,6 +167,7 @@ try {
       await sleep(280);
       emailRowClicked = true;
     }
+    emailScroll = scrollFirst(['.zalous-email-prototype-main .mail-body', '.zalous-email-prototype-main .mail-list'], 180);
   }
 
   const marketBtn = document.querySelector('#zalous-market-btn');
@@ -174,15 +190,64 @@ try {
   const emailMain = document.querySelector('.zalous-email-prototype-main');
   const marketCard = document.querySelector('#zalous-market-card');
   const emailRow = document.querySelector('.zalous-email-prototype-main .mail-row');
+  let blurPresetResults = [];
+  if (window.zalous && typeof window.zalous.setExtensionConfig === 'function' && typeof window.zalous.getExtensionConfig === 'function') {
+    const previousBlurConfig = window.zalous.getExtensionConfig('blur-elements');
+    const presets = ['preview', 'name-preview', 'message-body', 'privacy', 'off'];
+    const targetSelectors = {
+      preview: '.z-conv-message__preview-message,.conv-item-body__main,.conv-message.truncate',
+      'name-preview': '.conv-item-title__name,.z-conv-message__preview-message,.conv-item-body__main,.conv-message.truncate',
+      'message-body': '.message-content-wrapper',
+      privacy: '.conv-item-title__name,.z-conv-message__preview-message,.conv-item-body__main,.conv-message.truncate,.message-content-wrapper',
+      off: ''
+    };
+    for (const preset of presets) {
+      window.zalous.setExtensionConfig('blur-elements', { preset, blurRadius: 6, revealOnHover: true });
+      await sleep(180);
+      const style = document.querySelector('#zalous-blur-elements-style');
+      const styleText = style ? (style.textContent || '') : '';
+      const sample = targetSelectors[preset] ? document.querySelector(targetSelectors[preset]) : null;
+      let revealFilterBefore = '';
+      let revealFilterAfter = '';
+      if (sample) {
+        revealFilterBefore = getComputedStyle(sample).filter || '';
+        sample.setAttribute('data-zalous-blur-reveal', '1');
+        await sleep(240);
+        revealFilterAfter = getComputedStyle(sample).filter || '';
+        sample.removeAttribute('data-zalous-blur-reveal');
+      }
+      blurPresetResults.push({
+        preset,
+        attr: document.documentElement.getAttribute('data-zalous-blur-preset') || '',
+        styleLength: styleText.length,
+        previewCount: document.querySelectorAll('.z-conv-message__preview-message,.conv-item-body__main,.conv-message.truncate').length,
+        nameCount: document.querySelectorAll('.conv-item-title__name').length,
+        bodyCount: document.querySelectorAll('.message-content-wrapper').length,
+        hoverRulePresent: styleText.includes(':hover') || styleText.includes(':focus-within'),
+        revealFilterBefore,
+        revealFilterAfter,
+        revealWorks: preset === 'off' ? true : (!sample || revealFilterAfter === 'none' || revealFilterAfter === ''),
+        protectsZalousUi: styleText.includes('#zalous-controls') && styleText.includes('#zalous-market-modal') && styleText.includes('.zalous-email-prototype-main')
+      });
+    }
+    const legacyMap = { off: 'off', content: 'preview', name: 'name-preview', all: 'privacy' };
+    const restorePreset = (previousBlurConfig && previousBlurConfig.preset) || legacyMap[(previousBlurConfig && previousBlurConfig.mode) || ''] || 'preview';
+    window.zalous.setExtensionConfig('blur-elements', Object.assign({}, previousBlurConfig || {}, { preset: restorePreset }));
+    await sleep(180);
+  }
 
   return {
     themeKey,
     activeTheme: (window.zalous.getState().config || {}).activeTheme || '',
     themePackAttr: document.documentElement.getAttribute('data-zalous-theme-pack') || '',
     chatPicked: chat ? (chat.textContent || '').trim().slice(0, 80) : '',
+    conversationScroll,
     marketOpened,
+    marketScroll,
     emailOpened,
     emailRowClicked,
+    emailScroll,
+    blurPresetResults,
     mainBg: getComputedStyle(document.body).backgroundColor,
     mainColor: getComputedStyle(document.body).color,
     navBg: (() => {
@@ -242,9 +307,13 @@ try {
       activeTheme = $state.activeTheme
       themePackAttr = $state.themePackAttr
       chatPicked = $state.chatPicked
+      conversationScroll = $state.conversationScroll
       marketOpened = $state.marketOpened
+      marketScroll = $state.marketScroll
       emailOpened = $state.emailOpened
       emailRowClicked = $state.emailRowClicked
+      emailScroll = $state.emailScroll
+      blurPresetResults = $state.blurPresetResults
       mainBg = $state.mainBg
       navBg = $state.navBg
       mainColor = $state.mainColor

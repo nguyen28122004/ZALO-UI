@@ -1,4 +1,4 @@
-﻿body {
+body {
   transition: background-color 1s, border-color .8s, color .8s, filter .5s;
 
   /* Core green pastel scale */
@@ -919,140 +919,98 @@ body [class*="main-tab"] [class*="indicator"] {
   background: var(--accent-blue-border) !important;
 }
 
-/* ZALOUS_THEME_SYNC_BEGIN */
-:root,
-body {
-  --zsync-bg-main: var(--layer-background, var(--surface-background, var(--bg-default, #111827)));
-  --zsync-bg-soft: var(--layer-background-subtle, var(--surface-background-subtle, var(--surface-alt, var(--zsync-bg-main))));
-  --zsync-bg-hover: var(--layer-background-hover, var(--zsync-bg-soft));
-  --zsync-bg-active: var(--layer-background-selected, var(--zsync-bg-hover));
-  --zsync-text: var(--text-primary, #e5e7eb);
-  --zsync-text-muted: var(--text-secondary, #9ca3af);
-  --zsync-icon: var(--icon-primary, var(--zsync-text));
-  --zsync-border: var(--border, rgba(148, 163, 184, 0.35));
-  --zsync-border-soft: var(--border-subtle, rgba(148, 163, 184, 0.2));
-  --zsync-accent: var(--button-primary-normal, var(--accent-blue-bg, #60a5fa));
-  --zsync-accent-hover: var(--button-primary-hover, var(--zsync-accent));
-  --zsync-accent-press: var(--button-primary-pressed, var(--zsync-accent-hover));
-  --zsync-accent-text: var(--button-primary-text, var(--text-on-color, #ffffff));
-  --zsync-chip-bg: var(--button-primary-tonal-normal, color-mix(in srgb, var(--zsync-accent) 20%, transparent));
-}
+/* ZALOUS_THEME_TOKEN_BEGIN */
+:root, body {
+  --zalous-token-accent: #d1a000;
+  --zalous-token-accent-hover: #bd9100;
+  --zalous-token-accent-press: #9f7a00;
+  --zalous-token-accent-soft: rgba(209,160,0,.18);
+  --zalous-token-bg-a: #fffdf4;
+  --zalous-token-bg-b: #fff9e6;
+  --zalous-token-surface: #fffef8;
+  --zalous-token-surface-2: #fff8df;
+  --zalous-token-text: #4f3c05;
+  --zalous-token-text-muted: #7a6640;
+  --zalous-token-border: rgba(161,132,48,.22);
+  --zalous-token-titlebar-bg: #fff6dc;
+  --zalous-token-titlebar-text: #4f3c05;
+  --zalous-token-nav-bg: #e6cf8b;
+  --zalous-token-nav-text: #4f3c05;
+  --zalous-token-nav-hover: #d8be74;
+  --zalous-token-nav-selected: #bea45a;
+  --zalous-token-selected-bg: #ded1c7;
+  --zalous-token-hover-bg: #fff1c8;
+  --zalous-token-on-color: #ffffff;
+  --zalous-token-timestamp: color-mix(in srgb, #4f3c05 46%, transparent);
+  --zalous-token-disabled-text: color-mix(in srgb, #ffffff 76%, transparent);
+  --zalous-token-scheme: light;
 
-#zalous-controls,
-#zalous-controls *,
-#zalous-market-modal,
-#zalous-market-modal *,
-#zalous-ext-config-modal,
-#zalous-ext-config-modal *,
-.zalous-email-prototype-main,
-.zalous-email-prototype-main * {
-  pointer-events: auto !important;
-}
+  --zalous-theme-accent: var(--zalous-token-accent);
+  --zalous-theme-accent-soft: var(--zalous-token-accent-soft);
+  --zalous-theme-bg-a: var(--zalous-token-bg-a);
+  --zalous-theme-bg-b: var(--zalous-token-bg-b);
+  --zalous-theme-surface: var(--zalous-token-surface);
+  --zalous-theme-surface-2: var(--zalous-token-surface-2);
+  --zalous-theme-text: var(--zalous-token-text);
+  --zalous-theme-text-muted: var(--zalous-token-text-muted);
+  --zalous-theme-border: var(--zalous-token-border);
+  --zalous-theme-titlebar-bg: var(--zalous-token-titlebar-bg);
+  --zalous-theme-titlebar-text: var(--zalous-token-titlebar-text);
+  --zalous-theme-nav-bg: var(--zalous-token-nav-bg);
+  --zalous-theme-nav-text: var(--zalous-token-nav-text);
+  --zalous-theme-selected-bg: var(--zalous-token-selected-bg);
+  --zalous-theme-hover-bg: var(--zalous-token-hover-bg);
+  --zalous-theme-on-color: var(--zalous-token-on-color);
+  --zalous-theme-timestamp: var(--zalous-token-timestamp);
+  --zalous-theme-scheme: var(--zalous-token-scheme);
 
-#zalous-market-modal {
-  background: color-mix(in srgb, var(--zsync-bg-main) 72%, #000 28%) !important;
-}
+  --bg-default: var(--zalous-token-bg-a);
+  --title-bar: var(--zalous-token-titlebar-bg);
+  --NG15: var(--zalous-token-titlebar-bg);
+  --surface-background: var(--zalous-token-bg-a);
+  --surface-background-subtle: var(--zalous-token-bg-b);
+  --surface-alt: var(--zalous-token-surface-2);
+  --layer-background: var(--zalous-token-surface);
+  --layer-background-subtle: var(--zalous-token-surface-2);
+  --layer-background-hover: var(--zalous-token-hover-bg);
+  --layer-background-selected: var(--zalous-token-selected-bg);
+  --layer-background-leftmenu: var(--zalous-token-nav-bg);
+  --layer-background-leftmenu-hover: var(--zalous-token-nav-hover);
+  --layer-background-leftmenu-selected: var(--zalous-token-nav-selected);
+  --layer-background-navbar-normal: var(--zalous-token-nav-bg);
+  --layer-background-navbar-hover: var(--zalous-token-nav-hover);
+  --layer-background-navbar-selected: var(--zalous-token-nav-selected);
+  --text-primary: var(--zalous-token-text);
+  --text-secondary: var(--zalous-token-text-muted);
+  --text-on-color: var(--zalous-token-on-color);
+  --timestamp: var(--zalous-token-timestamp);
+  --icon-primary: var(--zalous-token-text);
+  --icon-secondary: var(--zalous-token-text-muted);
+  --icon-navbar-normal: var(--zalous-token-nav-text);
+  --border: var(--zalous-token-border);
+  --border-subtle: color-mix(in srgb, var(--zalous-token-border) 68%, transparent);
+  --divider: var(--zalous-token-border);
+  --button-primary-normal: var(--zalous-token-accent);
+  --button-primary-hover: var(--zalous-token-accent-hover);
+  --button-primary-pressed: var(--zalous-token-accent-press);
+  --button-primary-text: var(--zalous-token-on-color);
+  --button-primary-text-disabled: var(--zalous-token-disabled-text);
+  --button-primary-tonal-normal: var(--zalous-token-accent-soft);
+  --button-secondary-neutral-normal: var(--zalous-token-surface-2);
+  --button-secondary-neutral-hover: var(--zalous-token-hover-bg);
+  --button-secondary-neutral-pressed: var(--zalous-token-selected-bg);
+  --button-secondary-neutral-text: var(--zalous-token-text);
+  --input-field-bg-filled: var(--zalous-token-surface-2);
+  --input-field-bg-outline: var(--zalous-token-surface);
 
-#zalous-market-card,
-#zalous-ext-config-modal > div {
-  background: var(--zsync-bg-main) !important;
-  color: var(--zsync-text) !important;
-  border: 1px solid var(--zsync-border) !important;
+  --zmail-accent: var(--zalous-token-accent);
+  --zmail-accent-soft: var(--zalous-token-accent-soft);
+  --zmail-bg-a: var(--zalous-token-bg-a);
+  --zmail-bg-b: var(--zalous-token-bg-b);
+  --zmail-surface: var(--zalous-token-surface);
+  --zmail-surface-2: var(--zalous-token-surface-2);
+  --zmail-text: var(--zalous-token-text);
+  --zmail-text-muted: var(--zalous-token-text-muted);
+  --zmail-border: var(--zalous-token-border);
 }
-
-#zalous-market-card *,
-#zalous-ext-config-modal * {
-  color: var(--zsync-text) !important;
-  border-color: var(--zsync-border-soft) !important;
-}
-
-#zalous-market-card button,
-#zalous-ext-config-modal button,
-#zalous-controls button {
-  background: var(--zsync-bg-soft) !important;
-  color: var(--zsync-text) !important;
-  border: 1px solid var(--zsync-border) !important;
-}
-
-#zalous-market-card button:hover,
-#zalous-ext-config-modal button:hover,
-#zalous-controls button:hover {
-  background: var(--zsync-bg-hover) !important;
-}
-
-#zalous-market-card button:active,
-#zalous-ext-config-modal button:active,
-#zalous-controls button:active {
-  background: var(--zsync-bg-active) !important;
-}
-
-#zalous-market-card button[class*="primary"],
-#zalous-market-card [class*="btn-primary"],
-#zalous-ext-config-modal button[class*="primary"] {
-  background: var(--zsync-accent) !important;
-  border-color: var(--zsync-accent) !important;
-  color: var(--zsync-accent-text) !important;
-}
-
-#zalous-market-card button[class*="primary"]:hover,
-#zalous-market-card [class*="btn-primary"]:hover,
-#zalous-ext-config-modal button[class*="primary"]:hover {
-  background: var(--zsync-accent-hover) !important;
-  border-color: var(--zsync-accent-hover) !important;
-}
-
-#zalous-market-card button[class*="primary"]:active,
-#zalous-market-card [class*="btn-primary"]:active,
-#zalous-ext-config-modal button[class*="primary"]:active {
-  background: var(--zsync-accent-press) !important;
-  border-color: var(--zsync-accent-press) !important;
-}
-
-.zalous-email-prototype-main {
-  --zmail-accent: var(--zsync-accent);
-  --zmail-accent-soft: var(--zsync-chip-bg);
-  --zmail-bg-a: var(--zsync-bg-main);
-  --zmail-bg-b: var(--zsync-bg-soft);
-  --zmail-surface: var(--zsync-bg-main);
-  --zmail-surface-2: var(--zsync-bg-soft);
-  --zmail-text: var(--zsync-text);
-  --zmail-text-muted: var(--zsync-text-muted);
-  --zmail-border: var(--zsync-border-soft);
-}
-
-.zalous-email-prototype-main .mail-row,
-.zalous-email-prototype-main [class*="mail-row"] {
-  border-color: var(--zsync-border-soft) !important;
-}
-
-.zalous-email-prototype-main .mail-row:hover,
-.zalous-email-prototype-main [class*="mail-row"]:hover {
-  background: var(--zsync-bg-hover) !important;
-}
-
-.zalous-email-prototype-main .mail-row.active,
-.zalous-email-prototype-main .mail-row[aria-selected="true"],
-.zalous-email-prototype-main [class*="mail-row"].active {
-  background: var(--zsync-bg-active) !important;
-  border-color: var(--zsync-border) !important;
-}
-
-.zalous-email-prototype-main button,
-.zalous-email-prototype-main [role="button"] {
-  border-color: var(--zsync-border) !important;
-}
-
-.zalous-email-prototype-main button:hover,
-.zalous-email-prototype-main [role="button"]:hover {
-  background: var(--zsync-bg-hover) !important;
-}
-
-.zalous-email-prototype-main svg,
-.zalous-email-prototype-main [class*="icon"],
-.zalous-email-prototype-main [class*="icon"] * {
-  color: var(--zsync-icon) !important;
-  fill: currentColor !important;
-  stroke: currentColor !important;
-}
-/* ZALOUS_THEME_SYNC_END */
-
+/* ZALOUS_THEME_TOKEN_END */

@@ -1,6 +1,6 @@
 {
   "name": "hara-zalous",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Spicetify-like patch CLI for Zalo Desktop",
   "main": "tools/zalous-cli.js",
   "bin": {
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "zalous": "node tools/zalous-cli.js",
+    "build:themes": "node tools/build-themes.js",
     "build:email-prototype": "node tools/build-email-prototype.js",
     "build:exe": "pkg . --targets node18-win-x64 --output dist/zalous.exe",
     "email:bridge": "node tools/email-imap-bridge.js"

@@ -48,7 +48,7 @@ async function main(argv = process.argv.slice(2)) {
       console.log(`[zalous] initialized ${ZALOUS_ROOT}`);
       break;
     case 'detect': {
-      const asarPath = await resolveAsar(flags.asar);
+      const asarPath = flags.asar ? await resolveAsar(flags.asar) : await detectLatestAsar();
       const cfg = await readConfig();
       cfg.appAsarPath = asarPath;
       await saveConfig(cfg);
@@ -141,7 +141,7 @@ async function main(argv = process.argv.slice(2)) {
       break;
     case 'doctor': {
       let asarPath = '';
-      try { asarPath = await resolveAsar(flags.asar); } catch (_) {}
+      try { asarPath = flags.asar ? await resolveAsar(flags.asar) : await detectLatestAsar(); } catch (_) {}
       console.log(JSON.stringify({
         node: process.version,
         repoRoot: REPO_ROOT,
