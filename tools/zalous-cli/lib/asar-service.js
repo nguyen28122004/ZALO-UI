@@ -306,6 +306,7 @@ async function applyPatch({ asarPath, noBackup, fullPayload = true, keepControls
   const themes = synced.themes;
   const themePacks = synced.themePacks;
   const extensions = synced.extensions;
+  cfg.appAsarPath = asarPath;
   if (!Object.keys(themes).length && !Object.keys(themePacks).length) {
     throw new Error('Chua co theme/theme-pack trong %APPDATA%\\Zalous');
   }
@@ -316,7 +317,7 @@ async function applyPatch({ asarPath, noBackup, fullPayload = true, keepControls
 
   const payload = {
     meta: {
-      version: '0.3.2',
+      version: '0.3.3',
       generatedAt: new Date().toISOString(),
       engine: 'hara-zalous',
       mode: fullPayload ? 'full' : 'lite'
@@ -398,7 +399,6 @@ async function applyPatch({ asarPath, noBackup, fullPayload = true, keepControls
         if (err && err.code) console.log(`[zalous] unpacked replace fallback ${err.code}`);
       }
     }
-    cfg.appAsarPath = asarPath;
     await saveConfig(cfg);
     console.log(`[zalous] applied ${asarPath}`);
   } finally {

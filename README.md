@@ -62,12 +62,14 @@ Pack `email-prototype` them pinned mail workspace vao conversation list:
 Build bundle:
 
 ```powershell
+npm run build:themes
 npm run build:email-prototype
 ```
 
 ## Build exe
 
 ```powershell
+npm run build:themes
 npm run build:email-prototype
 npm run build:exe
 Copy-Item .\dist\zalous.exe .\tools\zalous.exe -Force

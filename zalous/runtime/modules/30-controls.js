@@ -48,9 +48,9 @@
           lock ? 'left:10px' : 'right:10px',
           'bottom:12px',
           'z-index:2147483647',
-          'border:1px solid #b8cfc1',
+          'border:1px solid var(--zalous-theme-border,#b8cfc1)',
           'border-radius:12px',
-          'background:#f4faf7',
+          'background:var(--zalous-theme-surface,#f4faf7)',
           'box-shadow:0 10px 24px rgba(0,0,0,.2)',
           '-webkit-app-region:no-drag'
           ].join(';');
@@ -104,10 +104,29 @@
     rld.style.cssText = base;
     wtg.style.cssText = base;
 
+    function controlPalette() {
+      const targets = [document.documentElement, document.body].filter(Boolean);
+      const accent = firstCssVar(targets, ['--zalous-theme-accent', '--button-primary-normal']) || '#2f7a49';
+      const accentText = firstCssVar(targets, ['--zalous-theme-on-color', '--button-primary-text', '--text-on-color']) || '#ffffff';
+      const surface = firstCssVar(targets, ['--zalous-theme-surface', '--button-secondary-neutral-normal', '--surface-background']) || '#eef4f1';
+      const surface2 = firstCssVar(targets, ['--zalous-theme-surface-2', '--layer-background-subtle']) || surface;
+      const hover = firstCssVar(targets, ['--zalous-theme-hover-bg', '--button-secondary-neutral-hover']) || surface2;
+      const text = firstCssVar(targets, ['--zalous-theme-text', '--button-secondary-neutral-text', '--text-primary']) || '#204534';
+      const muted = firstCssVar(targets, ['--zalous-theme-text-muted', '--text-secondary']) || text;
+      const border = firstCssVar(targets, ['--zalous-theme-border', '--border']) || '#b8cfc1';
+      return { accent, accentText, surface, surface2, hover, text, muted, border };
+    }
+
+    function paintButton(btn, bg, color, border) {
+      btn.style.background = bg;
+      btn.style.color = color;
+      btn.style.border = `1px solid ${border}`;
+    }
+
     function refresh() {
+      const pal = controlPalette();
       tgl.textContent = state.config.patchEnabled ? 'ON' : 'OFF';
-      tgl.style.background = state.config.patchEnabled ? '#2f7a49' : '#dbe6df';
-      tgl.style.color = state.config.patchEnabled ? '#fff' : '#2b3f34';
+      paintButton(tgl, state.config.patchEnabled ? pal.accent : pal.surface2, state.config.patchEnabled ? pal.accentText : pal.text, pal.border);
 
       const keys = getAllThemeKeys(state);
       const hasActive = !!(state.config.activeTheme && keys.includes(state.config.activeTheme));
@@ -118,27 +137,20 @@
         : String(activeKey).replace(/\.css$/i, '').replace(/^pack:/, '');
       const label = hasActive ? rawLabel.slice(0, 2).toUpperCase() : '--';
       thm.textContent = label;
-      thm.style.background = '#eef4f1';
-      thm.style.color = '#254437';
+      paintButton(thm, pal.surface, pal.text, pal.border);
 
       mkt.textContent = 'MK';
       mkt.title = 'Open Zalous Market Manager';
-      mkt.style.background = '#e8f3ee';
-      mkt.style.color = '#204534';
-      mkt.style.border = '1px solid #b8cfc1';
+      paintButton(mkt, pal.surface2, pal.text, pal.border);
 
       rld.textContent = 'RL';
       rld.title = 'Reload UI';
-      rld.style.background = '#eef4f1';
-      rld.style.color = '#204534';
-      rld.style.border = '1px solid #b8cfc1';
+      paintButton(rld, pal.surface, pal.text, pal.border);
 
       const watcherOn = !state.config.ui || state.config.ui.hotReloadWatcher !== false;
       wtg.textContent = watcherOn ? 'WR' : 'WX';
       wtg.title = watcherOn ? 'Hot Reload Watcher: ON' : 'Hot Reload Watcher: OFF';
-      wtg.style.background = watcherOn ? '#2f7a49' : '#4b4b4b';
-      wtg.style.color = '#fff';
-      wtg.style.border = '1px solid #b8cfc1';
+      paintButton(wtg, watcherOn ? pal.accent : pal.muted, watcherOn ? pal.accentText : pal.surface, pal.border);
     }
 
     const marketModal = ensureMarketModal(state, refresh);

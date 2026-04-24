@@ -26,6 +26,15 @@
     '--zalous-theme-hover-bg',
     '--zalous-theme-on-color',
     '--zalous-theme-timestamp',
+    '--layer-background-leftmenu',
+    '--layer-background-leftmenu-hover',
+    '--layer-background-leftmenu-selected',
+    '--layer-background-navbar-normal',
+    '--layer-background-navbar-hover',
+    '--layer-background-navbar-selected',
+    '--layer-background-selected',
+    '--title-bar',
+    '--NG15',
     '--button-primary-text-disabled',
     '--text-on-color',
     '--timestamp'
@@ -251,9 +260,50 @@
     return '';
   }
 
+  function readThemeTokenPalette(targets) {
+    const token = (name) => firstCssVar(targets, [`--zalous-token-${name}`, `--zalous-theme-${name}`]);
+    const accent = token('accent');
+    const bgA = token('bg-a');
+    const text = token('text');
+    if (!accent && !bgA && !text) return null;
+    const bgB = token('bg-b') || bgA;
+    const surface = token('surface') || bgA || bgB;
+    const surface2 = token('surface-2') || bgB || surface;
+    const navBg = token('nav-bg') || firstCssVar(targets, ['--layer-background-leftmenu']) || surface2;
+    const navText = token('nav-text') || text;
+    const selectedBg = token('selected-bg') || firstCssVar(targets, ['--layer-background-selected']) || surface2;
+    const hoverBg = token('hover-bg') || firstCssVar(targets, ['--layer-background-hover']) || surface2;
+    const onColor = token('on-color') || firstCssVar(targets, ['--text-on-color', '--button-primary-text']) || '#ffffff';
+    return {
+      accent: accent || firstCssVar(targets, ['--button-primary-normal', '--accent-blue-bg']) || '#0068ff',
+      accentSoft: token('accent-soft') || alphaColor(accent, 0.16) || 'rgba(0,104,255,.12)',
+      bgA: bgA || surface,
+      bgB,
+      surface,
+      surface2,
+      text: text || firstCssVar(targets, ['--text-primary']) || '#0f172a',
+      textMuted: token('text-muted') || firstCssVar(targets, ['--text-secondary']) || '#64748b',
+      border: token('border') || firstCssVar(targets, ['--border', '--border-subtle']) || 'rgba(148,163,184,.24)',
+      titlebarBg: token('titlebar-bg') || firstCssVar(targets, ['--title-bar', '--NG15']) || bgB || surface,
+      titlebarText: token('titlebar-text') || text || '#0f172a',
+      navBg,
+      navText,
+      navHover: token('nav-hover') || firstCssVar(targets, ['--layer-background-leftmenu-hover']) || hoverBg,
+      navSelected: token('nav-selected') || firstCssVar(targets, ['--layer-background-leftmenu-selected']) || selectedBg,
+      scheme: token('scheme') || 'light',
+      selectedBg,
+      hoverBg,
+      onColor,
+      timestamp: token('timestamp') || alphaColor(text, 0.46) || 'rgba(15,23,42,.46)',
+      disabledText: token('disabled-text') || alphaColor(onColor, 0.76) || onColor
+    };
+  }
+
   function resolveThemeUiPalette(themeKey) {
     const key = String(themeKey || '').toLowerCase();
     const targets = [document.documentElement, document.body].filter(Boolean);
+    const tokenPalette = readThemeTokenPalette(targets);
+    if (tokenPalette) return tokenPalette;
     const runtimeBg = firstCssVar(targets, ['--surface-background', '--layer-background', '--bg-default', '--background']);
     const runtimeBg2 = firstCssVar(targets, ['--surface-background-subtle', '--layer-background-subtle', '--surface-alt', '--background-subtle']);
     const runtimeText = firstCssVar(targets, ['--text-primary', '--text-main', '--button-secondary-neutral-text']) || '#dfe2e7';
@@ -349,9 +399,11 @@
     const body = document.body || root;
     const pal = resolveThemeUiPalette(themeName);
     ensureThemeSyncTag();
-    const leftMenuBg = firstCssVar([root, body], ['--layer-background-leftmenu']) || pal.navBg;
-    const selectedBg = firstCssVar([root, body], ['--layer-background-selected']) || pal.selectedBg || pal.surface2 || pal.bgB;
-    const hoverBg = firstCssVar([root, body], ['--layer-background-leftmenu-hover', '--layer-background-hover']) || pal.hoverBg || pal.surface2 || pal.bgB;
+    const leftMenuBg = pal.navBg || firstCssVar([root, body], ['--layer-background-leftmenu']) || pal.surface2 || pal.bgB;
+    const selectedBg = pal.selectedBg || firstCssVar([root, body], ['--layer-background-selected']) || pal.surface2 || pal.bgB;
+    const hoverBg = pal.hoverBg || firstCssVar([root, body], ['--layer-background-hover']) || pal.surface2 || pal.bgB;
+    const navHover = pal.navHover || firstCssVar([root, body], ['--layer-background-leftmenu-hover']) || hoverBg;
+    const navSelected = pal.navSelected || firstCssVar([root, body], ['--layer-background-leftmenu-selected']) || selectedBg;
     const onColor = pal.onColor || firstCssVar([root, body], ['--text-on-color', '--button-primary-text']) || '#ffffff';
     const timestamp = pal.timestamp || alphaColor(pal.text, 0.46) || pal.textMuted;
     const disabledText = pal.disabledText || alphaColor(onColor, 0.76) || onColor;
@@ -374,8 +426,12 @@
       '--zalous-theme-hover-bg': hoverBg,
       '--zalous-theme-on-color': onColor,
       '--zalous-theme-timestamp': timestamp,
-      '--layer-background-leftmenu': pal.navBg,
-      '--layer-background-leftmenu-hover': hoverBg,
+      '--layer-background-leftmenu': leftMenuBg,
+      '--layer-background-leftmenu-hover': navHover,
+      '--layer-background-leftmenu-selected': navSelected,
+      '--layer-background-navbar-normal': leftMenuBg,
+      '--layer-background-navbar-hover': navHover,
+      '--layer-background-navbar-selected': navSelected,
       '--layer-background-selected': selectedBg,
       '--button-primary-text-disabled': disabledText,
       '--text-on-color': onColor,
@@ -454,13 +510,11 @@
     const hasTheme = !!(state.themes && state.themes[themeName]);
     const hasPack = !!(state.themePacks && state.themePacks[themeName]);
     const picked = (themeName && (hasTheme || hasPack)) ? themeName : allKeys[0];
-
-    syncThemeSurfaceVars(picked);
+    clearThemeSurfaceVars();
 
     if (state.themePacks && state.themePacks[picked]) {
       const pack = state.themePacks[picked] || {};
       clearThemePackArtifacts();
-      syncThemeSurfaceVars(picked);
       try {
         const key = String((pack.id || picked || '')).replace(/^pack:/, '').replace(/^themepack[._-]?/i, '').replace(/^[._-]+/, '');
         if (key) document.documentElement.setAttribute('data-zalous-theme-pack', key);
@@ -495,6 +549,7 @@
         }
       }
 
+      syncThemeSurfaceVars(picked);
       return { ok: true, name: picked, length: (pack.css || '').length, type: 'theme-pack' };
     }
 
@@ -502,6 +557,7 @@
     clearThemePackArtifacts();
     try { document.documentElement.removeAttribute('data-zalous-theme-pack'); } catch (_) {}
     ensureStyleTag().textContent = css;
+    syncThemeSurfaceVars(picked);
     return { ok: true, name: picked, length: css.length, type: 'theme' };
   }
 
@@ -514,19 +570,19 @@
     }
 
     tag.textContent = [
-      ':root:not([data-zalous-theme-pack="console-minimal"]) #main-tab,',
-      ':root:not([data-zalous-theme-pack="console-minimal"]) [id*="main-tab"],',
-      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="main-tab"],',
-      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="main_tab"],',
-      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="leftbar"],',
-      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="left-bar"],',
-      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="nav-left"] {',
+      ':root:not([data-zalous-theme-pack^="console-minimal"]) #main-tab,',
+      ':root:not([data-zalous-theme-pack^="console-minimal"]) [id*="main-tab"],',
+      ':root:not([data-zalous-theme-pack^="console-minimal"]) [class*="main-tab"],',
+      ':root:not([data-zalous-theme-pack^="console-minimal"]) [class*="main_tab"],',
+      ':root:not([data-zalous-theme-pack^="console-minimal"]) [class*="leftbar"],',
+      ':root:not([data-zalous-theme-pack^="console-minimal"]) [class*="left-bar"],',
+      ':root:not([data-zalous-theme-pack^="console-minimal"]) [class*="nav-left"] {',
       '  background: var(--layer-background-leftmenu, var(--layer-background, var(--surface-background, inherit))) !important;',
       '}',
-      ':root:not([data-zalous-theme-pack="console-minimal"]) #main-tab > *,',
-      ':root:not([data-zalous-theme-pack="console-minimal"]) [id*="main-tab"] > *,',
-      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="main-tab"] > *,',
-      ':root:not([data-zalous-theme-pack="console-minimal"]) [class*="main_tab"] > * {',
+      ':root:not([data-zalous-theme-pack^="console-minimal"]) #main-tab > *,',
+      ':root:not([data-zalous-theme-pack^="console-minimal"]) [id*="main-tab"] > *,',
+      ':root:not([data-zalous-theme-pack^="console-minimal"]) [class*="main-tab"] > *,',
+      ':root:not([data-zalous-theme-pack^="console-minimal"]) [class*="main_tab"] > * {',
       '  background-color: var(--layer-background-leftmenu, var(--layer-background, var(--surface-background, inherit))) !important;',
       '}'
     ].join('\n');

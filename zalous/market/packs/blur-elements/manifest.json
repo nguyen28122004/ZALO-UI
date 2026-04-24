@@ -3,6 +3,6 @@
   "name": "Blur Elements",
   "type": "extension",
   "entry": "blur-elements.js",
-  "description": "Blur selected chat list elements with configurable level",
-  "version": "1.0.0"
+  "description": "Privacy presets for blurring chat previews, names, and message bodies",
+  "version": "1.1.0"
 }

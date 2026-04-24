@@ -3,7 +3,23 @@
     const external = tryLoadExternal();
     const localConfig = tryLoadLocalConfig();
 
-    const config = normalizeConfig((external && external.config) || localConfig || embedded.config || {});
+    function pickConfig() {
+      if (external && external.config) return external.config;
+      const embeddedConfig = embedded.config || {};
+      if (localConfig && typeof localConfig === 'object') {
+        const localAsar = String(localConfig.appAsarPath || '');
+        const embeddedAsar = String(embeddedConfig.appAsarPath || '');
+        if (localAsar && embeddedAsar && localAsar !== embeddedAsar) {
+          return Object.assign({}, localConfig, embeddedConfig, {
+            extensionConfigs: Object.assign({}, embeddedConfig.extensionConfigs || {}, localConfig.extensionConfigs || {})
+          });
+        }
+        return localConfig;
+      }
+      return embeddedConfig;
+    }
+
+    const config = normalizeConfig(pickConfig());
     const themes = Object.assign({}, embedded.themes || {}, (external && external.themes) || {});
     const themePacks = Object.assign({}, embedded.themePacks || {}, (external && external.themePacks) || {});
     const extensions = Object.assign({}, embedded.extensions || {}, (external && external.extensions) || {});
@@ -67,7 +83,17 @@
     };
     state.reloadExtensions = () => runExtensions(state.config.enabledExtensions, state.extensions, extensionHooks);
     const extResult = runExtensions(state.config.enabledExtensions, state.extensions, extensionHooks);
+    const marketModal = ensureMarketModal(state, () => {});
     mountControls(state);
+
+    const resolveExtensionName = (name) => {
+      const raw = String(name || '').trim();
+      if (!raw) return '';
+      if (state.extensions[raw]) return raw;
+      if (!raw.toLowerCase().endsWith('.js') && state.extensions[`${raw}.js`]) return `${raw}.js`;
+      const byId = Object.keys(state.extensions).find((x) => x.replace(/\.js$/i, '') === raw.replace(/^extension[._-]/i, ''));
+      return byId || raw;
+    };
 
     window.zalous = {
       version: (embedded.meta && embedded.meta.version) || 'dev',
@@ -95,18 +121,40 @@
         state.saveConfig();
       },
       reloadExtensions: () => state.reloadExtensions(),
+      getExtensionConfig: (name) => {
+        const extName = resolveExtensionName(name);
+        const cfg = state.config.extensionConfigs && state.config.extensionConfigs[extName];
+        return JSON.parse(JSON.stringify((cfg && typeof cfg === 'object') ? cfg : {}));
+      },
+      setExtensionConfig: (name, patchValue) => {
+        const extName = resolveExtensionName(name);
+        if (!extName || !state.extensions[extName]) return false;
+        if (!state.config.extensionConfigs || typeof state.config.extensionConfigs !== 'object') state.config.extensionConfigs = {};
+        const prev = state.config.extensionConfigs[extName];
+        const patch = (patchValue && typeof patchValue === 'object') ? patchValue : {};
+        state.config.extensionConfigs[extName] = Object.assign({}, (prev && typeof prev === 'object') ? prev : {}, patch);
+        state.saveConfig();
+        if ((state.config.enabledExtensions || []).includes(extName)) state.reloadExtensions();
+        return true;
+      },
       reloadPage: (reason) => triggerRuntimeReload(reason || 'api'),
       openMarket: () => {
         if (typeof window.__zalousOpenMarket === 'function') {
           window.__zalousOpenMarket();
-          return;
+          return true;
+        }
+        if (marketModal && typeof marketModal.open === 'function') {
+          marketModal.open();
+          return true;
         }
         const modal = document.getElementById(MARKET_MODAL_ID);
         if (modal) {
           modal.style.display = 'flex';
           modal.classList.add('is-open');
           modal.setAttribute('aria-hidden', 'false');
+          return true;
         }
+        return false;
       }
     };
 
